@@ -483,9 +483,43 @@ More text`;
       const markdown = `Paragraph 1.
 
 
+
 Paragraph 2.`;
       const ast = parser.parse(markdown);
       expect(ast.children).toHaveLength(2);
     });
   });
+
+  describe('Line Breaks', () => {
+    it('should parse hard line break with two trailing spaces', () => {
+      const markdown = 'Line 1  \nLine 2';
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      expect(para.type).toBe('paragraph');
+      
+      // Should have: text("Line 1"), hard-line-break, text("Line 2")
+      const hasLineBreak = para.children.some((child: any) => child.type === 'hard-line-break');
+      expect(hasLineBreak).toBe(true);
+    });
+
+    it('should not create hard line break with single trailing space', () => {
+      const markdown = 'Line 1 \nLine 2';
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      
+      // Should treat as soft line break (space)
+      const hasHardBreak = para.children.some((child: any) => child.type === 'hard-line-break');
+      expect(hasHardBreak).toBe(false);
+    });
+
+    it('should handle multiple hard line breaks in one paragraph', () => {
+      const markdown = 'Line 1  \nLine 2  \nLine 3';
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      
+      const breakCount = para.children.filter((child: any) => child.type === 'hard-line-break').length;
+      expect(breakCount).toBe(2);
+    });
+  });
 });
+

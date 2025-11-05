@@ -430,4 +430,29 @@ Paragraph with **emphasis**.
       expect(html).toContain('🎉');
     });
   });
+
+  describe('Line Breaks', () => {
+    it('should render hard line break as <br />', () => {
+      const markdown = 'Line 1  \nLine 2';
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('<br />');
+    });
+
+    it('should render soft line break as space', () => {
+      const markdown = 'Line 1 \nLine 2';
+      const html = renderMarkdown(markdown);
+      // Soft line break becomes space in rendering
+      expect(html).toContain('Line 1');
+      expect(html).toContain('Line 2');
+      expect(html).not.toContain('<br />');
+    });
+
+    it('should render multiple line breaks', () => {
+      const markdown = 'Line 1  \nLine 2  \nLine 3';
+      const html = renderMarkdown(markdown);
+      const breakCount = (html.match(/<br \/>/g) || []).length;
+      expect(breakCount).toBe(2);
+    });
+  });
 });
+

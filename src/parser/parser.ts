@@ -615,7 +615,13 @@ export class Parser {
         break;
       }
 
-      lines.push(line);
+      // Check for trailing spaces (2+ spaces = hard line break marker)
+      // Replace 2+ trailing spaces with special marker for hard line breaks
+      if (currentLine < state.lines.length - 1 && /  +$/.test(line)) {
+        lines.push(line.replace(/  +$/, '\u0000')); // Use null character as marker
+      } else {
+        lines.push(line);
+      }
       currentLine++;
     }
 
@@ -643,6 +649,24 @@ export class Parser {
           value: text[i + 1],
         });
         i += 2;
+        continue;
+      }
+
+      // Check for hard line break marker (null character + newline)
+      if (text[i] === '\u0000' && text[i + 1] === '\n') {
+        nodes.push({
+          type: 'hard-line-break',
+        });
+        i += 2;
+        continue;
+      }
+
+      // Check for soft line break (newline without marker = just space)
+      if (text[i] === '\n') {
+        nodes.push({
+          type: 'soft-line-break',
+        });
+        i += 1;
         continue;
       }
 
@@ -771,7 +795,7 @@ export class Parser {
       }
 
       // Default: text node
-      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~]/);
+      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~\u0000]/);
       const textLength = nextSpecial === -1 ? text.length - i : nextSpecial + 1;
 
       nodes.push({
