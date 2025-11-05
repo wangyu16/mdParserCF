@@ -35,6 +35,7 @@ import {
  */
 export class Parser {
   private options: ParserOptions;
+  private currentLinkReferences: Map<string, { url: string; title?: string }> = new Map();
 
   constructor(options: ParserOptions = {}) {
     this.options = {
@@ -52,14 +53,30 @@ export class Parser {
    * Parse markdown string into AST
    */
   public parse(markdown: string): Document {
+    // Reset link references for new parse
+    this.currentLinkReferences = new Map();
+    
     const lines = markdown.split('\n');
     const state: ParserState = {
       lines,
       position: 0,
       ast: { type: 'document', children: [] },
       footnotes: new Map(),
+      linkReferences: this.currentLinkReferences,
       options: this.options,
     };
+
+    // Pre-pass: collect link reference definitions
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const match = line.match(/^\[([^\]]+)\]:\s+(.+?)(?:\s+"([^"]*)")?\s*$/);
+      if (match) {
+        const label = match[1].toLowerCase();
+        const url = match[2].trim();
+        const title = match[3];
+        this.currentLinkReferences.set(label, { url, title });
+      }
+    }
 
     // First pass: collect block-level elements
     while (state.position < lines.length) {
@@ -130,6 +147,14 @@ export class Parser {
       const footnote = this.parseFootnoteDefinition(state);
       if (footnote) {
         return null; // Footnote definitions are collected, not rendered as blocks
+      }
+    }
+
+    // Check for link reference definition [label]: url
+    if (line.match(/^\[([^\]]+)\]:\s+/)) {
+      const linkRef = this.parseLinkReferenceDefinition(state);
+      if (linkRef) {
+        return null; // Link references are collected, not rendered as blocks
       }
     }
 
@@ -607,6 +632,28 @@ export class Parser {
   }
 
   /**
+   * Parse link reference definition [label]: url "title"
+   */
+  private parseLinkReferenceDefinition(state: ParserState): boolean {
+    const line = state.lines[state.position];
+    // Match [label]: url or [label]: url "title"
+    const match = line.match(/^\[([^\]]+)\]:\s+(.+?)(?:\s+"([^"]*)")?\s*$/);
+
+    if (!match) {
+      return false;
+    }
+
+    const label = match[1].toLowerCase(); // Reference labels are case-insensitive
+    const url = match[2].trim();
+    const title = match[3];
+
+    // Store in state
+    state.linkReferences.set(label, { url, title });
+
+    return true;
+  }
+
+  /**
    * Parse custom container :::classname\n...\n:::
    */
   private parseCustomContainer(state: ParserState): CustomContainer | null {
@@ -781,22 +828,43 @@ export class Parser {
         }
       }
 
-      // Check for links [text](url "title")
+      // Check for links [text](url "title") or reference-style [text][ref] or [text][]
       if (text[i] === '[') {
-        // Match [text](url) or [text](url "title")
-        const linkMatch = text.slice(i).match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
-        if (linkMatch) {
-          const linkText = linkMatch[1];
-          const url = linkMatch[2];
-          const title = linkMatch[3];
+        // First try inline link: [text](url "title")
+        const inlineLinkMatch = text.slice(i).match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
+        if (inlineLinkMatch) {
+          const linkText = inlineLinkMatch[1];
+          const url = inlineLinkMatch[2];
+          const title = inlineLinkMatch[3];
           nodes.push({
             type: 'link',
             url,
             title,
             children: this.parseInline(linkText),
           });
-          i += linkMatch[0].length;
+          i += inlineLinkMatch[0].length;
           continue;
+        }
+
+        // Try reference-style link: [text][ref] or [text][]
+        const refLinkMatch = text.slice(i).match(/^\[([^\]]+)\](?:\[\]|\[([^\]]+)\])/);
+        if (refLinkMatch) {
+          const linkText = refLinkMatch[1];
+          const ref = refLinkMatch[2] || linkText; // Use ref if provided, else use text as ref
+          const refLabel = ref.toLowerCase(); // References are case-insensitive
+
+          const linkRef = this.currentLinkReferences.get(refLabel);
+          if (linkRef) {
+            nodes.push({
+              type: 'link',
+              url: linkRef.url,
+              title: linkRef.title,
+              children: this.parseInline(linkText),
+            });
+            i += refLinkMatch[0].length;
+            continue;
+          }
+          // If reference not found, fall through to treat as text
         }
       }
 

@@ -240,6 +240,43 @@ const x = 5;
       const html = renderMarkdown('[link]("javascript:alert(1)")');
       expect(html).toContain('&quot;');
     });
+
+    it('should render reference-style link with explicit reference', () => {
+      const markdown = `[link text][ref]
+
+[ref]: https://example.com`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('<a href="https://example.com">');
+      expect(html).toContain('link text');
+      expect(html).toContain('</a>');
+    });
+
+    it('should render reference-style link with implicit reference', () => {
+      const markdown = `[link text][]
+
+[link text]: https://example.com`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('<a href="https://example.com">');
+      expect(html).toContain('link text');
+    });
+
+    it('should render reference-style link with title', () => {
+      const markdown = `[link][ref]
+
+[ref]: https://example.com "My Title"`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('<a href="https://example.com"');
+      expect(html).toContain('title="My Title"');
+      expect(html).toContain('link');
+    });
+
+    it('should handle case-insensitive reference-style links', () => {
+      const markdown = `[link][REF]
+
+[ref]: https://example.com`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('<a href="https://example.com">');
+    });
   });
 
   describe('Images', () => {

@@ -280,6 +280,57 @@ const x = 5;
       const link = para.children.find((child: any) => child.type === 'link') as any;
       expect(link.title).toBe('Title');
     });
+
+    it('should parse reference-style link with explicit reference', () => {
+      const markdown = `[link text][ref]
+
+[ref]: https://example.com`;
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link') as any;
+      expect(link).toBeDefined();
+      expect(link.url).toBe('https://example.com');
+    });
+
+    it('should parse reference-style link with implicit reference', () => {
+      const markdown = `[link text][]
+
+[link text]: https://example.com`;
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link') as any;
+      expect(link).toBeDefined();
+      expect(link.url).toBe('https://example.com');
+    });
+
+    it('should parse reference-style link with title', () => {
+      const markdown = `[link text][ref]
+
+[ref]: https://example.com "Link Title"`;
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link') as any;
+      expect(link.url).toBe('https://example.com');
+      expect(link.title).toBe('Link Title');
+    });
+
+    it('should handle reference-style links case-insensitively', () => {
+      const markdown = `[link text][REF]
+
+[ref]: https://example.com`;
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link') as any;
+      expect(link.url).toBe('https://example.com');
+    });
+
+    it('should not create link if reference not found', () => {
+      const markdown = `[link text][missing-ref]`;
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link');
+      expect(link).toBeUndefined();
+    });
   });
 
   describe('Images', () => {

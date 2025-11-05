@@ -427,6 +427,7 @@ export interface ParserState {
   position: number;
   ast: Document;
   footnotes: Map<string, FootnoteDefinition>;
+  linkReferences: Map<string, { url: string; title?: string }>;
   options: ParserOptions;
 }
 
