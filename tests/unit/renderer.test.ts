@@ -96,6 +96,102 @@ Second paragraph.`);
     });
   });
 
+  describe('Inline Styles', () => {
+    describe('Underline', () => {
+      it('should render underline with <u>', () => {
+        const html = renderMarkdown('This is ++underline++ text.');
+        expect(html).toContain('<u>underline</u>');
+      });
+
+      it('should render underline with nested formatting', () => {
+        const html = renderMarkdown('This is ++**bold underline**++ text.');
+        expect(html).toContain('<u>');
+        expect(html).toContain('<strong>bold underline</strong>');
+        expect(html).toContain('</u>');
+      });
+
+      it('should render multiple underline on same line', () => {
+        const html = renderMarkdown('++first++ and ++second++');
+        const underlines = html.match(/<u>/g);
+        expect(underlines).toHaveLength(2);
+      });
+
+      it('should escape HTML in underline', () => {
+        const html = renderMarkdown('++`<script>`++');
+        expect(html).toContain('<u>');
+        expect(html).toContain('&lt;script&gt;');
+        expect(html).not.toContain('<script>');
+      });
+    });
+
+    describe('Highlight', () => {
+      it('should render highlight with <mark>', () => {
+        const html = renderMarkdown('This is ==highlight== text.');
+        expect(html).toContain('<mark>highlight</mark>');
+      });
+
+      it('should render highlight with nested formatting', () => {
+        const html = renderMarkdown('This is ==*italic highlight*== text.');
+        expect(html).toContain('<mark>');
+        expect(html).toContain('<em>italic highlight</em>');
+        expect(html).toContain('</mark>');
+      });
+
+      it('should render multiple highlight on same line', () => {
+        const html = renderMarkdown('==first== and ==second==');
+        const marks = html.match(/<mark>/g);
+        expect(marks).toHaveLength(2);
+      });
+
+      it('should escape HTML in highlight', () => {
+        const html = renderMarkdown('==`<script>`==');
+        expect(html).toContain('<mark>');
+        expect(html).toContain('&lt;script&gt;');
+        expect(html).not.toContain('<script>');
+      });
+    });
+
+    describe('Superscript', () => {
+      it('should render superscript with <sup>', () => {
+        const html = renderMarkdown('E = mc^2^');
+        expect(html).toContain('<sup>2</sup>');
+      });
+
+      it('should render multiple superscript on same line', () => {
+        const html = renderMarkdown('^first^ and ^second^');
+        const sups = html.match(/<sup>/g);
+        expect(sups).toHaveLength(2);
+      });
+
+      it('should escape HTML in superscript', () => {
+        const html = renderMarkdown('^`<script>`^');
+        expect(html).toContain('<sup>');
+        expect(html).toContain('&lt;script&gt;');
+        expect(html).not.toContain('<script>');
+      });
+    });
+
+    describe('Subscript', () => {
+      it('should render subscript with <sub>', () => {
+        const html = renderMarkdown('H~2~O');
+        expect(html).toContain('<sub>2</sub>');
+      });
+
+      it('should render multiple subscript on same line', () => {
+        const html = renderMarkdown('~first~ and ~second~');
+        const subs = html.match(/<sub>/g);
+        expect(subs).toHaveLength(2);
+      });
+
+      it('should escape HTML in subscript', () => {
+        const html = renderMarkdown('~`<script>`~');
+        expect(html).toContain('<sub>');
+        expect(html).toContain('&lt;script&gt;');
+        expect(html).not.toContain('<script>');
+      });
+    });
+  });
+
   describe('Code', () => {
     it('should render inline code with <code>', () => {
       const html = renderMarkdown('Use `const x = 5;`');

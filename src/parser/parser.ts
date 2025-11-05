@@ -833,6 +833,65 @@ export class Parser {
         }
       }
 
+      // Check for underline ++text++
+      if (text[i] === '+' && text[i + 1] === '+') {
+        const closingIndex = text.indexOf('++', i + 2);
+        if (closingIndex !== -1) {
+          const content = text.slice(i + 2, closingIndex);
+          nodes.push({
+            type: 'underline',
+            children: this.parseInline(content),
+          });
+          i = closingIndex + 2;
+          continue;
+        }
+      }
+
+      // Check for highlight ==text==
+      if (text[i] === '=' && text[i + 1] === '=') {
+        const closingIndex = text.indexOf('==', i + 2);
+        if (closingIndex !== -1) {
+          const content = text.slice(i + 2, closingIndex);
+          nodes.push({
+            type: 'highlight',
+            children: this.parseInline(content),
+          });
+          i = closingIndex + 2;
+          continue;
+        }
+      }
+
+      // Check for superscript ^text^
+      if (text[i] === '^') {
+        const closingIndex = text.indexOf('^', i + 1);
+        if (closingIndex !== -1) {
+          const content = text.slice(i + 1, closingIndex);
+          nodes.push({
+            type: 'superscript',
+            children: this.parseInline(content),
+          });
+          i = closingIndex + 1;
+          continue;
+        }
+      }
+
+      // Check for subscript ~text~ (single tilde, not double which is strikethrough)
+      if (text[i] === '~' && text[i + 1] !== '~') {
+        const closingIndex = text.indexOf('~', i + 1);
+        if (closingIndex !== -1) {
+          // Make sure we don't have ~~ which would be strikethrough
+          if (text[closingIndex + 1] !== '~') {
+            const content = text.slice(i + 1, closingIndex);
+            nodes.push({
+              type: 'subscript',
+              children: this.parseInline(content),
+            });
+            i = closingIndex + 1;
+            continue;
+          }
+        }
+      }
+
       // Check for custom span ::class[content]::
       if (text[i] === ':' && text[i + 1] === ':') {
         const spanMatch = text.slice(i).match(/^::([a-zA-Z0-9_-]+)\[([^\]]*)\]::/);
@@ -864,7 +923,7 @@ export class Parser {
       }
 
       // Default: text node
-      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:\u0000]/);
+      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=^\u0000]/);
       const textLength = nextSpecial === -1 ? text.length - i : nextSpecial + 1;
 
       nodes.push({

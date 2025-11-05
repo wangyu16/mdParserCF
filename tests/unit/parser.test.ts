@@ -124,6 +124,117 @@ Second paragraph.`;
     });
   });
 
+  describe('Inline Styles', () => {
+    describe('Underline', () => {
+      it('should parse underline', () => {
+        const ast = parser.parse('This is ++underline++ text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'underline')).toBe(true);
+      });
+
+      it('should parse underline with nested formatting', () => {
+        const ast = parser.parse('This is ++**bold underline**++ text.');
+        const para = ast.children[0] as any;
+        const underline = para.children.find((child: any) => child.type === 'underline') as any;
+        expect(underline).toBeDefined();
+        expect(underline.children.some((child: any) => child.type === 'strong')).toBe(true);
+      });
+
+      it('should parse multiple underline on one line', () => {
+        const ast = parser.parse('++first++ and ++second++ text.');
+        const para = ast.children[0] as any;
+        const underlines = para.children.filter((child: any) => child.type === 'underline');
+        expect(underlines).toHaveLength(2);
+      });
+
+      it('should not parse unclosed underline', () => {
+        const ast = parser.parse('This is ++unclosed underline text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'underline')).toBe(false);
+      });
+    });
+
+    describe('Highlight', () => {
+      it('should parse highlight', () => {
+        const ast = parser.parse('This is ==highlight== text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'highlight')).toBe(true);
+      });
+
+      it('should parse highlight with nested formatting', () => {
+        const ast = parser.parse('This is ==*italic highlight*== text.');
+        const para = ast.children[0] as any;
+        const highlight = para.children.find((child: any) => child.type === 'highlight') as any;
+        expect(highlight).toBeDefined();
+        expect(highlight.children.some((child: any) => child.type === 'emphasis')).toBe(true);
+      });
+
+      it('should parse multiple highlight on one line', () => {
+        const ast = parser.parse('==first== and ==second== text.');
+        const para = ast.children[0] as any;
+        const highlights = para.children.filter((child: any) => child.type === 'highlight');
+        expect(highlights).toHaveLength(2);
+      });
+
+      it('should not parse unclosed highlight', () => {
+        const ast = parser.parse('This is ==unclosed highlight text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'highlight')).toBe(false);
+      });
+    });
+
+    describe('Superscript', () => {
+      it('should parse superscript', () => {
+        const ast = parser.parse('This is ^superscript^ text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'superscript')).toBe(true);
+      });
+
+      it('should parse multiple superscript on one line', () => {
+        const ast = parser.parse('^first^ and ^second^ text.');
+        const para = ast.children[0] as any;
+        const superscripts = para.children.filter((child: any) => child.type === 'superscript');
+        expect(superscripts).toHaveLength(2);
+      });
+
+      it('should not parse unclosed superscript', () => {
+        const ast = parser.parse('This is ^unclosed superscript text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'superscript')).toBe(false);
+      });
+    });
+
+    describe('Subscript', () => {
+      it('should parse subscript', () => {
+        const ast = parser.parse('This is ~subscript~ text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'subscript')).toBe(true);
+      });
+
+      it('should parse multiple subscript on one line', () => {
+        const ast = parser.parse('~first~ and ~second~ text.');
+        const para = ast.children[0] as any;
+        const subscripts = para.children.filter((child: any) => child.type === 'subscript');
+        expect(subscripts).toHaveLength(2);
+      });
+
+      it('should distinguish subscript ~text~ from strikethrough ~~text~~', () => {
+        const ast = parser.parse('~sub~ and ~~strike~~ text.');
+        const para = ast.children[0] as any;
+        const subscripts = para.children.filter((child: any) => child.type === 'subscript');
+        const strikethroughs = para.children.filter((child: any) => child.type === 'strikethrough');
+        expect(subscripts).toHaveLength(1);
+        expect(strikethroughs).toHaveLength(1);
+      });
+
+      it('should not parse unclosed subscript', () => {
+        const ast = parser.parse('This is ~unclosed subscript text.');
+        const para = ast.children[0] as any;
+        expect(para.children.some((child: any) => child.type === 'subscript')).toBe(false);
+      });
+    });
+  });
+
   describe('Code', () => {
     it('should parse inline code', () => {
       const ast = parser.parse('Use `const x = 5;` for code.');
