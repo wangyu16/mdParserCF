@@ -21,6 +21,8 @@ import {
   TableRow,
   TableCell,
   FootnoteDefinition,
+  CustomContainer,
+  CustomSpan,
   ParserOptions,
   ParserState,
 } from './ast-types';
@@ -135,6 +137,14 @@ export class Parser {
     const trimmed = line.trim();
     if (trimmed === '---' || trimmed === '***' || trimmed === '___') {
       return { type: 'horizontal-rule' } as HorizontalRule;
+    }
+
+    // Check for custom container :::classname...:::
+    if (trimmed.startsWith(':::')) {
+      const container = this.parseCustomContainer(state);
+      if (container) {
+        return container;
+      }
     }
 
     // Default to paragraph
@@ -597,6 +607,49 @@ export class Parser {
   }
 
   /**
+   * Parse custom container :::classname\n...\n:::
+   */
+  private parseCustomContainer(state: ParserState): CustomContainer | null {
+    const line = state.lines[state.position];
+    const match = line.match(/^:::([a-zA-Z0-9_-]+)$/);
+
+    if (!match) {
+      return null;
+    }
+
+    const className = match[1];
+    let nextLine = state.position + 1;
+    const contentLines: string[] = [];
+
+    // Collect lines until closing :::
+    while (nextLine < state.lines.length) {
+      const currentLine = state.lines[nextLine];
+
+      if (currentLine.trim() === ':::') {
+        break;
+      }
+
+      contentLines.push(currentLine);
+      nextLine++;
+    }
+
+    // Update position to after closing :::
+    state.position = nextLine;
+
+    // Parse the container content as blocks
+    const fullContent = contentLines.join('\n');
+    const contentParser = new Parser(this.options);
+    const contentDoc = contentParser.parse(fullContent);
+    const children = contentDoc.children;
+
+    return {
+      type: 'custom-container',
+      className,
+      children,
+    };
+  }
+
+  /**
    * Parse paragraph (default block type)
    */
   private parseParagraph(state: ParserState): Paragraph {
@@ -780,6 +833,22 @@ export class Parser {
         }
       }
 
+      // Check for custom span ::class[content]::
+      if (text[i] === ':' && text[i + 1] === ':') {
+        const spanMatch = text.slice(i).match(/^::([a-zA-Z0-9_-]+)\[([^\]]*)\]::/);
+        if (spanMatch) {
+          const className = spanMatch[1];
+          const content = spanMatch[2];
+          nodes.push({
+            type: 'custom-span',
+            className,
+            children: this.parseInline(content),
+          });
+          i += spanMatch[0].length;
+          continue;
+        }
+      }
+
       // Check for footnote reference [^1] or [^label]
       if (text[i] === '[' && text[i + 1] === '^') {
         const footnoteMatch = text.slice(i).match(/^\[\^([^\]]+)\]/);
@@ -795,7 +864,7 @@ export class Parser {
       }
 
       // Default: text node
-      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~\u0000]/);
+      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:\u0000]/);
       const textLength = nextSpecial === -1 ? text.length - i : nextSpecial + 1;
 
       nodes.push({

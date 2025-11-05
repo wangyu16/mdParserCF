@@ -454,5 +454,63 @@ Paragraph with **emphasis**.
       expect(breakCount).toBe(2);
     });
   });
+
+  describe('Custom Containers', () => {
+    it('should render inline custom span as div with class', () => {
+      const markdown = 'Text with ::highlight[important]:: content.';
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('class="highlight"');
+      expect(html).toContain('important');
+    });
+
+    it('should render block custom container as section', () => {
+      const markdown = `:::note
+This is a note.
+:::`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('class="note"');
+      expect(html).toContain('This is a note');
+    });
+
+    it('should render custom container with multiple paragraphs', () => {
+      const markdown = `:::warning
+First paragraph.
+
+Second paragraph.
+:::`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('class="warning"');
+      expect(html).toContain('<p>First paragraph');
+      expect(html).toContain('Second paragraph');
+    });
+
+    it('should render inline formatting within custom span', () => {
+      const markdown = 'Text with ::highlight[**bold** text]:: here.';
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('class="highlight"');
+      expect(html).toContain('<strong>bold</strong>');
+    });
+
+    it('should render multiple custom containers', () => {
+      const markdown = `:::note
+Note.
+:::
+
+:::warning
+Warning.
+:::`;
+      const html = renderMarkdown(markdown);
+      expect((html.match(/class="note"/g) || []).length).toBe(1);
+      expect((html.match(/class="warning"/g) || []).length).toBe(1);
+    });
+
+    it('should handle hyphenated class names', () => {
+      const markdown = `:::info-box
+Info here.
+:::`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('class="info-box"');
+    });
+  });
 });
 

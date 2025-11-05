@@ -521,5 +521,78 @@ Paragraph 2.`;
       expect(breakCount).toBe(2);
     });
   });
+
+  describe('Custom Containers', () => {
+    it('should parse inline custom span with ::class[content]::', () => {
+      const markdown = 'Text with ::highlight[important]:: content.';
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      
+      const hasSpan = para.children.some((child: any) => child.type === 'custom-span');
+      expect(hasSpan).toBe(true);
+      
+      const span = para.children.find((child: any) => child.type === 'custom-span') as any;
+      expect(span.className).toBe('highlight');
+    });
+
+    it('should parse block custom container with :::class...:::', () => {
+      const markdown = `:::note
+This is a note container.
+:::`;
+      const ast = parser.parse(markdown);
+      
+      const hasContainer = ast.children.some((child: any) => child.type === 'custom-container');
+      expect(hasContainer).toBe(true);
+      
+      const container = ast.children.find((child: any) => child.type === 'custom-container') as any;
+      expect(container.className).toBe('note');
+    });
+
+    it('should parse custom container with multiple paragraphs', () => {
+      const markdown = `:::warning
+First paragraph in warning.
+
+Second paragraph in warning.
+:::`;
+      const ast = parser.parse(markdown);
+      const container = ast.children[0] as any;
+      
+      expect(container.type).toBe('custom-container');
+      expect(container.children.length).toBeGreaterThan(1);
+    });
+
+    it('should parse nested inline formatting in custom span', () => {
+      const markdown = 'Text with ::highlight[**bold** and *italic*]:: content.';
+      const ast = parser.parse(markdown);
+      const para = ast.children[0] as any;
+      
+      const span = para.children.find((child: any) => child.type === 'custom-span') as any;
+      expect(span.children.length).toBeGreaterThan(1);
+    });
+
+    it('should parse multiple custom containers', () => {
+      const markdown = `:::note
+Note content.
+:::
+
+:::warning
+Warning content.
+:::`;
+      const ast = parser.parse(markdown);
+      
+      const containers = ast.children.filter((child: any) => child.type === 'custom-container');
+      expect(containers.length).toBe(2);
+    });
+
+    it('should handle custom container with class name containing hyphens', () => {
+      const markdown = `:::info-box
+This is info.
+:::`;
+      const ast = parser.parse(markdown);
+      const container = ast.children[0] as any;
+      
+      expect(container.className).toBe('info-box');
+    });
+  });
 });
 

@@ -101,6 +101,8 @@ export class HTMLRenderer {
         return this.renderTable(block as Table);
       case 'html-block':
         return this.renderHTMLBlock(block as HTMLBlock);
+      case 'custom-container':
+        return this.renderCustomContainer(block as any);
       default:
         return '';
     }
@@ -261,6 +263,8 @@ export class HTMLRenderer {
         return (node as HTMLInline).value;
       case 'footnote-reference':
         return this.renderFootnoteReference(node as FootnoteReference);
+      case 'custom-span':
+        return this.renderCustomSpan(node as any);
       default:
         return '';
     }
@@ -379,4 +383,21 @@ export class HTMLRenderer {
     html += '</ol>\n</section>\n';
     return html;
   }
+
+  /**
+   * Render custom inline span
+   */
+  private renderCustomSpan(node: any): string {
+    const content = node.children.map((child: InlineNode) => this.renderInline(child)).join('');
+    return `<span class="${escapeHtml(node.className)}">${content}</span>`;
+  }
+
+  /**
+   * Render custom container block
+   */
+  private renderCustomContainer(node: any): string {
+    const content = node.children.map((block: BlockNode) => this.renderBlock(block)).join('');
+    return `<section class="${escapeHtml(node.className)}">\n${content}</section>\n`;
+  }
 }
+
