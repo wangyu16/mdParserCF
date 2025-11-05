@@ -868,6 +868,35 @@ export class Parser {
         }
       }
 
+      // Check for auto-links <url> or <email@example.com>
+      if (text[i] === '<') {
+        // Try URL auto-link: <http://example.com> or <https://example.com>, etc.
+        const urlAutoLinkMatch = text.slice(i).match(/^<([a-zA-Z][a-zA-Z0-9+.\-]*:\/\/[^>]+)>/);
+        if (urlAutoLinkMatch) {
+          const url = urlAutoLinkMatch[1];
+          nodes.push({
+            type: 'link',
+            url,
+            children: [{ type: 'text', value: url }],
+          });
+          i += urlAutoLinkMatch[0].length;
+          continue;
+        }
+
+        // Try email auto-link: <user@example.com>
+        const emailAutoLinkMatch = text.slice(i).match(/^<([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)>/);
+        if (emailAutoLinkMatch) {
+          const email = emailAutoLinkMatch[1];
+          nodes.push({
+            type: 'link',
+            url: `mailto:${email}`,
+            children: [{ type: 'text', value: email }],
+          });
+          i += emailAutoLinkMatch[0].length;
+          continue;
+        }
+      }
+
       // Check for images ![alt](url "title")
       if (text[i] === '!' && text[i + 1] === '[') {
         // Match ![alt](url) or ![alt](url "title")
@@ -1020,7 +1049,7 @@ export class Parser {
       }
 
       // Default: text node
-      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=^\u0000]/);
+      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=^\u0000<]/);
       const textLength = nextSpecial === -1 ? text.length - i : nextSpecial + 1;
 
       nodes.push({

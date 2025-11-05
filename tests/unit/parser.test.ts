@@ -331,6 +331,39 @@ const x = 5;
       const link = para.children.find((child: any) => child.type === 'link');
       expect(link).toBeUndefined();
     });
+
+    it('should parse URL auto-link', () => {
+      const ast = parser.parse('Visit <https://example.com>');
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link') as any;
+      expect(link).toBeDefined();
+      expect(link.url).toBe('https://example.com');
+      expect(link.children[0].value).toBe('https://example.com');
+    });
+
+    it('should parse email auto-link', () => {
+      const ast = parser.parse('Contact: <user@example.com>');
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link') as any;
+      expect(link).toBeDefined();
+      expect(link.url).toBe('mailto:user@example.com');
+      expect(link.children[0].value).toBe('user@example.com');
+    });
+
+    it('should parse URL auto-link with FTP protocol', () => {
+      const ast = parser.parse('<ftp://files.example.com>');
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link') as any;
+      expect(link).toBeDefined();
+      expect(link.url).toBe('ftp://files.example.com');
+    });
+
+    it('should not create auto-link for invalid format', () => {
+      const ast = parser.parse('<not-a-valid-link>');
+      const para = ast.children[0] as any;
+      const link = para.children.find((child: any) => child.type === 'link');
+      expect(link).toBeUndefined();
+    });
   });
 
   describe('Images', () => {

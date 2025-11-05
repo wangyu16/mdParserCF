@@ -277,6 +277,24 @@ const x = 5;
       const html = renderMarkdown(markdown);
       expect(html).toContain('<a href="https://example.com">');
     });
+
+    it('should render URL auto-link', () => {
+      const html = renderMarkdown('<https://example.com>');
+      expect(html).toContain('<a href="https://example.com">');
+      expect(html).toContain('https://example.com</a>');
+    });
+
+    it('should render email auto-link', () => {
+      const html = renderMarkdown('<user@example.com>');
+      expect(html).toContain('<a href="mailto:user@example.com">');
+      expect(html).toContain('user@example.com</a>');
+    });
+
+    it('should render FTP auto-link', () => {
+      const html = renderMarkdown('<ftp://files.example.com/document.pdf>');
+      expect(html).toContain('<a href="ftp://files.example.com/document.pdf">');
+      expect(html).toContain('ftp://files.example.com/document.pdf</a>');
+    });
   });
 
   describe('Images', () => {
