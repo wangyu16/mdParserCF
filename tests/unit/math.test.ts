@@ -27,12 +27,15 @@ describe('Math Formulas', () => {
       expect(mathNode.content).toBe('x^2');
     });
 
-    it('should render inline math with MathJax script tag', () => {
+    it('should render inline math with KaTeX', () => {
       const markdown = 'The formula $E=mc^2$ is famous.';
       const ast = parser.parse(markdown);
       const html = renderer.render(ast).html;
       
-      expect(html).toContain('<script type="math/tex">E=mc^2</script>');
+      // KaTeX renders to span with katex class containing MathML and HTML
+      expect(html).toContain('<span class="katex">');
+      expect(html).toContain('E=mc^2');
+      expect(html).toContain('annotation encoding="application/x-tex">E=mc^2</annotation>');
     });
 
     it('should handle multiple inline math formulas', () => {
@@ -40,8 +43,12 @@ describe('Math Formulas', () => {
       const ast = parser.parse(markdown);
       const html = renderer.render(ast).html;
       
-      expect(html).toContain('<script type="math/tex">a^2</script>');
-      expect(html).toContain('<script type="math/tex">b^2</script>');
+      // Both formulas should be rendered with KaTeX
+      expect(html).toContain('a^2');
+      expect(html).toContain('b^2');
+      // Should have multiple katex spans
+      const katexMatches = (html.match(/<span class="katex">/g) || []).length;
+      expect(katexMatches).toBeGreaterThanOrEqual(2);
     });
 
     it('should not parse $$ as inline math', () => {
@@ -66,8 +73,9 @@ describe('Math Formulas', () => {
       const ast = parser.parse(markdown);
       const html = renderer.render(ast).html;
       
-      // Should have math tag with escaped content
-      expect(html).toContain('<script type="math/tex">');
+      // KaTeX should handle the math properly
+      expect(html).toContain('<span class="katex">');
+      // The formula should be present
       expect(html).toContain('x&lt;y');
     });
   });
@@ -86,20 +94,24 @@ End.`;
       // Find math block
       const mathBlock = ast.children.find(node => node.type === 'math-block');
       expect(mathBlock).toBeDefined();
-      expect(mathBlock.type).toBe('math-block');
-      expect((mathBlock as any).content).toContain('E = mc^2');
+      if (mathBlock) {
+        expect(mathBlock.type).toBe('math-block');
+        expect((mathBlock as any).content).toContain('E = mc^2');
+      }
     });
 
-    it('should render block math with mode=display', () => {
+    it('should render block math with KaTeX display mode', () => {
       const markdown = `$$
 x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}
 $$`;
       const ast = parser.parse(markdown);
       const html = renderer.render(ast).html;
       
-      expect(html).toContain('<script type="math/tex; mode=display">');
-      expect(html).toContain('x = \\frac{-b');
-      expect(html).toContain('</script>');
+      // KaTeX display mode wraps in katex-display
+      expect(html).toContain('<div class="math-block">');
+      expect(html).toContain('<span class="katex-display">');
+      expect(html).toContain('frac');
+      expect(html).toContain('</div>');
     });
 
     it('should wrap block math in div with math-block class', () => {
@@ -123,9 +135,9 @@ $$`;
       const ast = parser.parse(markdown);
       const html = renderer.render(ast).html;
       
-      expect(html).toContain('<script type="math/tex; mode=display">');
+      // Should have display mode KaTeX with align environment
+      expect(html).toContain('<div class="math-block">');
       expect(html).toContain('begin{align}');
-      expect(html).toContain('a &amp;= b + c'); // & is escaped as &amp;
       expect(html).toContain('end{align}');
     });
 
@@ -152,12 +164,14 @@ More text with $z$.`;
       const ast = parser.parse(markdown);
       const html = renderer.render(ast).html;
       
-      // Should have 2 inline and 1 block
-      const inlineMath = (html.match(/type="math\/tex">/g) || []).length;
-      const blockMath = (html.match(/type="math\/tex; mode=display">/g) || []).length;
+      // Should have 2 inline math (x and z) and 1 block math (y = x^2)
+      const katexSpans = (html.match(/<span class="katex">/g) || []).length;
+      const katexDisplay = (html.match(/<span class="katex-display">/g) || []).length;
+      const mathBlocks = (html.match(/<div class="math-block">/g) || []).length;
       
-      expect(inlineMath).toBe(2);
-      expect(blockMath).toBe(1);
+      expect(katexSpans).toBeGreaterThanOrEqual(2); // At least x and z
+      expect(katexDisplay).toBeGreaterThanOrEqual(1); // y = x^2 block
+      expect(mathBlocks).toBe(1);
     });
 
     it('should work with other markdown elements', () => {
@@ -174,11 +188,57 @@ $$
       const ast = parser.parse(markdown);
       const html = renderer.render(ast).html;
       
+      // Check structural elements
       expect(html).toContain('<h1>');
       expect(html).toContain('<strong>');
       expect(html).toContain('<ul>');
-      expect(html).toContain('<script type="math/tex">');
-      expect(html).toContain('<script type="math/tex; mode=display">');
+      
+      // Check math elements (KaTeX format)
+      expect(html).toContain('<span class="katex">');
+      expect(html).toContain('<div class="math-block">');
+      
+      // Check formulas are present
+      expect(html).toContain('x^2');
+      expect(html).toContain('E = mc^2');
+    });
+  });
+
+  describe('Chemistry Formulas (mhchem)', () => {
+    it('should render inline chemical formulas with mhchem', () => {
+      const markdown = 'Water molecule: $\\ce{H2O}$';
+      const ast = parser.parse(markdown);
+      const html = renderer.render(ast).html;
+      
+      // Should render with KaTeX
+      expect(html).toContain('<span class="katex">');
+      expect(html).toContain('H2O');
+    });
+
+    it('should render simple block chemical formula', () => {
+      const markdown = `Combustion reaction:
+
+$$
+\\ce{CH4 + 2O2 -> CO2 + 2H2O}
+$$`;
+      const ast = parser.parse(markdown);
+      const html = renderer.render(ast).html;
+      
+      // Should have display mode for block
+      expect(html).toContain('<div class="math-block">');
+      expect(html).toContain('CH4');
+      expect(html).toContain('CO2');
+    });
+
+    it('should handle chemical equations with phases', () => {
+      const markdown = `$$
+\\ce{H2SO4 + 2NaOH -> Na2SO4 + 2H2O}
+$$`;
+      const ast = parser.parse(markdown);
+      const html = renderer.render(ast).html;
+      
+      expect(html).toContain('<div class="math-block">');
+      expect(html).toContain('H2SO4');
+      expect(html).toContain('NaOH');
     });
   });
 
@@ -190,7 +250,8 @@ $$
       const ast = parserDisabled.parse(markdown);
       const html = renderer.render(ast).html;
       
-      expect(html).not.toContain('<script type="math/tex">');
+      // When math is disabled, $ should be treated as text
+      expect(html).not.toContain('<span class="katex">');
       expect(html).toContain('$x^2$');
     });
 

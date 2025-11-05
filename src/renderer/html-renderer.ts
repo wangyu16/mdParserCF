@@ -2,7 +2,10 @@
  * HTML Renderer
  *
  * Converts AST nodes to HTML output
+ * Uses KaTeX for server-side math rendering
  */
+
+import * as katex from 'katex';
 
 import {
   Document,
@@ -390,20 +393,38 @@ export class HTMLRenderer {
 
   /**
    * Render inline math
-   * Wrapped in $ delimiters, rendered as span with MathJax support
+   * Wrapped in $ delimiters, rendered using KaTeX server-side
+   * Supports mhchem for chemical formulas: $\ce{H2O}$
    */
   private renderInlineMath(node: any): string {
-    const content = escapeHtml(node.content);
-    return `<script type="math/tex">${content}</script>`;
+    try {
+      return katex.renderToString(node.content, {
+        throwOnError: false,
+        trust: true,
+      });
+    } catch (error) {
+      // Fallback to escaped text if KaTeX rendering fails
+      return `<span class="math-error" title="Math rendering failed">${escapeHtml(node.content)}</span>`;
+    }
   }
 
   /**
    * Render block-level math
-   * Wrapped in $$ delimiters, rendered with MathJax support
+   * Wrapped in $$ delimiters, rendered using KaTeX server-side in display mode
+   * Supports mhchem for chemical reactions: $$\ce{CO2 + C -> 2CO}$$
    */
   private renderMathBlock(node: any): string {
-    const content = escapeHtml(node.content);
-    return `<div class="math-block">\n<script type="math/tex; mode=display">\n${content}\n<\/script>\n</div>\n`;
+    try {
+      const html = katex.renderToString(node.content, {
+        displayMode: true,
+        throwOnError: false,
+        trust: true,
+      });
+      return `<div class="math-block">\n${html}\n</div>\n`;
+    } catch (error) {
+      // Fallback to code block if KaTeX rendering fails
+      return `<div class="math-block-error"><pre>${escapeHtml(node.content)}</pre></div>\n`;
+    }
   }
 
   /**

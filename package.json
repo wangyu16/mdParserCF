@@ -40,6 +40,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/katex": "^0.16.7",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitest/ui": "^2.0.0",
@@ -51,6 +52,7 @@
     "vitest": "^2.0.0"
   },
   "dependencies": {
+    "katex": "^0.16.25",
     "wrangler": "^3.0.0"
   },
   "optionalDependencies": {
