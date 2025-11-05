@@ -22,7 +22,6 @@ import {
   TableCell,
   FootnoteDefinition,
   CustomContainer,
-  CustomSpan,
   ParserOptions,
   ParserState,
 } from './ast-types';

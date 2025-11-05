@@ -10,7 +10,6 @@ import {
   InlineNode,
   Paragraph,
   Heading,
-  HorizontalRule,
   BlockQuote,
   UnorderedList,
   OrderedList,
@@ -21,8 +20,6 @@ import {
   TableRow,
   TableCell,
   Text,
-  SoftLineBreak,
-  HardLineBreak,
   Emphasis,
   Strong,
   StrongEmphasis,
@@ -47,14 +44,8 @@ import { escapeHtml } from './escaper';
  * HTML Renderer - converts AST to HTML
  */
 export class HTMLRenderer {
-  private options: RendererOptions;
-
-  constructor(options: RendererOptions = {}) {
-    this.options = {
-      highlightCode: false,
-      sanitizeHtml: false,
-      ...options,
-    };
+  constructor(_options: RendererOptions = {}) {
+    // Options reserved for future use (syntax highlighting, sanitization, etc.)
   }
 
   /**
