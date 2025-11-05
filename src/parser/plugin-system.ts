@@ -11,6 +11,16 @@
 
 import { InlineNode, BlockNode } from './ast-types';
 
+// Import SmilesDrawer for chemical structure rendering
+// Using dynamic import with any type for compatibility
+let SmilesDrawer: any;
+try {
+  SmilesDrawer = require('smiles-drawer');
+} catch (e) {
+  // SmilesDrawer not available in some environments
+  SmilesDrawer = null;
+}
+
 /**
  * Plugin handler result
  */
@@ -180,18 +190,57 @@ export const emojiPlugin: Plugin = {
 /**
  * SMILES (chemical notation) plugin
  * Syntax: {{smiles CCCO}}
+ * 
+ * Note: SmilesDrawer requires a DOM/Canvas environment which isn't available
+ * in server-side Node.js. For production use, this plugin generates placeholder
+ * elements that can be rendered client-side with SmilesDrawer.js loaded in the browser.
+ * 
+ * The generated HTML includes:
+ * - Canvas element with data-smiles attribute
+ * - Script loading SmilesDrawer library
+ * - Client-side rendering instructions
  */
 export const smilesPlugin: Plugin = {
   name: 'smiles',
-  pattern: /\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@]+)\}\}/g,
+  pattern: /\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@]+)\}\}/);
+    const match = content.match(/\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/);
     if (!match || !match[1]) {
       return { type: 'fallthrough' };
     }
 
     const smilesString = match[1];
-    const html = `<span class="smiles" data-smiles="${smilesString}" title="SMILES: ${smilesString}">[${smilesString}]</span>`;
+    const canvasId = `smiles-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Generate HTML with canvas and client-side rendering script
+    // This allows SmilesDrawer to render the structure when loaded in browser
+    const html = `<div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
+<canvas id="${canvasId}" data-smiles="${smilesString}" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<p style="font-size: 0.85em; color: #666; margin: 0.5em 0;">
+  <code>${smilesString}</code>
+</p>
+<script>
+// Client-side SmilesDrawer rendering
+if (typeof SmilesDrawer !== 'undefined') {
+  try {
+    const canvas = document.getElementById('${canvasId}');
+    const smiles = canvas.dataset.smiles;
+    const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
+    SmilesDrawer.parse(smiles, function(tree) {
+      drawer.draw(tree, canvas, 'light', false);
+    }, function(error) {
+      console.error('SMILES parsing error:', error);
+      const ctx = canvas.getContext('2d');
+      ctx.font = '12px sans-serif';
+      ctx.fillStyle = '#d00';
+      ctx.fillText('Invalid SMILES', 10, 20);
+    });
+  } catch (e) {
+    console.error('Error rendering SMILES:', e);
+  }
+}
+</script>
+</div>`;
 
     return {
       type: 'rendered',

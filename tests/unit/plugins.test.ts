@@ -135,22 +135,87 @@ describe('Plugin System', () => {
         expect(smilesPlugin.type).toBe('inline');
       });
 
-      it('should render SMILES notation', () => {
+      it('should render SMILES notation with canvas placeholder', () => {
         const result = smilesPlugin.handler('{{smiles CCCO}}');
         
         expect(result.type).toBe('rendered');
         const node = result.content as any;
         expect(node.type).toBe('html-inline');
         expect(node.value).toContain('CCCO');
-        expect(node.value).toContain('smiles');
+        
+        // Should contain canvas element for client-side rendering
+        expect(node.value).toContain('canvas');
+        expect(node.value).toContain('data-smiles');
+        expect(node.value).toContain('SmilesDrawer');
       });
 
-      it('should escape SMILES content', () => {
+      it('should handle simple ethanol SMILES', () => {
+        const result = smilesPlugin.handler('{{smiles CCO}}');
+        
+        expect(result.type).toBe('rendered');
+        const node = result.content as any;
+        expect(node.value).toContain('CCO');
+        expect(node.value).toContain('canvas');
+      });
+
+      it('should handle benzene ring SMILES', () => {
+        const result = smilesPlugin.handler('{{smiles c1ccccc1}}');
+        
+        expect(result.type).toBe('rendered');
+        const node = result.content as any;
+        expect(node.value).toContain('c1ccccc1');
+        expect(node.value).toContain('canvas');
+      });
+
+      it('should handle double bonds in SMILES', () => {
         const result = smilesPlugin.handler('{{smiles C=C}}');
         
         expect(result.type).toBe('rendered');
         const node = result.content as any;
         expect(node.value).toContain('C=C');
+        expect(node.value).toContain('canvas');
+      });
+
+      it('should handle brackets in SMILES', () => {
+        const result = smilesPlugin.handler('{{smiles CC[CH3]}}');
+        
+        expect(result.type).toBe('rendered');
+        const node = result.content as any;
+        expect(node.value).toContain('CC[CH3]');
+        expect(node.value).toContain('canvas');
+      });
+
+      it('should handle cyclohexane SMILES', () => {
+        const result = smilesPlugin.handler('{{smiles C1CCCCC1}}');
+        
+        expect(result.type).toBe('rendered');
+        const node = result.content as any;
+        expect(node.value).toContain('C1CCCCC1');
+        expect(node.value).toContain('canvas');
+      });
+
+      it('should fallthrough on missing SMILES content', () => {
+        const result = smilesPlugin.handler('{{smiles}}');
+        
+        expect(result.type).toBe('fallthrough');
+      });
+
+      it('should generate unique canvas IDs', () => {
+        const result1 = smilesPlugin.handler('{{smiles CCO}}');
+        const result2 = smilesPlugin.handler('{{smiles C=C}}');
+        
+        const node1 = result1.content as any;
+        const node2 = result2.content as any;
+        
+        // Extract canvas IDs
+        const id1Match = node1.value.match(/id="(smiles-\w+)"/);
+        const id2Match = node2.value.match(/id="(smiles-\w+)"/);
+        
+        expect(id1Match).toBeTruthy();
+        expect(id2Match).toBeTruthy();
+        if (id1Match && id2Match) {
+          expect(id1Match[1]).not.toBe(id2Match[1]);
+        }
       });
     });
 
