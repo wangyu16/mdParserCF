@@ -398,6 +398,22 @@ Reference to complex footnote[^complex].
     
     Third paragraph with `code` and **bold**.
 
+### Multi-Paragraph Footnote Example 2
+This document[^doc1] provides comprehensive information about markdown parsing.
+
+[^doc1]: This is a detailed footnote with multiple paragraphs.
+
+    The parser handles continuation lines that are indented with at least 4 spaces or a tab character.
+    
+    Each blank line followed by indented content creates a new paragraph within the same footnote. This allows for rich, structured footnotes with multiple thoughts.
+    
+    Footnotes can contain:
+    - Lists
+    - **Bold text**
+    - *Italic formatting*
+    - `Code snippets`
+    - And other inline elements
+
 ### Reused Footnotes
 First reference[^shared].
 Second reference to same footnote[^shared].
