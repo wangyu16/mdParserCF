@@ -11,16 +11,6 @@
 
 import { InlineNode, BlockNode } from './ast-types';
 
-// Import SmilesDrawer for chemical structure rendering
-// Using dynamic import with any type for compatibility
-let SmilesDrawer: any;
-try {
-  SmilesDrawer = require('smiles-drawer');
-} catch (e) {
-  // SmilesDrawer not available in some environments
-  SmilesDrawer = null;
-}
-
 /**
  * Plugin handler result
  */
