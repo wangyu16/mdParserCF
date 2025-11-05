@@ -318,7 +318,16 @@ export class HTMLRenderer {
     const src = escapeHtml(node.url);
     const alt = escapeHtml(node.alt);
     const title = node.title ? ` title="${escapeHtml(node.title)}"` : '';
-    return `<img src="${src}" alt="${alt}"${title} />`;
+    
+    // Build custom attributes string
+    let customAttrs = '';
+    if (node.attributes) {
+      for (const [key, value] of Object.entries(node.attributes)) {
+        customAttrs += ` ${key}="${escapeHtml(value)}"`;
+      }
+    }
+    
+    return `<img src="${src}" alt="${alt}"${title}${customAttrs} />`;
   }
 
   /**

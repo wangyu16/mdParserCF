@@ -808,13 +808,42 @@ export class Parser {
           const alt = imgMatch[1];
           const url = imgMatch[2];
           const title = imgMatch[3];
-          nodes.push({
+          
+          // Check if HTML comment immediately follows (no space)
+          const remainingText = text.slice(i + imgMatch[0].length);
+          const commentMatch = remainingText.match(/^<!--\s*(.*?)\s*-->/);
+          
+          const imageNode: any = {
             type: 'image',
             url,
             alt,
             title,
-          });
-          i += imgMatch[0].length;
+          };
+          
+          if (commentMatch) {
+            // Parse attributes from HTML comment
+            const attributesStr = commentMatch[1];
+            const attributes: Record<string, string> = {};
+            
+            // Match attribute patterns: key="value" or key='value'
+            // Attribute names can contain letters, numbers, hyphens, and underscores
+            const attrRegex = /([\w-]+)=['"]([^'"]*)['"]/g;
+            let match;
+            while ((match = attrRegex.exec(attributesStr)) !== null) {
+              attributes[match[1]] = match[2];
+            }
+            
+            if (Object.keys(attributes).length > 0) {
+              imageNode.attributes = attributes;
+              i += imgMatch[0].length + commentMatch[0].length;
+            } else {
+              i += imgMatch[0].length;
+            }
+          } else {
+            i += imgMatch[0].length;
+          }
+          
+          nodes.push(imageNode);
           continue;
         }
       }

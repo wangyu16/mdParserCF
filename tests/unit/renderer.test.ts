@@ -259,6 +259,41 @@ const x = 5;
       const html = renderMarkdown('![alt](img.png)');
       expect(html).toContain(' />');
     });
+
+    it('should render image with custom attributes from HTML comment', () => {
+      const html = renderMarkdown('![alt text](image.png)<!-- class="responsive-img" style="width: 100%;" -->');
+      expect(html).toContain('class="responsive-img"');
+      expect(html).toContain('style="width: 100%;"');
+    });
+
+    it('should render image with title and custom attributes', () => {
+      const html = renderMarkdown('![alt](image.png "Title")<!-- data-id="123" class="thumb" -->');
+      expect(html).toContain('title="Title"');
+      expect(html).toContain('data-id="123"');
+      expect(html).toContain('class="thumb"');
+    });
+
+    it('should not include attributes when HTML comment has space before it', () => {
+      const html = renderMarkdown('![alt](image.png) <!-- class="test" -->');
+      expect(html).not.toContain('class="test"');
+    });
+
+    it('should handle single-quoted attributes in rendering', () => {
+      const html = renderMarkdown("![alt](image.png)<!-- class='my-class' -->");
+      expect(html).toContain('class="my-class"');
+    });
+
+    it('should properly escape special characters in attributes', () => {
+      const html = renderMarkdown('![alt](image.png)<!-- data-tooltip="<script>" -->');
+      expect(html).toContain('data-tooltip="&lt;script&gt;"');
+    });
+
+    it('should handle multiple attributes', () => {
+      const html = renderMarkdown('![alt](image.png)<!-- width="100" height="50" data-lazy="true" -->');
+      expect(html).toContain('width="100"');
+      expect(html).toContain('height="50"');
+      expect(html).toContain('data-lazy="true"');
+    });
   });
 
   describe('Lists', () => {

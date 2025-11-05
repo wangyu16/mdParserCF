@@ -297,6 +297,48 @@ const x = 5;
       const img = para.children.find((child: any) => child.type === 'image') as any;
       expect(img.title).toBe('Image Title');
     });
+
+    it('should parse image with custom attributes from HTML comment', () => {
+      const ast = parser.parse('![alt text](image.png)<!-- class="responsive-img" style="width: 100%;" -->');
+      const para = ast.children[0] as any;
+      const img = para.children.find((child: any) => child.type === 'image') as any;
+      expect(img.url).toBe('image.png');
+      expect(img.alt).toBe('alt text');
+      expect(img.attributes).toBeDefined();
+      expect(img.attributes.class).toBe('responsive-img');
+      expect(img.attributes.style).toBe('width: 100%;');
+    });
+
+    it('should parse image with title and custom attributes', () => {
+      const ast = parser.parse('![alt](image.png "Title")<!-- class="img-class" data-id="123" -->');
+      const para = ast.children[0] as any;
+      const img = para.children.find((child: any) => child.type === 'image') as any;
+      expect(img.title).toBe('Title');
+      expect(img.attributes?.class).toBe('img-class');
+      expect(img.attributes?.['data-id']).toBe('123');
+    });
+
+    it('should not treat HTML comment with space as attributes', () => {
+      const ast = parser.parse('![alt](image.png) <!-- class="test" -->');
+      const para = ast.children[0] as any;
+      const img = para.children.find((child: any) => child.type === 'image') as any;
+      expect(img.attributes).toBeUndefined();
+    });
+
+    it('should handle single-quoted attributes', () => {
+      const ast = parser.parse("![alt](image.png)<!-- class='my-class' -->");
+      const para = ast.children[0] as any;
+      const img = para.children.find((child: any) => child.type === 'image') as any;
+      expect(img.attributes?.class).toBe('my-class');
+    });
+
+    it('should handle multiple attributes with mixed quotes', () => {
+      const ast = parser.parse('![alt](image.png)<!-- width="100" height=\'50\' -->');
+      const para = ast.children[0] as any;
+      const img = para.children.find((child: any) => child.type === 'image') as any;
+      expect(img.attributes?.width).toBe('100');
+      expect(img.attributes?.height).toBe('50');
+    });
   });
 
   describe('Lists', () => {
