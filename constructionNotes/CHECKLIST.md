@@ -249,6 +249,131 @@ npm run deploy:staging  # Deploy to staging
 
 **Note**: Subscript syntax conflicts with strikethrough delimiter - may need alternative or special handling
 
+### ✅ Phase 1 Extensions - Priority Order
+
+#### Extension #1: Tables (GFM)
+**Status**: ✅ COMPLETE  
+**Complexity**: Medium  
+**Tests**: 18 (9 parser + 9 renderer)  
+**Features**: Full table support with alignment
+
+- [x] Add Table, TableRow, TableCell AST types
+- [x] Implement table parsing in `src/parser/parser.ts`
+- [x] Add table rendering methods
+- [x] Write 9+ parser/renderer tests
+- [x] Update documentation
+
+#### Extension #2: Strikethrough
+**Status**: ✅ COMPLETE  
+**Complexity**: Low  
+**Tests**: 8 (4 parser + 4 renderer)  
+**Features**: `~~text~~` → `<del>text</del>`
+
+- [x] Add Strikethrough AST type
+- [x] Implement parsing in parseInline()
+- [x] Add rendering methods (already existed)
+- [x] Write 4+ tests
+- [x] Update documentation
+
+#### Extension #3: Footnotes
+**Status**: ✅ COMPLETE  
+**Complexity**: Medium  
+**Tests**: 11 (6 parser + 5 renderer)  
+**Features**: `[^label]` references and definitions
+
+- [x] Add Footnote AST types
+- [x] Implement footnote parsing and collection
+- [x] Add footnote rendering
+- [x] Write 6+ tests
+- [x] Update documentation
+
+#### Extension #4: Line Breaks
+**Status**: ✅ COMPLETE  
+**Complexity**: Low  
+**Tests**: 6 (3 parser + 3 renderer)  
+**Features**: 2+ trailing spaces → `<br />`
+
+- [x] Implement hard line break detection
+- [x] Add soft line break handling
+- [x] Add rendering
+- [x] Write 3+ tests
+- [x] Update documentation
+
+#### Extension #5: Custom Containers
+**Status**: ✅ COMPLETE  
+**Complexity**: Medium  
+**Tests**: 12 (6 parser + 6 renderer)  
+**Features**: `:::class...:::` and `::class[content]::`
+
+- [x] Add CustomContainer and CustomSpan types
+- [x] Implement block container parsing
+- [x] Implement inline span parsing
+- [x] Add rendering methods
+- [x] Write 6+ tests
+- [x] Update documentation
+
+#### Extension #6: Inline Styles
+**Status**: ✅ COMPLETE  
+**Complexity**: Medium  
+**Tests**: 25 (13 parser + 12 renderer)  
+**Features**: Underline, Highlight, Superscript, Subscript
+
+- [x] Verify AST types (already existed)
+- [x] Implement ++text++ parsing (underline)
+- [x] Implement ==text== parsing (highlight)
+- [x] Implement ^text^ parsing (superscript)
+- [x] Implement ~text~ parsing (subscript)
+- [x] Update text regex for special chars
+- [x] Add rendering methods (already existed)
+- [x] Write 13+ tests
+- [x] Update documentation
+
+#### Extension #7: Reference-Style Links
+**Status**: ⏳ Ready to implement  
+**Complexity**: Medium-High  
+**Estimated Tests**: 6-8 tests  
+**Features**: `[text][ref]` and `[ref]: url` syntax
+
+- [ ] Design reference storage in parser state
+- [ ] Implement `[text][ref]` detection in parseInline()
+- [ ] Implement `[ref]: url` block parsing
+- [ ] Add rendering with reference resolution
+- [ ] Write 6+ tests
+- [ ] Update documentation
+
+#### Extension #8: Auto-Links
+**Status**: Planned  
+**Complexity**: Low  
+**Estimated Tests**: 4-6 tests  
+**Features**: `<url>` and `<email@example.com>`
+
+- [ ] Implement auto-link detection
+- [ ] Add rendering
+- [ ] Write 4+ tests
+- [ ] Update documentation
+
+#### Extension #9: Better List Nesting
+**Status**: Planned  
+**Complexity**: Medium  
+**Estimated Tests**: 4-6 tests  
+**Features**: Improved nested list handling
+
+- [ ] Analyze current list parsing
+- [ ] Implement proper indentation handling
+- [ ] Add nesting support
+- [ ] Write 4+ tests
+
+#### Extension #10: GitHub Actions CI/CD
+**Status**: Planned  
+**Complexity**: Low  
+**Features**: Automated testing and deployment
+
+- [ ] Create `.github/workflows/test.yml`
+- [ ] Create `.github/workflows/lint.yml`
+- [ ] Create `.github/workflows/deploy.yml`
+- [ ] Setup coverage reporting
+- [ ] Add status badges to README
+
 ### ⏳ Phase 1 Priority Tasks
 
 #### High Priority - Core Markdown Gaps
@@ -278,11 +403,17 @@ See `constructionNotes/MARKDOWN_SPEC_COMPLIANCE.md` for detailed feature matrix!
 
 | Phase | Component | Tests | Status | Pass Rate |
 |-------|-----------|-------|--------|-----------|
-| Core | Parser | 44 | ✅ | 100% |
-| Core | Renderer | 42 | ✅ | 100% |
+| Core | Parser | 35 | ✅ | 100% |
+| Core | Renderer | 33 | ✅ | 100% |
 | Ext #1 | Tables | 18 | ✅ | 100% |
 | Ext #2 | Strikethrough | 8 | ✅ | 100% |
-| **Total** | **All** | **94** | ✅ | **100%** |
+| Ext #3 | Footnotes | 11 | ✅ | 100% |
+| Ext #4 | Line Breaks | 6 | ✅ | 100% |
+| Ext #5 | Custom Containers | 12 | ✅ | 100% |
+| Ext #6 | Inline Styles | 25 | ✅ | 100% |
+| **Total** | **All** | **152** | ✅ | **100%** |
+
+**Progress**: 60% of Phase 1 Extensions (6/10 complete)
 
 ---
 
