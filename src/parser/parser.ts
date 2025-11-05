@@ -22,6 +22,7 @@ import {
   TableCell,
   FootnoteDefinition,
   CustomContainer,
+  MathBlock,
   ParserOptions,
   ParserState,
 } from './ast-types';
@@ -109,6 +110,14 @@ export class Parser {
     // Skip empty lines
     if (line.trim() === '') {
       return null;
+    }
+
+    // Check for math block (block-level math with $$)
+    if (this.options.enableMath && line.trim().startsWith('$$')) {
+      const mathBlock = this.parseMathBlock(state);
+      if (mathBlock) {
+        return mathBlock;
+      }
     }
 
     // Try each block type in precedence order
@@ -265,6 +274,46 @@ export class Parser {
     return {
       type: 'code-block',
       content: lines.join('\n').replace(/\n\s*$/, ''), // Remove trailing empty lines
+    };
+  }
+
+  /**
+   * Parse math block ($$...$$)
+   * Block-level math is delimited by $$ on separate lines
+   */
+  private parseMathBlock(state: ParserState): MathBlock | null {
+    const line = state.lines[state.position];
+
+    if (!line.trim().startsWith('$$')) {
+      return null;
+    }
+
+    const lines: string[] = [];
+    let currentLine = state.position + 1;
+    let foundClosing = false;
+
+    // Find closing $$
+    while (currentLine < state.lines.length) {
+      const currentLineStr = state.lines[currentLine];
+
+      if (currentLineStr.trim().startsWith('$$')) {
+        foundClosing = true;
+        state.position = currentLine;
+        break;
+      }
+
+      lines.push(currentLineStr);
+      currentLine++;
+    }
+
+    if (!foundClosing) {
+      // If no closing delimiter, treat as paragraph
+      return null;
+    }
+
+    return {
+      type: 'math-block',
+      content: lines.join('\n').trim(),
     };
   }
 
@@ -751,6 +800,23 @@ export class Parser {
         continue;
       }
 
+      // Check for inline math $...$
+      if (this.options.enableMath && text[i] === '$' && text[i + 1] !== '$') {
+        const closingIndex = text.indexOf('$', i + 1);
+        if (closingIndex !== -1 && closingIndex > i + 1) {
+          const content = text.slice(i + 1, closingIndex);
+          // Ensure it's not empty and doesn't contain newlines
+          if (content.length > 0 && !content.includes('\n')) {
+            nodes.push({
+              type: 'inline-math',
+              content,
+            });
+            i = closingIndex + 1;
+            continue;
+          }
+        }
+      }
+
       // Check for hard line break marker (null character + newline)
       if (text[i] === '\u0000' && text[i + 1] === '\n') {
         nodes.push({
@@ -1048,7 +1114,7 @@ export class Parser {
       }
 
       // Default: text node
-      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=^\u0000<]/);
+      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=$^\u0000<]/);
       const textLength = nextSpecial === -1 ? text.length - i : nextSpecial + 1;
 
       nodes.push({

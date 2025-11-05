@@ -92,6 +92,8 @@ export class HTMLRenderer {
         return this.renderTable(block as Table);
       case 'html-block':
         return this.renderHTMLBlock(block as HTMLBlock);
+      case 'math-block':
+        return this.renderMathBlock(block as any);
       case 'custom-container':
         return this.renderCustomContainer(block as any);
       default:
@@ -250,6 +252,8 @@ export class HTMLRenderer {
         return this.renderSuperscript(node as Superscript);
       case 'subscript':
         return this.renderSubscript(node as Subscript);
+      case 'inline-math':
+        return this.renderInlineMath(node as any);
       case 'html-inline':
         return (node as HTMLInline).value;
       case 'footnote-reference':
@@ -382,6 +386,24 @@ export class HTMLRenderer {
     }
     html += '</ol>\n</section>\n';
     return html;
+  }
+
+  /**
+   * Render inline math
+   * Wrapped in $ delimiters, rendered as span with MathJax support
+   */
+  private renderInlineMath(node: any): string {
+    const content = escapeHtml(node.content);
+    return `<script type="math/tex">${content}</script>`;
+  }
+
+  /**
+   * Render block-level math
+   * Wrapped in $$ delimiters, rendered with MathJax support
+   */
+  private renderMathBlock(node: any): string {
+    const content = escapeHtml(node.content);
+    return `<div class="math-block">\n<script type="math/tex; mode=display">\n${content}\n<\/script>\n</div>\n`;
   }
 
   /**

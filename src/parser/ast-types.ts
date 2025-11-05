@@ -42,7 +42,8 @@ export type BlockNode =
   | FencedCodeBlock
   | Table
   | CustomContainer
-  | HTMLBlock;
+  | HTMLBlock
+  | MathBlock;
 
 /**
  * Union type for all inline elements
@@ -65,7 +66,8 @@ export type InlineNode =
   | Subscript
   | CustomSpan
   | HTMLInline
-  | FootnoteReference;
+  | FootnoteReference
+  | InlineMath;
 
 // ========================================
 // BLOCK-LEVEL NODES
