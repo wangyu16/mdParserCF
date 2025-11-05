@@ -1,2 +1,260 @@
 # mdParserCF
-Markdown parser deployed on CloutFlare workers. 
+
+A comprehensive, customizable Markdown parser designed for deployment on Cloudflare Workers with full local development support.
+
+## ✨ Features
+
+- **Complete Markdown Support** - All standard markdown elements plus custom extensions
+- **Cloudflare Workers Ready** - Optimized for serverless deployment
+- **Local Development** - Works perfectly for local development and testing
+- **Extensible Plugin System** - Easy to add custom content processors
+- **Math & Chemistry** - Built-in support for KaTeX and mhchem formulas
+- **Syntax Highlighting** - Code block highlighting integration
+- **Type-Safe** - 100% TypeScript with strict type checking
+- **Well-Tested** - Comprehensive test coverage with Vitest
+- **Developer Friendly** - Devcontainer setup for instant development environment
+
+## 📚 Documentation
+
+- **[Project Blueprint](bluePrint/projectBlueprint.md)** - Complete development plan and architecture
+- **[Markdown Rendering Rules](bluePrint/markdownRenderRules.md)** - Full specification of supported markdown
+- **[Test Syntax](bluePrint/testMarkdownSyntax.md)** - Test cases and syntax examples
+
+## 🚀 Quick Start
+
+### Using GitHub Codespaces (Recommended)
+1. Open repository in Codespaces
+2. Development environment automatically sets up via devcontainer
+3. Ready to code in seconds!
+
+### Local Development
+```bash
+# Prerequisites: Node.js 22+, npm, Docker (for devcontainer)
+
+# Clone and setup
+git clone <repo-url>
+cd mdParserCF
+npm install
+
+# Run tests
+npm test
+
+# Start dev server
+npm run dev
+```
+
+## 🛠️ Development Setup
+
+### Devcontainer
+The `.devcontainer/devcontainer.json` provides a complete development environment with:
+- Node.js 22
+- Wrangler CLI for Cloudflare Workers
+- Docker support
+- Pre-configured VS Code extensions
+- Debugging capabilities
+
+### Local Setup
+See [Project Blueprint - Development Environment](bluePrint/projectBlueprint.md#-development-environment-setup) for detailed local setup instructions.
+
+## 📝 NPM Scripts
+
+```bash
+# Development
+npm run dev              # Start local dev server
+npm run dev:wrangler    # Start Cloudflare Wrangler dev
+
+# Building
+npm run build           # Build for production
+npm run type-check      # TypeScript type checking
+
+# Testing
+npm test                # Run all tests
+npm test -- --watch     # Watch mode
+npm test -- --ui        # Test UI explorer
+npm run test:coverage   # Coverage report
+
+# Code Quality
+npm run lint            # Check code quality
+npm run lint:fix        # Fix linting issues
+npm run format          # Format code with Prettier
+
+# Deployment
+npm run deploy          # Deploy to production
+npm run deploy:staging  # Deploy to staging
+```
+
+## 🏗️ Project Structure
+
+```
+mdParserCF/
+├── src/                    # Source code
+│   ├── parser/            # Tokenizer & parser
+│   ├── renderer/          # HTML generation
+│   ├── plugins/           # Custom plugins
+│   ├── extensions/        # Markdown extensions
+│   ├── utils/             # Utilities
+│   └── cloudflare/        # Cloudflare integration
+├── tests/                 # Test suites
+│   ├── unit/             # Unit tests
+│   ├── integration/       # Integration tests
+│   └── fixtures/         # Test data & snapshots
+├── bluePrint/            # Project documentation
+├── docs/                 # Detailed documentation
+├── .devcontainer/        # Devcontainer setup
+├── .github/workflows/    # CI/CD pipelines
+└── wrangler.toml         # Cloudflare config
+```
+
+## 🧪 Testing
+
+The project uses **Vitest** for fast, type-safe testing:
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode for TDD
+npm test -- --watch
+
+# Test UI for exploration
+npm test -- --ui
+
+# Coverage report
+npm run test:coverage
+```
+
+### Test Coverage Goals
+- Minimum 80% overall
+- 90%+ for parser core
+- 85%+ branch coverage
+
+## 🔍 Debugging
+
+### VS Code Debugging
+1. Open file with breakpoint
+2. Press `F5` to start debugger
+3. Use Debug Console for evaluation
+
+**Debug Configurations:**
+- Debug Tests
+- Debug Application
+- Attach to Running Process
+
+### Logging
+Use the built-in logger for development:
+```typescript
+import { logger } from './src/utils/logger'
+
+logger.debug('Debug info')    // Only shown in LOG_LEVEL=debug
+logger.info('Information')    // Normal logging
+logger.warn('Warning')        // Warning messages
+logger.error('Error')         // Error messages
+```
+
+Control verbosity:
+```bash
+LOG_LEVEL=debug npm run dev     # Verbose
+LOG_LEVEL=info npm run dev      # Normal
+LOG_LEVEL=warn npm run dev      # Only warnings/errors
+```
+
+## 🚀 Deployment
+
+### To Cloudflare Workers
+```bash
+# Setup authentication
+wrangler login
+
+# Deploy to production
+npm run deploy
+
+# Deploy to staging environment
+npm run deploy:staging
+
+# Rollback to previous version
+wrangler rollback
+```
+
+### Configuration
+Edit `wrangler.toml` to configure:
+- Worker name and route
+- Environment variables
+- KV namespaces
+- R2 buckets
+- etc.
+
+## 📖 Documentation
+
+### Core Documentation
+- **[Project Blueprint](bluePrint/projectBlueprint.md)** - Architecture, design decisions, phase plan
+- **[Markdown Rules](bluePrint/markdownRenderRules.md)** - Complete markdown specification
+- **[Test Syntax](bluePrint/testMarkdownSyntax.md)** - Test cases and syntax examples
+
+### Development Progress
+Progressive documentation from development sessions is stored in `constructionNotes/`:
+- **[Phase 1 Completion](constructionNotes/PHASE1_COMPLETION.md)** - Phase 1 status and achievements
+- **[Phase 1 Extensions Guide](constructionNotes/PHASE1_EXTENSIONS.md)** - How to add new features
+- **[Session Summary](constructionNotes/SESSION_SUMMARY.md)** - Latest session work
+- **[Project Status Dashboard](constructionNotes/PROJECT_STATUS.md)** - Current project metrics
+- **[Celebration Summary](constructionNotes/CELEBRATION.md)** - Achievements summary
+- **[Development Checklist](constructionNotes/CHECKLIST.md)** - Task tracking
+
+### Technical Docs (To Be Created)
+- Architecture guides in `docs/`
+- Plugin development documentation
+- Debugging and performance guides
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## 📋 Supported Markdown
+
+### Core Elements ✅
+- Headings (h1-h6)
+- Paragraphs with line breaks
+- Bold, italic, underline
+- Blockquotes (including nested)
+- Lists (ordered, unordered, nested)
+- Code (inline, fenced, indented)
+- Horizontal rules
+- Links and images (inline & reference-style)
+- HTML passthrough with markdown parsing inside
+
+### Phase 1 Extensions ✅
+- **Tables with alignment** (GFM syntax) - ✅ IMPLEMENTED
+  - Support for `:---` (left), `:-:` (center), `---:` (right) alignment
+  - Inline markdown within cells
+  - Semantic HTML output
+- **Strikethrough** (`~~text~~`) - ✅ IMPLEMENTED
+  - Support for nested formatting
+  - Multiple strikethrough on same line
+  - Semantic `<del>` tag output
+- **Footnotes** (`[^1]`) - Coming Soon
+- **Custom containers** (`:::class...:::`) - Planned
+
+### Planned Features 📅
+- Math formulas (KaTeX)
+- Custom plugins (YouTube, SMILES, etc.)
+- Additional inline elements
+
+## 🐛 Known Issues
+
+None currently. See GitHub Issues for tracking.
+
+## 📜 License
+
+[To be added]
+
+## 🔗 Resources
+
+- [Cloudflare Workers](https://developers.cloudflare.com/workers/)
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/)
+- [TypeScript Docs](https://www.typescriptlang.org/)
+- [Vitest Docs](https://vitest.dev/)
+- [CommonMark Spec](https://spec.commonmark.org/)
+
+---
+
+**Status:** Development Environment Ready ✅  
+**Next Steps:** See [Phase Implementation Plan](bluePrint/projectBlueprint.md#-phase-implementation-plan) 
