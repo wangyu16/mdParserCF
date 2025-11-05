@@ -560,4 +560,299 @@ To display plugin syntax literally:
 - Escape the opening braces: `\{\{youtube VIDEO_ID\}\}` - Renders as: `{{youtube VIDEO_ID}}`
 - Alternative: Escape only the first brace: `\{{youtube VIDEO_ID}}` - Renders as: `{{youtube VIDEO_ID}}`
 
-Note: Use `\\` to render a literal backslash. 
+Note: Use `\\` to render a literal backslash.
+
+<!-- 16. Potential Plugins (Future Extensions) -->
+
+The following plugins are recommended for future implementation to enhance chemistry, biology, and data science documentation capabilities. They follow the same `{{pluginName args}}` syntax as existing plugins.
+
+**High Priority / High-Value Plugins**
+
+**3D Molecular Structure Viewer**
+Syntax: `{{3dstructure format:data}}`
+
+Example:
+```
+{{3dstructure pdb:1crn}}
+```
+
+Description: Interactive 3D viewer for protein structures and molecular models. Displays PDB (Protein Data Bank) files or raw coordinate data. Supports rotation, zoom, atom/residue selection, and color schemes (cartoon, surface, CPK). Uses client-side 3Dmol.js or NGL.js library.
+
+Features:
+- Load structures from PDB ID or inline coordinates
+- Interactive 3D rendering in browser
+- Selectable atoms and residues
+- Multiple display modes (cartoon, surface, ball-and-stick, CPK)
+- Export snapshot as PNG/SVG
+- Ideal for: structural biology, protein documentation, education
+
+Implementation: Client-side rendering with canvas/WebGL. Server generates HTML with unique div ID and embedded script that calls 3Dmol.js when library is available.
+
+**Reaction Mechanism / Arrow-Pushing**
+Syntax: `{{mechanism steps}}`
+
+Example:
+```
+{{mechanism
+step1: Substrate → Intermediate1 [curved arrow from C to N]
+step2: Intermediate1 → Product [curved arrow showing electron flow]
+}}
+```
+
+Description: Visualizes organic reaction mechanisms with curved arrows showing electron flow, charges, and formal charge changes. Renders as interactive SVG with optional step-by-step animation.
+
+Features:
+- Curved arrows with arrowheads and labels
+- Electron pair movement visualization
+- Formal charge annotations
+- Step-by-step progression (optional animation)
+- Export as SVG or PNG
+- Ideal for: organic chemistry education, mechanism documentation
+
+Implementation: Server-side SVG generation using d3 or SVG.js. Client-side enhancement for interactivity.
+
+**Spectroscopic Data Viewer (NMR / IR / MS)**
+Syntax: `{{spectra format type:data}}`
+
+Example:
+```
+{{spectra jcamp NMR:path/to/sample.jdx}}
+```
+
+or inline:
+
+```
+{{spectra inline MS:
+m/z: [43, 71, 85, 99]
+intensity: [100, 85, 92, 45]
+}}
+```
+
+Description: Interactive spectral plots for NMR (1H, 13C), IR, and mass spectrometry (MS) data. Supports JCAMP-DX and mzML formats, or inline CSV-like data. Features zoom, peak picking, annotation, and comparison tools.
+
+Features:
+- Support for multiple spectra types (1H NMR, 13C NMR, IR, MS)
+- Zoom and pan interactions
+- Peak identification and annotation
+- Integration calculation (NMR)
+- Multiplet analysis
+- Data import from JCAMP-DX, mzML, or CSV
+- Ideal for: analytical chemistry, spectroscopy teaching, data documentation
+
+Implementation: Client-side rendering using Plotly.js or Chart.js. Server provides data parsing for common formats.
+
+**Medium Priority / Useful Plugins**
+
+**Data Plotting (Generic)**
+Syntax: `{{plot format:data [options]}}`
+
+Example:
+```
+{{plot csv:
+x,y
+1,2
+2,4
+3,9
+type: scatter
+title: Sample Data
+}}
+```
+
+Description: Generic plotting plugin for inline numeric data. Supports scatter, line, bar, and histogram plots. Data can be inline CSV or JSON, or referenced from a URL.
+
+Features:
+- Multiple plot types (scatter, line, bar, histogram)
+- Interactive legends and hover tooltips
+- Axis labels and title
+- Grid and axis styling
+- Export as PNG/SVG
+- Responsive sizing
+- Ideal for: data visualization in documentation, inline plots
+
+Implementation: Client-side rendering using Plotly.js or Vega-Lite.
+
+**Reaction Balancing & Stoichiometry**
+Syntax: `{{stoichiometry equation [options]}}`
+
+Example:
+```
+{{stoichiometry
+C6H12O6 + O2 -> CO2 + H2O
+}}
+```
+
+Description: Automatically balances chemical equations and computes stoichiometric ratios. Displays coefficients, molar masses, and limiting reagent calculations.
+
+Features:
+- Automatic equation balancing using algebraic methods
+- Display of balanced equation with coefficients
+- Molar mass calculation
+- Stoichiometric ratio computation
+- Limiting reagent identification (with optional reactant amounts)
+- Ideal for: chemistry education, problem solving
+
+Implementation: Server-side chemistry algorithms (balancing, mass calculation). Render as formatted table or HTML.
+
+**Unit-Aware Calculation**
+Syntax: `{{calc expression}}`
+
+Example:
+```
+{{calc (5 m * 3 cm) / (2 s)}}
+```
+
+Renders as: `7.5 m·cm/s` or automatically simplified with unit conversion.
+
+Description: Inline calculator supporting unit-aware math. Expressions maintain unit consistency and automatically convert/simplify. Useful for quick conversions and dimensional analysis.
+
+Features:
+- Unit-aware arithmetic (km + m = km, with automatic conversion)
+- Dimensional analysis
+- Common unit conversions
+- Support for SI and imperial units
+- Display final result with simplified units
+- Ideal for: chemistry/physics calculations, homework, documentation
+
+Implementation: Uses js-quantities or Unit.js library. Server-side or client-side evaluation.
+
+**Periodic Table Widget**
+Syntax: `{{periodic [highlight:element1,element2]}}` or `{{element symbol}}`
+
+Example:
+```
+{{periodic highlight:H,C,N,O}}
+```
+
+or inline:
+
+```
+The element {{element Au}} has atomic number 79.
+```
+
+Description: Interactive periodic table with detailed element information. Clicking an element shows atomic properties, electron configuration, isotopes, and common reactions. Lightweight and embeddable.
+
+Features:
+- Full periodic table with color-coded blocks (s, p, d, f)
+- Hover tooltips showing element name, atomic mass, common oxidation states
+- Click for detailed view: electron configuration, isotopes, electronegativity, common reactions
+- Copy-to-clipboard for element symbols, names, atomic numbers
+- Highlight specific elements (for teaching trends)
+- Inline element link: `{{element Au}}` renders as clickable link to Au details
+- Ideal for: chemistry reference, education, quick lookups
+
+Implementation: Client-side interactive widget using a lightweight periodic table library (custom SVG or pre-built component). Server provides minimal HTML with unique ID.
+
+**Lower Priority / Advanced Plugins**
+
+**Biological Sequence Viewer**
+Syntax: `{{sequence format:data [features]}}` or `{{dna sequence}}`, `{{protein sequence}}`
+
+Example:
+```
+{{dna
+ATGCGATCGATCGATCG
+features: [
+  {start: 1, end: 5, name: "ATG", type: "start_codon"},
+  {start: 10, end: 15, name: "stop", type: "stop_codon"}
+]
+}}
+```
+
+Description: Render DNA, RNA, or protein sequences with visual features (exons, introns, motifs, domains). Supports zooming, scrolling, and feature annotations. Can display multiple aligned sequences.
+
+Features:
+- Sequence rendering with color schemes (DNA: ATCG; protein: hydrophobic, charged, etc.)
+- Feature tracks (exons, introns, motifs, domains, restriction sites)
+- Zoomable view
+- Multiple sequence alignment (if multiple sequences provided)
+- Copy sequence to clipboard
+- Link-out to databases (UniProt, NCBI)
+- Ideal for: molecular biology documentation, genomics, bioinformatics
+
+Implementation: Client-side rendering using biojs/SeqViz or custom canvas/SVG. Lightweight library for feature rendering.
+
+**Jupyter Output Embedding**
+Syntax: `{{jupyter source:url [options]}}` or `{{jupyter-cell code}}`
+
+Example:
+```
+{{jupyter source:https://example.com/notebook.ipynb cell:2}}
+```
+
+or inline code (server-executed):
+
+```
+{{jupyter-cell
+import numpy as np
+plt.plot(np.linspace(0, 2*np.pi, 100), np.sin(np.linspace(0, 2*np.pi, 100)))
+plt.show()
+}}
+```
+
+Description: Embed Jupyter notebook cells or pre-rendered outputs (HTML, PNG) into documentation. For static rendering, exports notebook outputs as HTML. For live execution, requires secure sandbox (e.g., JupyterLite, Binder, or server-side execution with security controls).
+
+Features:
+- Static output embedding (HTML/PNG export from notebook)
+- Optional live execution via Binder/JupyterLite (read-only or sandboxed)
+- Cell-level selection from full notebooks
+- Output rendering (plots, tables, stdout)
+- Optional code visibility toggle
+- Ideal for: data science documentation, tutorials, reproducible examples
+
+Implementation: Static mode (server extracts and embeds HTML). Live mode requires external service integration (Binder, JupyterLite).
+
+**RDKit / ChemDoodle Integration (Advanced)**
+Syntax: `{{chem-property input [property]}}` or `{{chem-depict SMILES}}`
+
+Example:
+```
+{{chem-property C1CCCCC1 logP}}
+```
+
+Returns: `logP: 3.44` (for cyclohexane)
+
+or:
+
+```
+{{chem-depict C1CCCCC1 width:400 height:300}}
+```
+
+Renders: High-quality 2D depiction of the molecule.
+
+Description: Server-side cheminformatics using RDKit (Python library) or ChemDoodle. Compute molecular properties (logP, MW, tPSA, H-bond donors/acceptors, etc.), generate conformers, and produce publication-quality molecular depictions.
+
+Features:
+- Molecular property calculation (logP, molecular weight, PSA, rotatable bonds, etc.)
+- Conformer generation and 3D coordinate prediction
+- High-quality 2D depiction (SVG or PNG)
+- Similarity search against SMILES/SMARTS
+- Fragment analysis
+- Substructure matching
+- Ideal for: advanced cheminformatics, property databases, drug discovery documentation
+
+Implementation: Server-side service (Python RDKit running in Docker or as microservice). Requires infrastructure. Returns JSON or SVG/PNG.
+
+---
+
+**Plugin Development Guidelines**
+
+All plugins should follow these conventions:
+
+1. **Syntax:** `{{pluginName args}}` (single-line) or multi-line for block-level content.
+2. **Unique IDs:** Generate unique element IDs (canvas, div, svg) to avoid conflicts when multiple instances appear in one document.
+3. **Client-Side Priority:** Prefer client-side rendering (JavaScript) for responsiveness. Use server-side only for heavy computation.
+4. **Error Handling:** Gracefully degrade with fallback text or error message if library is not available or parsing fails.
+5. **Testing:** Add unit tests verifying HTML output contains expected placeholders and data attributes. Add integration tests for client-side rendering where feasible.
+6. **Documentation:** Include usage examples, supported formats, required CDN/script includes, and limitations.
+7. **Accessibility:** Provide alt text for generated images/visualizations. Include ARIA labels where possible.
+
+---
+
+**Integration and Deployment Strategy**
+
+- **Phase 1 (Current):** YouTube, Emoji, SMILES, Badge, Mermaid, Math (KaTeX with mhchem)
+- **Phase 2:** 3D Viewer, Reaction Mechanisms, Spectra Viewer (high-impact chemistry/biology features)
+- **Phase 3:** Generic plotting, stoichiometry, periodic table, unit-aware calc (utility plugins)
+- **Phase 4:** Sequence viewer, Jupyter embedding, RDKit integration (advanced/specialized)
+
+Prioritize by user feedback and use case frequency. 
