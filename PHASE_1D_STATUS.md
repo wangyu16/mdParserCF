@@ -370,15 +370,58 @@ graph TD
 
 ---
 
-**Status**: 🟢 **PHASE 1D COMPLETE - ALL PLUGINS VERIFIED**  
-**Next Phase**: Cloudflare Workers Deployment (Phase 2)  
-**Overall Progress**: 5/6 major features complete
+---
+
+## Latest Updates: Specification Extension
+
+### Section 16 Added to Specification
+- **File**: `bluePrint/markdownRenderRules.md`
+- **Content**: Section 16 "Potential Plugins"
+- **Size**: +308 lines (550 → 858 lines total)
+- **Features Documented**: 10 recommended chemistry/science visualization plugins
+
+**High-Priority Plugins Recommended**:
+1. **3D Molecular Structure Viewer** - Using 3Dmol.js or NGL.js
+2. **Reaction Mechanism / Arrow-Pushing** - SVG-based with d3
+3. **Spectroscopic Data Viewer** - NMR/IR/MS with Plotly or Chart.js
+
+**Medium-Priority Utilities**:
+4. Data Plotting (Plotly/Vega-Lite)
+5. Reaction Balancing & Stoichiometry
+6. Periodic Table & Element Information
+7. Unit-Aware Calculation
+
+**Lower-Priority Advanced**:
+8. Biological Sequence Viewer (DNA/protein)
+9. Jupyter Output Embedding
+10. RDKit/ChemDoodle Integration
+
+### Documentation Updated
+- ✅ Plugin development guidelines added
+- ✅ Integration and deployment strategy documented
+- ✅ Phased roadmap provided
+- ✅ Implementation recommendations for each plugin
+
+### Repository Status
+- ✅ Documentation reorganized (files moved to `constructionNotes/`)
+- ✅ Construction notes organized in dedicated folder
+- ✅ Specification comprehensive and current
+- ✅ Todo list updated with 10 new feature recommendations
+
+---
+
+**Status**: 🟢 **PHASE 1D COMPLETE - ALL PLUGINS VERIFIED + SPECIFICATION EXTENDED**  
+**Specification Version**: 1.0 (Section 16 added)  
+**Next Phase**: Choose from: Cloudflare Workers Deployment, 3D Viewer, or Reaction Mechanisms  
+**Overall Progress**: 6/17+ major features complete
 
 ---
 
 **Generated**: November 5, 2025  
-**Session Duration**: ~7 minutes  
-**Commits Made**: 4  
-**Tests Added**: 6  
-**Documents Created**: 4  
-**Bugs Fixed**: 0
+**Latest Session Duration**: ~5 minutes (specification update)  
+**Total Session Time**: ~12 minutes  
+**Commits Made**: 5 (including documentation reorganization)  
+**Tests Added**: 6 (SMILES plugin)  
+**Documents Created**: 5 (4 from SmilesDrawer session + 1 reorganization)  
+**Bugs Fixed**: 0  
+**Status Files Updated**: This file (PHASE_1D_STATUS.md)
