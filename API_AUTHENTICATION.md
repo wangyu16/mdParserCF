@@ -46,6 +46,7 @@ API_KEY=mySecurePassword123!
 ```
 
 Then run:
+
 ```bash
 source .env && npx wrangler dev
 ```
@@ -90,12 +91,12 @@ const response = await fetch('https://mdparser-cf.yxw8611.workers.dev/parse', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-API-Key': 'mySecurePassword123!'  // Your API key
+    'X-API-Key': 'mySecurePassword123!', // Your API key
   },
   body: JSON.stringify({
     markdown: '# Hello World',
-    options: { enableMath: true }
-  })
+    options: { enableMath: true },
+  }),
 });
 
 const { html } = await response.json();
@@ -206,6 +207,7 @@ npx wrangler tail
 Go to: **Workers & Pages** → **mdparser-cf** → **Analytics**
 
 Filter by:
+
 - Status code: 401 (Unauthorized)
 - Review access patterns
 
@@ -218,7 +220,7 @@ function authenticate(request: Request, env: any): boolean {
   if (!env.API_KEY) return true;
 
   const apiKey = request.headers.get('X-API-Key');
-  
+
   // Support multiple keys (comma-separated)
   const validKeys = env.API_KEY.split(',');
   return validKeys.includes(apiKey);
@@ -226,6 +228,7 @@ function authenticate(request: Request, env: any): boolean {
 ```
 
 Then set multiple keys:
+
 ```bash
 npx wrangler secret put API_KEY
 # Enter: key1,key2,key3
@@ -236,11 +239,13 @@ npx wrangler secret put API_KEY
 ### "Unauthorized" even with correct key
 
 1. Check the key is set:
+
    ```bash
    npx wrangler secret list
    ```
 
 2. Verify you've deployed after setting the key:
+
    ```bash
    npm run deploy
    ```
@@ -257,6 +262,7 @@ If it does, check the code in `worker.ts` to ensure these routes are before the 
 **Your API is now secured with password protection!** 🔒
 
 Choose your setup method and deploy:
+
 ```bash
 # 1. Set API key
 npx wrangler secret put API_KEY
