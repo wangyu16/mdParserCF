@@ -15,7 +15,7 @@ import { HTMLRenderer } from '../renderer/html-renderer';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -48,6 +48,23 @@ function errorResponse(message: string, status = 400) {
     },
     status
   );
+}
+
+// Authentication middleware
+function authenticate(request: Request, env: any): boolean {
+  // If no API key is set in environment, allow all requests (open API)
+  if (!env.API_KEY) {
+    return true;
+  }
+
+  const apiKey = request.headers.get('X-API-Key');
+
+  // Check if API key matches
+  if (apiKey === env.API_KEY) {
+    return true;
+  }
+
+  return false;
 }
 
 // Handle CORS preflight requests
@@ -127,7 +144,12 @@ function getApiDocs() {
   <h1>🚀 Markdown Parser API</h1>
   <p><span class="badge">v1.0.0</span> Advanced markdown parser with math, tables, footnotes, and more!</p>
 
-  <h2>📋 Endpoints</h2>
+  <h2>� Authentication</h2>
+  <p>If authentication is enabled, include your API key in the request headers:</p>
+  <pre><code>X-API-Key: your-api-key-here</code></pre>
+  <p>Public endpoints (<code>/</code> and <code>/health</code>) do not require authentication.</p>
+
+  <h2>�📋 Endpoints</h2>
 
   <div class="endpoint">
     <h3><span class="method post">POST</span> /parse</h3>
@@ -201,10 +223,13 @@ function getApiDocs() {
   </ul>
 
   <h2>📊 Example Usage</h2>
-  <pre><code>// Using fetch
+  <pre><code>// Using fetch (with API key if required)
 const response = await fetch('https://your-worker.workers.dev/parse', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 
+    'Content-Type': 'application/json',
+    'X-API-Key': 'your-api-key-here'  // Include if authentication is enabled
+  },
   body: JSON.stringify({
     markdown: '# Hello\\n\\nThis is $E=mc^2$ formula.',
     options: { enableMath: true }
@@ -339,7 +364,7 @@ function countNodes(node: any): number {
 
 // Main request handler
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: any): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -348,7 +373,7 @@ export default {
       return handleOptions();
     }
 
-    // Route requests
+    // Public endpoints (no auth required)
     if (path === '/' && request.method === 'GET') {
       return getApiDocs();
     }
@@ -357,11 +382,24 @@ export default {
       return handleHealth();
     }
 
+    // Protected endpoints (require authentication if API_KEY is set)
     if (path === '/parse' && request.method === 'POST') {
+      if (!authenticate(request, env)) {
+        return errorResponse(
+          'Unauthorized. Please provide a valid API key in X-API-Key header.',
+          401
+        );
+      }
       return handleParse(request);
     }
 
     if (path === '/ast' && request.method === 'POST') {
+      if (!authenticate(request, env)) {
+        return errorResponse(
+          'Unauthorized. Please provide a valid API key in X-API-Key header.',
+          401
+        );
+      }
       return handleAst(request);
     }
 
