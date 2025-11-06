@@ -293,6 +293,8 @@ Complex reaction: $\ce{CaCO3 ->[heat] CaO + CO2}$
 
 Oxidation state: $\ce{[Fe(CN)6]^{4-}}$
 
+$$\ce{C + O2 -> CO2}$$
+
 ### Mixed Math and Text
 
 The equation $E=mc^2$ shows mass-energy equivalence in chemistry calculations like $\ce{C + O2 -> CO2}$.
@@ -533,7 +535,7 @@ With link: **_[bold italic link](https://example.com)_**
 
 1. First paragraph in item
 
-Second paragraph same item (note blank line)
+  Second paragraph same item (note blank line)
 
 2. Another item
    - Nested list in second paragraph

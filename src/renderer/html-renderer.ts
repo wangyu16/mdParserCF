@@ -160,7 +160,9 @@ export class HTMLRenderer {
    */
   private renderListItem(item: ListItem): string {
     const content = item.children.map((block) => this.renderBlock(block)).join('');
-    return `<li>${content}</li>\n`;
+    // Add depth as CSS class if available
+    const depthClass = item.depth !== undefined ? ` class="depth-${item.depth}"` : '';
+    return `<li${depthClass}>${content}</li>\n`;
   }
 
   /**

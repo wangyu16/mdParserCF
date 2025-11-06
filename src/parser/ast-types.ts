@@ -130,6 +130,7 @@ export interface OrderedList extends ASTNode {
 export interface ListItem extends ASTNode {
   type: 'list-item';
   children: BlockNode[];
+  depth?: number; // Nesting depth: 0 for top-level, 1 for nested, 2 for doubly nested, etc.
 }
 
 /**
@@ -387,6 +388,34 @@ export interface InlineMath extends ASTNode {
 // ========================================
 
 /**
+ * Protected region marker - used during pre-processing to protect
+ * special content from markdown interpretation
+ */
+export interface ProtectedRegion {
+  /** Type of protected content */
+  type: 'escaped' | 'code' | 'plugin' | 'math';
+  /** Starting position in original text */
+  start: number;
+  /** Ending position in original text */
+  end: number;
+  /** Placeholder string used in processed text */
+  placeholder: string;
+  /** Original content that was protected */
+  originalContent: string;
+}
+
+/**
+ * Result of pre-processing inline text
+ * Pre-processing protects special regions from markdown parsing
+ */
+export interface PreprocessedText {
+  /** Text with protected regions replaced by placeholders */
+  processed: string;
+  /** Map of placeholder strings to their original content */
+  protections: Map<string, { content: string; type: ProtectedRegion['type'] }>;
+}
+
+/**
  * Parser options to customize behavior
  */
 export interface ParserOptions {
@@ -413,6 +442,9 @@ export interface ParserOptions {
 
   /** Maximum nesting depth */
   maxNestingDepth?: number;
+
+  /** Internal: Current list nesting depth (used for recursive parsing) */
+  _currentListDepth?: number;
 }
 
 /**

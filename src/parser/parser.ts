@@ -26,6 +26,8 @@ import {
   MathBlock,
   ParserOptions,
   ParserState,
+  PreprocessedText,
+  ProtectedRegion,
 } from './ast-types';
 import { PluginRegistry, createDefaultPluginRegistry } from './plugin-system';
 
@@ -160,7 +162,8 @@ export class Parser {
     }
 
     if (line.match(/^[-+*]\s/) || line.match(/^\d+\.\s/)) {
-      return this.parseList(state);
+      const currentDepth = this.options._currentListDepth || 0;
+      return this.parseList(state, currentDepth);
     }
 
     // Check for table (pipe character indicates potential table)
@@ -321,6 +324,16 @@ export class Parser {
       return null;
     }
 
+    // Check for single-line block math: $$equation$$
+    const singleLineMatch = line.trim().match(/^\$\$(.+?)\$\$$/);
+    if (singleLineMatch) {
+      return {
+        type: 'math-block',
+        content: singleLineMatch[1].trim(),
+      };
+    }
+
+    // Multi-line block math: $$ on separate lines
     const lines: string[] = [];
     let currentLine = state.position + 1;
     let foundClosing = false;
@@ -444,7 +457,9 @@ export class Parser {
     state.position = currentLine - 1;
 
     // Parse content of blockquote recursively
-    const blockquoteContent = lines.join('\n');
+    // Join lines with hard line break marker (two spaces + newline)
+    // This ensures each > line becomes a separate line in output
+    const blockquoteContent = lines.join('  \n');
     const tempParser = new Parser(this.options);
     const tempAST = tempParser.parse(blockquoteContent);
 
@@ -458,7 +473,7 @@ export class Parser {
   /**
    * Parse list (ordered and unordered)
    */
-  private parseList(state: ParserState): UnorderedList | OrderedList | null {
+  private parseList(state: ParserState, depth: number = 0): UnorderedList | OrderedList | null {
     const line = state.lines[state.position];
 
     const unorderedMatch = line.match(/^([-+*])\s+(.*)$/);
@@ -486,7 +501,7 @@ export class Parser {
 
       if (itemMatch) {
         // Parse this list item, collecting all its content including nested lists
-        const itemResult = this.parseListItem(state, currentLine, isOrdered);
+        const itemResult = this.parseListItem(state, currentLine, isOrdered, depth);
         if (itemResult) {
           children.push(itemResult.item);
           currentLine = itemResult.nextLine;
@@ -522,7 +537,8 @@ export class Parser {
   private parseListItem(
     state: ParserState,
     startLine: number,
-    isOrdered: boolean
+    isOrdered: boolean,
+    depth: number = 0
   ): { item: ListItem; nextLine: number } | null {
     const startLineStr = state.lines[startLine];
     const itemMatch = isOrdered
@@ -535,6 +551,12 @@ export class Parser {
 
     const baseIndent = startLineStr.length - startLineStr.trimStart().length;
     const firstLineContent = itemMatch[itemMatch.length - 1];
+
+    // Calculate the content indent (where text starts after the marker)
+    // For "1. Text", marker is "1. " (3 chars), for "- Text", marker is "- " (2 chars)
+    const markerLength = itemMatch[0].length - firstLineContent.length;
+    const contentIndent = baseIndent + markerLength;
+
     const itemBlocks: BlockNode[] = [];
 
     // Parse the first line content as inline elements wrapped in a paragraph
@@ -577,7 +599,24 @@ export class Parser {
         }
 
         // Empty lines can continue list items but create paragraph breaks
+        // Mark that we encountered a blank line so the next text creates a new paragraph
         currentLine++;
+
+        // If the next line has content, we'll need a new paragraph
+        // Look for the next non-blank line
+        if (nextNonBlankLine < state.lines.length) {
+          const nextLine = state.lines[nextNonBlankLine];
+          const nextIndent = nextLine.length - nextLine.trimStart().length;
+          // If it's indented content (not a list item), force a new paragraph
+          if (nextIndent > baseIndent && !nextLine.match(/^(\s*)([-+*]|\d+\.)\s+/)) {
+            // Add a paragraph break marker by clearing the "last paragraph" state
+            // We do this by adding an empty placeholder that will trigger new paragraph creation
+            itemBlocks.push({
+              type: 'paragraph',
+              children: [],
+            });
+          }
+        }
         continue;
       }
 
@@ -637,7 +676,9 @@ export class Parser {
 
         const strippedLines = nestedLines.map((line) => line.slice(minIndent));
         const nestedContent = strippedLines.join('\n');
-        const nestedParser = new Parser(this.options);
+        // Create nested parser with incremented depth
+        const nestedOptions = { ...this.options, _currentListDepth: depth + 1 };
+        const nestedParser = new Parser(nestedOptions);
         const nestedDoc = nestedParser.parse(nestedContent);
 
         // Add all parsed blocks to the current list item
@@ -653,23 +694,38 @@ export class Parser {
         const trimmed = currentLineStr.trim();
         if (
           trimmed.match(/^(#{1,6})\s/) || // Heading
-          trimmed.startsWith('```') || // Fenced code block
-          trimmed.startsWith('~~~') || // Fenced code block
           trimmed.match(/^\[\^([^\]]+)\]:/) || // Footnote definition
           trimmed.match(/^\[([^\]]+)\]:\s+/) || // Link reference
           trimmed === '---' ||
           trimmed === '***' ||
-          trimmed === '___' || // Horizontal rule
-          trimmed.startsWith(':::') || // Custom container
-          (trimmed.startsWith('<') && trimmed.includes('>')) // HTML block
+          trimmed === '___' // Horizontal rule
         ) {
           // This is a block that should break the list, so stop parsing the list item
           break;
         }
 
+        // Allow these block elements inside lists:
+        // - Fenced code blocks (``` or ~~~)
+        // - Blockquotes (>)
+        // - Custom containers (:::)
+        // - HTML blocks
+
         // Parse this as a nested block element
+        // We need to remove the list item indentation from the lines so that
+        // parseFencedCodeBlock and other block parsers can recognize them
+        const dedentedLines = state.lines.map((line, idx) => {
+          if (idx < currentLine) return line; // Don't modify lines before this
+          const lineIndent = line.length - line.trimStart().length;
+          if (lineIndent >= contentIndent) {
+            return line.slice(contentIndent);
+          } else if (lineIndent >= baseIndent) {
+            return line.slice(baseIndent);
+          }
+          return line;
+        });
+
         const tempState: ParserState = {
-          lines: state.lines,
+          lines: dedentedLines,
           position: currentLine,
           ast: { type: 'document', children: [] },
           footnotes: state.footnotes,
@@ -684,11 +740,33 @@ export class Parser {
           continue;
         }
       } // Otherwise, treat as continuation of the current paragraph
-      const trimmedContent = currentLineStr.slice(baseIndent);
+      // Strip the content indent (alignment with first line text)
+      let trimmedContent: string;
+
+      if (currentIndent >= contentIndent) {
+        // Properly indented continuation - remove the content indent
+        trimmedContent = currentLineStr.slice(contentIndent);
+      } else if (currentIndent > baseIndent) {
+        // Partially indented - remove what we can
+        trimmedContent = currentLineStr.slice(currentIndent);
+      } else {
+        // Not indented enough - just trim
+        trimmedContent = currentLineStr.trim();
+      }
+
       if (trimmedContent.trim()) {
         // If we have a previous paragraph, add to it; otherwise create a new one
         const lastBlock = itemBlocks[itemBlocks.length - 1];
-        if (lastBlock && lastBlock.type === 'paragraph') {
+
+        // Check if the last block is an empty paragraph (paragraph break marker)
+        if (lastBlock && lastBlock.type === 'paragraph' && lastBlock.children.length === 0) {
+          // Remove the empty marker and create a new paragraph
+          itemBlocks.pop();
+          itemBlocks.push({
+            type: 'paragraph',
+            children: this.parseInline(trimmedContent),
+          });
+        } else if (lastBlock && lastBlock.type === 'paragraph') {
           // Add a soft line break and the new content
           (lastBlock as Paragraph).children.push(
             { type: 'soft-line-break' },
@@ -710,6 +788,7 @@ export class Parser {
       item: {
         type: 'list-item',
         children: itemBlocks,
+        depth,
       },
       nextLine: currentLine,
     };
@@ -1139,69 +1218,215 @@ export class Parser {
   }
 
   /**
-   * Parse inline elements within text
+   * Pre-process inline text to protect special regions from markdown parsing
+   *
+   * This method identifies and protects regions that should not be interpreted
+   * as markdown syntax, such as:
+   * - Escaped characters (\*, \_, etc.)
+   * - Code spans (`code`)
+   * - Inline math ($formula$)
+   * - Plugin syntax ({{plugin}})
+   *
+   * Protected regions are replaced with unique placeholder strings and stored
+   * in a map for later restoration. This ensures proper parsing order and
+   * prevents conflicts between different markdown elements.
+   *
+   * Processing order (priority):
+   * 1. Escaped characters (highest priority)
+   * 2. Code spans
+   * 3. Inline math
+   * 4. Plugins
+   *
+   * @param text - The raw inline text to pre-process
+   * @returns PreprocessedText object with processed string and protection map
    */
-  private parseInline(text: string): InlineNode[] {
+  private preprocessInlineText(text: string): PreprocessedText {
+    const protections = new Map<string, { content: string; type: ProtectedRegion['type'] }>();
+    let processed = text;
+    let placeholderCounter = 0;
+
+    // Priority 1: Protect escaped characters
+    // Match backslash followed by any character
+    const escapeMap = new Map<string, string>(); // placeholder -> char
+    processed = processed.replace(/\\(.)/g, (_match, char) => {
+      const placeholder = `\u0001ESC${placeholderCounter++}\u0001`;
+      escapeMap.set(placeholder, char);
+      protections.set(placeholder, { content: char, type: 'escaped' });
+      return placeholder;
+    });
+
+    // Helper: restore escapes in a string before protecting it
+    const restoreEscapesFor = (str: string): string => {
+      let restored = str;
+      for (const [placeholder, char] of escapeMap.entries()) {
+        restored = restored.replace(placeholder, '\\' + char);
+      }
+      return restored;
+    };
+
+    // Priority 2: Protect code spans `...`
+    // Match backtick-delimited code, avoiding empty spans
+    processed = processed.replace(/`([^`]+)`/g, (match, _content) => {
+      const placeholder = `\u0001CODE${placeholderCounter++}\u0001`;
+      // Restore escapes in the matched content before storing
+      const restoredMatch = restoreEscapesFor(match);
+      protections.set(placeholder, { content: restoredMatch, type: 'code' });
+      return placeholder;
+    });
+
+    // Priority 3: Protect inline math $...$
+    // Only if math is enabled, match dollar-delimited formulas (no newlines)
+    if (this.options.enableMath) {
+      processed = processed.replace(/\$([^\$\n]+)\$/g, (match, _content) => {
+        const placeholder = `\u0001MATH${placeholderCounter++}\u0001`;
+        // Restore escapes in the matched content before storing
+        const restoredMatch = restoreEscapesFor(match);
+        protections.set(placeholder, { content: restoredMatch, type: 'math' });
+        return placeholder;
+      });
+    }
+
+    // Priority 4: Protect plugins {{...}}
+    // Only if plugins are enabled, match double-brace syntax
+    if (this.options.enablePlugins) {
+      processed = processed.replace(/\{\{[^}]+\}\}/g, (match) => {
+        const placeholder = `\u0001PLUGIN${placeholderCounter++}\u0001`;
+        // Restore escapes in the matched content before storing
+        const restoredMatch = restoreEscapesFor(match);
+        protections.set(placeholder, { content: restoredMatch, type: 'plugin' });
+        return placeholder;
+      });
+    }
+
+    return { processed, protections };
+  }
+
+  /**
+   * Restore protected content in a string before recursive parsing
+   * @param text - Text that may contain placeholders
+   * @param protections - Map of placeholders to original content
+   * @param preserveEscapes - If true, restore escaped chars with backslashes (for code, etc.)
+   * @returns Text with placeholders restored to original content
+   */
+  private restoreProtections(
+    text: string,
+    protections: Map<string, { content: string; type: ProtectedRegion['type'] }>,
+    preserveEscapes: boolean = false
+  ): string {
+    let restored = text;
+    for (const [placeholder, protection] of protections.entries()) {
+      // For recursive parsing, we want to restore the ORIGINAL content
+      // so it can be properly parsed in the nested context
+      if (protection.type === 'escaped') {
+        if (preserveEscapes) {
+          // Restore WITH backslash (for code spans, etc.)
+          restored = restored.replace(placeholder, '\\' + protection.content);
+        } else {
+          // Restore without backslash for normal parsing
+          restored = restored.replace(placeholder, '\\' + protection.content);
+        }
+      } else {
+        // Restore code, math, and plugins as-is
+        restored = restored.replace(placeholder, protection.content);
+      }
+    }
+    return restored;
+  }
+
+  /**
+   * Parse inline elements within text
+   * @param text - The text to parse
+   * @param skipPreprocessing - If true, skip the preprocessing step (used for recursive calls)
+   */
+  private parseInline(
+    text: string,
+    skipPreprocessing: boolean = false,
+    parentContext?: string
+  ): InlineNode[] {
+    // Pre-process text to protect special regions (only for top-level calls)
+    let processed: string;
+    let protections: Map<string, { content: string; type: ProtectedRegion['type'] }>;
+
+    if (skipPreprocessing) {
+      processed = text;
+      protections = new Map();
+    } else {
+      const result = this.preprocessInlineText(text);
+      processed = result.processed;
+      protections = result.protections;
+    }
+
     const nodes: InlineNode[] = [];
     let i = 0;
 
-    while (i < text.length) {
-      // Check for escaped character
-      if (text[i] === '\\' && i + 1 < text.length) {
-        nodes.push({
-          type: 'text',
-          value: text[i + 1],
-        });
-        i += 2;
-        continue;
-      }
+    while (i < processed.length) {
+      // Check for protection placeholders
+      if (processed[i] === '\u0001') {
+        const placeholderMatch = processed.slice(i).match(/^\u0001(\w+)\u0001/);
+        if (placeholderMatch) {
+          const placeholder = placeholderMatch[0];
+          const protection = protections.get(placeholder);
 
-      // Check for inline plugins {{plugin args}}
-      if (this.options.enablePlugins && text[i] === '{' && text[i + 1] === '{') {
-        const pluginEndIndex = text.indexOf('}}', i + 2);
-        if (pluginEndIndex !== -1) {
-          const pluginText = text.slice(i, pluginEndIndex + 2);
-          let matched = false;
+          if (protection) {
+            // Restore protected content based on type
+            if (protection.type === 'escaped') {
+              // Escaped character - add as plain text
+              nodes.push({
+                type: 'text',
+                value: protection.content,
+              });
+            } else if (protection.type === 'code') {
+              // Code span - content already has escapes restored
+              const codeContent = protection.content.slice(1, -1); // Remove backticks
+              nodes.push({
+                type: 'code',
+                value: codeContent,
+              });
+            } else if (protection.type === 'math') {
+              // Inline math - content already has escapes restored
+              const mathContent = protection.content.slice(1, -1); // Remove $
+              nodes.push({
+                type: 'inline-math',
+                content: mathContent,
+              });
+            } else if (protection.type === 'plugin') {
+              // Plugin - process with plugin system
+              const pluginText = protection.content;
+              let matched = false;
 
-          // Try each inline plugin
-          for (const plugin of this.pluginRegistry.getInlinePlugins()) {
-            plugin.pattern.lastIndex = 0; // Reset regex
-            if (plugin.pattern.test(pluginText)) {
-              const result = plugin.handler(pluginText);
-              if (result.type === 'rendered' && result.content) {
-                nodes.push(result.content as InlineNode);
-                i = pluginEndIndex + 2;
-                matched = true;
-                break;
+              for (const plugin of this.pluginRegistry.getInlinePlugins()) {
+                plugin.pattern.lastIndex = 0;
+                if (plugin.pattern.test(pluginText)) {
+                  const result = plugin.handler(pluginText);
+                  if (result.type === 'rendered' && result.content) {
+                    nodes.push(result.content as InlineNode);
+                    matched = true;
+                    break;
+                  }
+                }
+              }
+
+              // If plugin didn't match, add as text
+              if (!matched) {
+                nodes.push({
+                  type: 'text',
+                  value: pluginText,
+                });
               }
             }
-          }
 
-          if (matched) {
+            i += placeholder.length;
             continue;
           }
         }
       }
 
-      // Check for inline math $...$
-      if (this.options.enableMath && text[i] === '$' && text[i + 1] !== '$') {
-        const closingIndex = text.indexOf('$', i + 1);
-        if (closingIndex !== -1 && closingIndex > i + 1) {
-          const content = text.slice(i + 1, closingIndex);
-          // Ensure it's not empty and doesn't contain newlines
-          if (content.length > 0 && !content.includes('\n')) {
-            nodes.push({
-              type: 'inline-math',
-              content,
-            });
-            i = closingIndex + 1;
-            continue;
-          }
-        }
-      }
+      // NOTE: Escaped character, code span, inline math, and plugin handling
+      // have been moved to pre-processing above. The following blocks are
+      // now redundant and can be removed in a future cleanup.
 
       // Check for hard line break marker (null character + newline)
-      if (text[i] === '\u0000' && text[i + 1] === '\n') {
+      if (processed[i] === '\u0000' && processed[i + 1] === '\n') {
         nodes.push({
           type: 'hard-line-break',
         });
@@ -1210,7 +1435,7 @@ export class Parser {
       }
 
       // Check for soft line break (newline without marker = just space)
-      if (text[i] === '\n') {
+      if (processed[i] === '\n') {
         nodes.push({
           type: 'soft-line-break',
         });
@@ -1218,9 +1443,10 @@ export class Parser {
         continue;
       }
 
-      // Check for code span
-      if (text[i] === '`') {
-        const codeMatch = text.slice(i).match(/^`([^`]+)`/);
+      // Check for code span - NOW HANDLED IN PRE-PROCESSING
+      // Kept for backward compatibility if pre-processing is disabled
+      if (processed[i] === '`') {
+        const codeMatch = processed.slice(i).match(/^`([^`]+)`/);
         if (codeMatch) {
           nodes.push({
             type: 'code',
@@ -1232,72 +1458,97 @@ export class Parser {
       }
 
       // Check for bold/italic
-      if (text[i] === '*' || text[i] === '_') {
-        const char = text[i];
+      if (processed[i] === '*' || processed[i] === '_') {
+        const char = processed[i];
 
-        if (text[i + 1] === char) {
-          if (text[i + 2] === char) {
+        if (processed[i + 1] === char) {
+          if (processed[i + 2] === char) {
             // Triple = bold+italic ***text***
-            const closingIndex = text.indexOf(char + char + char, i + 3);
-            if (closingIndex !== -1) {
-              const content = text.slice(i + 3, closingIndex);
-              nodes.push({
-                type: 'strong-emphasis',
-                children: this.parseInline(content),
-              });
-              i = closingIndex + 3;
-              continue;
+            // Skip if we're already inside strong-emphasis
+            if (parentContext === 'strong-emphasis') {
+              // Treat *** as literal text, don't parse as formatting
+              // Fall through to add as text at the end of the loop
+            } else {
+              const closingIndex = processed.indexOf(char + char + char, i + 3);
+              if (closingIndex !== -1) {
+                const content = processed.slice(i + 3, closingIndex);
+                const restoredContent = this.restoreProtections(content, protections);
+                nodes.push({
+                  type: 'strong-emphasis',
+                  children: this.parseInline(restoredContent, true, 'strong-emphasis'),
+                });
+                i = closingIndex + 3;
+                continue;
+              }
             }
           } else {
             // Double = bold **text**
-            const closingIndex = text.indexOf(char + char, i + 2);
-            if (closingIndex !== -1) {
-              const content = text.slice(i + 2, closingIndex);
-              nodes.push({
-                type: 'strong',
-                children: this.parseInline(content),
-              });
-              i = closingIndex + 2;
-              continue;
+            // Skip if we're already inside bold
+            if (parentContext === 'strong') {
+              // Treat ** as literal text, don't parse as formatting
+              // Fall through to add as text at the end of the loop
+            } else {
+              const closingIndex = processed.indexOf(char + char, i + 2);
+              if (closingIndex !== -1) {
+                const content = processed.slice(i + 2, closingIndex);
+                const restoredContent = this.restoreProtections(content, protections);
+                nodes.push({
+                  type: 'strong',
+                  children: this.parseInline(restoredContent, true, 'strong'),
+                });
+                i = closingIndex + 2;
+                continue;
+              }
             }
           }
         } else {
           // Single = italic *text*
-          const closingIndex = text.indexOf(char, i + 1);
-          if (closingIndex !== -1) {
-            const content = text.slice(i + 1, closingIndex);
-            nodes.push({
-              type: 'emphasis',
-              children: this.parseInline(content),
-            });
-            i = closingIndex + 1;
-            continue;
+          // Skip if we're already inside italic
+          if (parentContext === 'emphasis') {
+            // Treat * as literal text, don't parse as formatting
+            // Fall through to add as text at the end of the loop
+          } else {
+            const closingIndex = processed.indexOf(char, i + 1);
+            if (closingIndex !== -1) {
+              const content = processed.slice(i + 1, closingIndex);
+              const restoredContent = this.restoreProtections(content, protections);
+              nodes.push({
+                type: 'emphasis',
+                children: this.parseInline(restoredContent, true, 'emphasis'),
+              });
+              i = closingIndex + 1;
+              continue;
+            }
           }
         }
       }
 
       // Check for links [text](url "title") or reference-style [text][ref] or [text][]
-      if (text[i] === '[') {
+      if (processed[i] === '[') {
         // First try inline link: [text](url "title")
-        const inlineLinkMatch = text.slice(i).match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
+        const inlineLinkMatch = processed
+          .slice(i)
+          .match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
         if (inlineLinkMatch) {
           const linkText = inlineLinkMatch[1];
+          const restoredLinkText = this.restoreProtections(linkText, protections);
           const url = inlineLinkMatch[2];
           const title = inlineLinkMatch[3];
           nodes.push({
             type: 'link',
             url,
             title,
-            children: this.parseInline(linkText),
+            children: this.parseInline(restoredLinkText, true, 'link'),
           });
           i += inlineLinkMatch[0].length;
           continue;
         }
 
         // Try reference-style link: [text][ref] or [text][]
-        const refLinkMatch = text.slice(i).match(/^\[([^\]]+)\](?:\[\]|\[([^\]]+)\])/);
+        const refLinkMatch = processed.slice(i).match(/^\[([^\]]+)\](?:\[\]|\[([^\]]+)\])/);
         if (refLinkMatch) {
           const linkText = refLinkMatch[1];
+          const restoredLinkText = this.restoreProtections(linkText, protections);
           const ref = refLinkMatch[2] || linkText; // Use ref if provided, else use text as ref
           const refLabel = ref.toLowerCase(); // References are case-insensitive
 
@@ -1307,7 +1558,7 @@ export class Parser {
               type: 'link',
               url: linkRef.url,
               title: linkRef.title,
-              children: this.parseInline(linkText),
+              children: this.parseInline(restoredLinkText, true, 'link'),
             });
             i += refLinkMatch[0].length;
             continue;
@@ -1317,9 +1568,11 @@ export class Parser {
       }
 
       // Check for auto-links <url> or <email@example.com>
-      if (text[i] === '<') {
+      if (processed[i] === '<') {
         // Try URL auto-link: <http://example.com> or <https://example.com>, etc.
-        const urlAutoLinkMatch = text.slice(i).match(/^<([a-zA-Z][a-zA-Z0-9+.\-]*:\/\/[^>]+)>/);
+        const urlAutoLinkMatch = processed
+          .slice(i)
+          .match(/^<([a-zA-Z][a-zA-Z0-9+.\-]*:\/\/[^>]+)>/);
         if (urlAutoLinkMatch) {
           const url = urlAutoLinkMatch[1];
           nodes.push({
@@ -1332,7 +1585,7 @@ export class Parser {
         }
 
         // Try email auto-link: <user@example.com>
-        const emailAutoLinkMatch = text
+        const emailAutoLinkMatch = processed
           .slice(i)
           .match(/^<([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)>/);
         if (emailAutoLinkMatch) {
@@ -1348,16 +1601,16 @@ export class Parser {
       }
 
       // Check for images ![alt](url "title")
-      if (text[i] === '!' && text[i + 1] === '[') {
+      if (processed[i] === '!' && processed[i + 1] === '[') {
         // Match ![alt](url) or ![alt](url "title")
-        const imgMatch = text.slice(i).match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
+        const imgMatch = processed.slice(i).match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
         if (imgMatch) {
           const alt = imgMatch[1];
           const url = imgMatch[2];
           const title = imgMatch[3];
 
           // Check if HTML comment immediately follows (no space)
-          const remainingText = text.slice(i + imgMatch[0].length);
+          const remainingText = processed.slice(i + imgMatch[0].length);
           const commentMatch = remainingText.match(/^<!--\s*(.*?)\s*-->/);
 
           const imageNode: any = {
@@ -1396,71 +1649,78 @@ export class Parser {
       }
 
       // Check for strikethrough ~~text~~
-      if (text[i] === '~' && text[i + 1] === '~') {
-        const closingIndex = text.indexOf('~~', i + 2);
-        if (closingIndex !== -1) {
-          const content = text.slice(i + 2, closingIndex);
-          nodes.push({
-            type: 'strikethrough',
-            children: this.parseInline(content),
-          });
-          i = closingIndex + 2;
-          continue;
+      if (processed[i] === '~' && processed[i + 1] === '~') {
+        // Skip if we're already inside strikethrough
+        if (parentContext === 'strikethrough') {
+          // Treat ~~ as literal text, fall through
+        } else {
+          const closingIndex = processed.indexOf('~~', i + 2);
+          if (closingIndex !== -1) {
+            const content = processed.slice(i + 2, closingIndex);
+            const restoredContent = this.restoreProtections(content, protections);
+            nodes.push({
+              type: 'strikethrough',
+              children: this.parseInline(restoredContent, true, 'strikethrough'),
+            });
+            i = closingIndex + 2;
+            continue;
+          }
         }
       }
 
       // Check for underline ++text++
-      if (text[i] === '+' && text[i + 1] === '+') {
-        const closingIndex = text.indexOf('++', i + 2);
-        if (closingIndex !== -1) {
-          const content = text.slice(i + 2, closingIndex);
-          nodes.push({
-            type: 'underline',
-            children: this.parseInline(content),
-          });
-          i = closingIndex + 2;
-          continue;
+      if (processed[i] === '+' && processed[i + 1] === '+') {
+        // Skip if we're already inside underline
+        if (parentContext === 'underline') {
+          // Treat ++ as literal text, fall through
+        } else {
+          const closingIndex = processed.indexOf('++', i + 2);
+          if (closingIndex !== -1) {
+            const content = processed.slice(i + 2, closingIndex);
+            const restoredContent = this.restoreProtections(content, protections);
+            nodes.push({
+              type: 'underline',
+              children: this.parseInline(restoredContent, true, 'underline'),
+            });
+            i = closingIndex + 2;
+            continue;
+          }
         }
       }
 
       // Check for highlight ==text==
-      if (text[i] === '=' && text[i + 1] === '=') {
-        const closingIndex = text.indexOf('==', i + 2);
-        if (closingIndex !== -1) {
-          const content = text.slice(i + 2, closingIndex);
-          nodes.push({
-            type: 'highlight',
-            children: this.parseInline(content),
-          });
-          i = closingIndex + 2;
-          continue;
+      if (processed[i] === '=' && processed[i + 1] === '=') {
+        // Skip if we're already inside highlight
+        if (parentContext === 'highlight') {
+          // Treat == as literal text, fall through
+        } else {
+          const closingIndex = processed.indexOf('==', i + 2);
+          if (closingIndex !== -1) {
+            const content = processed.slice(i + 2, closingIndex);
+            const restoredContent = this.restoreProtections(content, protections);
+            nodes.push({
+              type: 'highlight',
+              children: this.parseInline(restoredContent, true, 'highlight'),
+            });
+            i = closingIndex + 2;
+            continue;
+          }
         }
       }
 
       // Check for superscript ^text^
-      if (text[i] === '^') {
-        const closingIndex = text.indexOf('^', i + 1);
-        if (closingIndex !== -1) {
-          const content = text.slice(i + 1, closingIndex);
-          nodes.push({
-            type: 'superscript',
-            children: this.parseInline(content),
-          });
-          i = closingIndex + 1;
-          continue;
-        }
-      }
-
-      // Check for subscript ~text~ (single tilde, not double which is strikethrough)
-      if (text[i] === '~' && text[i + 1] !== '~') {
-        const closingIndex = text.indexOf('~', i + 1);
-        if (closingIndex !== -1) {
-          // Make sure we don't have ~~ which would be strikethrough
-          if (text[closingIndex + 1] !== '~') {
-            const content = text.slice(i + 1, closingIndex);
+      if (processed[i] === '^') {
+        // Skip if we're already inside superscript
+        if (parentContext === 'superscript') {
+          // Treat ^ as literal text, fall through
+        } else {
+          const closingIndex = processed.indexOf('^', i + 1);
+          if (closingIndex !== -1) {
+            const content = processed.slice(i + 1, closingIndex);
+            const restoredContent = this.restoreProtections(content, protections);
             nodes.push({
-              type: 'subscript',
-              children: this.parseInline(content),
+              type: 'superscript',
+              children: this.parseInline(restoredContent, true, 'superscript'),
             });
             i = closingIndex + 1;
             continue;
@@ -1468,16 +1728,40 @@ export class Parser {
         }
       }
 
+      // Check for subscript ~text~ (single tilde, not double which is strikethrough)
+      if (processed[i] === '~' && processed[i + 1] !== '~') {
+        // Skip if we're already inside subscript
+        if (parentContext === 'subscript') {
+          // Treat ~ as literal text, fall through
+        } else {
+          const closingIndex = processed.indexOf('~', i + 1);
+          if (closingIndex !== -1) {
+            // Make sure we don't have ~~ which would be strikethrough
+            if (processed[closingIndex + 1] !== '~') {
+              const content = processed.slice(i + 1, closingIndex);
+              const restoredContent = this.restoreProtections(content, protections);
+              nodes.push({
+                type: 'subscript',
+                children: this.parseInline(restoredContent, true, 'subscript'),
+              });
+              i = closingIndex + 1;
+              continue;
+            }
+          }
+        }
+      }
+
       // Check for custom span ::class[content]::
-      if (text[i] === ':' && text[i + 1] === ':') {
-        const spanMatch = text.slice(i).match(/^::([a-zA-Z0-9_-]+)\[([^\]]*)\]::/);
+      if (processed[i] === ':' && processed[i + 1] === ':') {
+        const spanMatch = processed.slice(i).match(/^::([a-zA-Z0-9_-]+)\[([^\]]*)\]::/);
         if (spanMatch) {
           const className = spanMatch[1];
           const content = spanMatch[2];
+          const restoredContent = this.restoreProtections(content, protections);
           nodes.push({
             type: 'custom-span',
             className,
-            children: this.parseInline(content),
+            children: this.parseInline(restoredContent, true, 'custom-span'),
           });
           i += spanMatch[0].length;
           continue;
@@ -1485,8 +1769,8 @@ export class Parser {
       }
 
       // Check for footnote reference [^1] or [^label]
-      if (text[i] === '[' && text[i + 1] === '^') {
-        const footnoteMatch = text.slice(i).match(/^\[\^([^\]]+)\]/);
+      if (processed[i] === '[' && processed[i + 1] === '^') {
+        const footnoteMatch = processed.slice(i).match(/^\[\^([^\]]+)\]/);
         if (footnoteMatch) {
           const label = footnoteMatch[1];
           nodes.push({
@@ -1499,14 +1783,15 @@ export class Parser {
       }
 
       // Check for HTML tags <tag>content</tag> or <tag />
-      if (this.options.enableHtml !== false && text[i] === '<') {
+      if (this.options.enableHtml !== false && processed[i] === '<') {
         // Try to match opening and closing HTML tag with content
         const htmlRegex = /^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)>(.*?)<\/([a-zA-Z][a-zA-Z0-9]*)>/;
-        const match = text.slice(i).match(htmlRegex);
+        const match = processed.slice(i).match(htmlRegex);
         if (match && match[1] === match[4]) {
           const tag = match[1];
           const attrs = match[2];
           const content = match[3];
+          const restoredContent = this.restoreProtections(content, protections);
           const fullMatch = match[0];
 
           // Parse attributes
@@ -1518,7 +1803,7 @@ export class Parser {
           }
 
           // Parse content as markdown
-          const parsedContent = this.parseInline(content);
+          const parsedContent = this.parseInline(restoredContent, true, 'html-inline');
 
           nodes.push({
             type: 'html-inline',
@@ -1532,7 +1817,7 @@ export class Parser {
 
         // Try self-closing tag
         const selfClosingRegex = /^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)\/>/;
-        const selfMatch = text.slice(i).match(selfClosingRegex);
+        const selfMatch = processed.slice(i).match(selfClosingRegex);
         if (selfMatch) {
           const tag = selfMatch[1];
           const attrs = selfMatch[2];
@@ -1555,13 +1840,15 @@ export class Parser {
           i += fullMatch.length;
           continue;
         }
-      } // Default: text node
-      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=$^\u0000<{]/);
-      const textLength = nextSpecial === -1 ? text.length - i : nextSpecial + 1;
+      }
+
+      // Default: text node
+      const nextSpecial = processed.slice(i + 1).search(/[\\`*_\[\]!~:+=$^\u0000<{\u0001]/);
+      const textLength = nextSpecial === -1 ? processed.length - i : nextSpecial + 1;
 
       nodes.push({
         type: 'text',
-        value: text.slice(i, i + textLength),
+        value: processed.slice(i, i + textLength),
       });
       i += textLength;
     }

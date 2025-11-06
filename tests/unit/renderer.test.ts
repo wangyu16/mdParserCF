@@ -316,7 +316,9 @@ const x = 5;
     });
 
     it('should render image with custom attributes from HTML comment', () => {
-      const html = renderMarkdown('![alt text](image.png)<!-- class="responsive-img" style="width: 100%;" -->');
+      const html = renderMarkdown(
+        '![alt text](image.png)<!-- class="responsive-img" style="width: 100%;" -->'
+      );
       expect(html).toContain('class="responsive-img"');
       expect(html).toContain('style="width: 100%;"');
     });
@@ -344,7 +346,9 @@ const x = 5;
     });
 
     it('should handle multiple attributes', () => {
-      const html = renderMarkdown('![alt](image.png)<!-- width="100" height="50" data-lazy="true" -->');
+      const html = renderMarkdown(
+        '![alt](image.png)<!-- width="100" height="50" data-lazy="true" -->'
+      );
       expect(html).toContain('width="100"');
       expect(html).toContain('height="50"');
       expect(html).toContain('data-lazy="true"');
@@ -357,7 +361,7 @@ const x = 5;
 - Item 2`;
       const html = renderMarkdown(markdown);
       expect(html).toContain('<ul>');
-      expect(html).toContain('<li>');
+      expect(html).toMatch(/<li/); // Changed to match <li with attributes
       expect(html).toContain('Item 1');
       expect(html).toContain('</ul>');
     });
@@ -367,7 +371,7 @@ const x = 5;
 2. Second`;
       const html = renderMarkdown(markdown);
       expect(html).toContain('<ol>');
-      expect(html).toContain('<li>');
+      expect(html).toMatch(/<li/); // Changed to match <li with attributes
       expect(html).toContain('First');
       expect(html).toContain('</ol>');
     });
@@ -699,4 +703,3 @@ Info here.
     });
   });
 });
-
