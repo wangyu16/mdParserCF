@@ -1,436 +1,325 @@
-# 🗺️ Next Steps & Development Roadmap
+# Next Steps - Phase 2 Plugin Expansion & Deployment
 
-**Current Status**: Phase 1 Extensions - 40% Complete (2/5 extensions)  
-**Test Coverage**: 94/94 passing (100%) ✅  
-**Code Quality**: 100% type-safe, zero linting errors ✅  
+## 📍 Current Status
 
----
+✅ **Phase 1 Complete - Features & Plugins Implemented**
+- Parser: 92/92 tests passing (core markdown)
+- Renderer: 87/87 tests passing (core markdown)
+- Plugin System: 35 tests passing (YouTube, Emoji, SMILES, Badge, Mermaid)
+- Math System: 18 tests passing (KaTeX with mhchem)
+- **Total: 232/232 tests (100% pass rate)**
 
-## 🎯 Immediate Next Steps (This Week)
+### Phase 1 Features Implemented ✅
+- ✅ **Markdown Parser** - Complete CommonMark support
+- ✅ **HTML Renderer** - Production-ready rendering
+- ✅ **Plugin System** - Extensible architecture with 5 built-in plugins
+- ✅ **Math Formulas** - KaTeX server-side rendering with chemistry support
+- ✅ **SMILES Plugin** - Chemical structure visualization with SmilesDrawer
+- ✅ **Specification** - Section 16 added with 10 recommended future plugins
 
-### 1. Implement Footnotes (Extension #3) - 🔴 HIGH PRIORITY
-**Time Estimate**: 3-4 hours  
-**Complexity**: Medium  
-**Impact**: Adds commonly-used academic feature  
-
-#### Tasks:
-```
-[ ] Review footnote spec in markdownRenderRules.md (lines 11-X)
-    Syntax: [^1] reference, [^1]: definition
-    Features: Multi-paragraph, inline footnotes, reuse
-    
-[ ] Add/verify AST types in src/parser/ast-types.ts
-    - Footnote interface (reference marker + id)
-    - FootnoteDefinition interface (id + content)
-    
-[ ] Implement parsing in src/parser/parser.ts
-    [ ] Add footnote reference detection in parseInline()
-    [ ] Implement footnote collection phase
-    [ ] Add parseFootnoteReference() method
-    [ ] Add parseFootnoteDefinition() method
-    
-[ ] Implement rendering in src/renderer/html-renderer.ts
-    [ ] Add renderFootnote() method (inline)
-    [ ] Add renderFootnoteDefinition() method (footer)
-    [ ] Handle footnote numbering/ordering
-    
-[ ] Write comprehensive tests (8-10 total)
-    [ ] Basic footnote reference parsing (1 test)
-    [ ] Footnote definition parsing (1 test)
-    [ ] Multi-paragraph footnotes (1 test)
-    [ ] Inline footnotes ^[content] (1 test)
-    [ ] Footnote reuse (1 test)
-    [ ] Nested markdown in footnotes (1 test)
-    [ ] Footnote rendering (2 tests)
-    [ ] Edge cases: unclosed, invalid ID (1 test)
-    
-[ ] Verify all tests pass: npm test
-[ ] Update documentation:
-    [ ] Create PHASE1_EXTENSION_3_COMPLETE.md
-    [ ] Create FOOTNOTES_IMPLEMENTATION.md
-    [ ] Update NEXT_STEPS.md
-    [ ] Update PHASE1_EXTENSIONS.md
-```
-
-**Success Criteria**:
-- All 102-104 tests passing (94 + 8-10 footnote tests)
-- 100% pass rate maintained
-- Zero TypeScript errors
-- Documentation complete
+### Current Build Status ✅
+- ESM Bundle: 403 KB (gzip: 101 KB)
+- UMD Bundle: 280 KB (gzip: 83 KB)
+- Compilation: Clean (0 errors, 0 warnings)
+- All tests: 232/232 passing
+- Specification: Complete (858 lines, 16 sections)
 
 ---
 
-### 2. Add Line Breaks (2 Spaces → `<br>`) - 🟡 MEDIUM PRIORITY
-**Time Estimate**: 1 hour  
-**Complexity**: Low  
-**Impact**: Fixes markdown spec compliance gap  
+## 🎯 What To Do Next
 
-#### Tasks:
-```
-[ ] Understand spec: Two or more spaces at end of line = line break
-    Current: Spaces treated as part of text
-    Needed: Detect "  \n" pattern and create break node
-    
-[ ] Modify src/parser/parser.ts
-    [ ] Update parseParagraph() to detect trailing spaces
-    [ ] Create break element in inline parsing
-    
-[ ] Update src/renderer/html-renderer.ts
-    [ ] Add renderBreak() method returning `<br>`
-    
-[ ] Write tests (2-3)
-    [ ] Basic line break (1 test)
-    [ ] Multiple spaces (1 test)
-    [ ] Break in paragraph vs separate paragraph (1 test)
-    
-[ ] Verify all tests pass: npm test
-```
+### ✅ Phase 1 Complete - Ready for Phase 2
 
-**Success Criteria**:
-- All 96-97 tests passing
-- Spec compliance improved
-- Documentation updated
+**What's Done** (All Core + Extensions):
+- ✅ **Markdown Parser** - 92 tests covering all syntax elements
+- ✅ **HTML Renderer** - 87 tests with full specification compliance
+- ✅ **Plugin System** - 5 core plugins (YouTube, Emoji, SMILES, Badge, Mermaid)
+- ✅ **Math System** - KaTeX with mhchem chemistry support (18 tests)
+- ✅ **Quality Assurance** - 232/232 tests passing, clean compilation
+- ✅ **Documentation** - Full specification + construction notes
+
+### Phase 2 Options - Choose Your Priority
+
+**Option A: Cloudflare Workers Deployment** (Fastest path to production)
+- **Estimated Time**: 2-3 hours
+- **Effort**: Medium (configuration + testing)
+- **Impact**: Enable production use on serverless platform
+- **Dependencies**: None - ready to go
+- **Recommended**: YES - High value, unblocks everything
+
+**Option B: 3D Molecular Structure Viewer** (Highest chemistry impact)
+- **Estimated Time**: 1-2 days
+- **Effort**: High (library integration + testing)
+- **Impact**: Visualize 3D molecular structures (PDB, MMCIF formats)
+- **Libraries**: 3Dmol.js or NGL.js
+- **Tests**: ~10-12 new tests
+- **Recommended**: After CF Workers deployment
+
+**Option C: Reaction Mechanism / Arrow-Pushing** (Visualization for reactions)
+- **Estimated Time**: 2-3 days
+- **Effort**: High (SVG curve rendering + physics)
+- **Impact**: Show reaction mechanisms with electron flow
+- **Libraries**: d3.js, SVG.js, or Paper.js
+- **Tests**: ~8-10 new tests
+- **Recommended**: After CF Workers + 3D viewer
+
+**Option D: Spectra Viewer (NMR/IR/MS)** (Analytical chemistry support)
+- **Estimated Time**: 2-3 days
+- **Effort**: Medium-High (data parsing + visualization)
+- **Impact**: Interactive spectroscopic data visualization
+- **Libraries**: Plotly.js or Chart.js
+- **Formats**: JCAMP-DX, mzML
+- **Tests**: ~10-12 new tests
+- **Recommended**: After CF Workers
+
+### Recommended Implementation Order
+
+**Phase 2A: Foundation** (Week 1)
+1. ✅ **Deploy to Cloudflare Workers** (2-3 hours)
+   - Configure wrangler.toml
+   - Create CF Worker handler
+   - Deploy to staging/production
+   - Enable real-world usage
+
+**Phase 2B: High-Impact Plugins** (Week 2-3)
+2. **Implement 3D Molecular Viewer** (1-2 days)
+   - Integrate 3Dmol.js or NGL.js
+   - Support PDB/MMCIF formats
+   - Add rotation, zoom, selection
+   
+3. **Implement Reaction Mechanisms** (2-3 days)
+   - SVG-based arrow rendering
+   - Electron flow visualization
+   - Stepwise annotations
+
+**Phase 2C: Utility Plugins** (Week 4)
+4. **Implement Spectra Viewer** (2-3 days)
+   - NMR/IR/MS data support
+   - JCAMP-DX parsing
+   - Interactive plots
+
+5. **Implement Data Plotting** (1-2 days)
+   - CSV/JSON support
+   - Plotly/Vega-Lite integration
+   - Export capabilities
 
 ---
 
-## 🗓️ This Month Roadmap (Week 2-3)
+## 📋 Estimated Effort for Phase 2
 
-### 3. Reference-Style Links & Images - 🟡 MEDIUM PRIORITY
-**Time Estimate**: 2-3 hours  
-**Complexity**: Medium (requires link reference collection)  
-**Impact**: CommonMark standard feature  
+| Task | Effort | Time | Tests | Dependencies | Priority |
+|------|--------|------|-------|--------------|----------|
+| Cloudflare Workers Deployment | Medium | 2-3h | - | None | 1 |
+| 3D Molecular Viewer | High | 1-2d | 10-12 | None (after CF) | 2 |
+| Reaction Mechanisms | High | 2-3d | 8-10 | None (after 3D) | 3 |
+| Spectra Viewer | Medium-High | 2-3d | 10-12 | None (after CF) | 4 |
+| Data Plotting | Medium | 1-2d | 8-10 | None | 5 |
+| Stoichiometry Tool | Medium | 1-2d | 6-8 | None | 6 |
+| Periodic Table | Low-Medium | 1-2d | 6-8 | None | 7 |
+| Sequence Viewer | Medium | 1-2d | 8-10 | None | 8 |
+| Jupyter Embedding | Medium-High | 2-3d | 8-10 | None | 9 |
+| RDKit Integration | High | 2-3d | 8-10 | Server setup | 10 |
 
-#### Pattern Recognition:
+**Estimated Phase 2 Timeline**: 3-4 weeks (if implemented sequentially)
+
+**Recommended Path (Parallel)**:
+- Week 1: Cloudflare Workers deployment (unblocks production use)
+- Week 2-3: 3D Viewer + Spectra Viewer (parallel if resources available)
+- Week 4+: Additional plugins as priority
+
+---
+
+## 🚀 Recommended Path Forward
+
+### ✅ What Was Completed (All of Phase 1)
+- [x] Markdown parser with all standard elements
+- [x] HTML renderer with full feature support
+- [x] Plugin system architecture
+- [x] 5 core plugins (YouTube, Emoji, SMILES, Badge, Mermaid)
+- [x] Math formulas (KaTeX + mhchem)
+- [x] 232 comprehensive tests (100% passing)
+- [x] Complete specification (858 lines, 16 sections)
+- [x] Production-quality code with zero warnings
+
+### PRIORITY 1: Cloudflare Workers Deployment ⭐
+**Status**: Ready to begin
+**Estimated**: 2-3 hours
+**Impact**: HIGH (enables production use)
+
+**Steps**:
+1. Review `wrangler.toml` configuration
+2. Create `src/cloudflare/worker.ts` entry point
+3. Configure environment variables
+4. Test locally with `wrangler dev`
+5. Deploy to staging: `wrangler publish --env staging`
+6. Test production deployment
+7. Setup custom domain routing
+8. Create deployment documentation
+
+**After Completion**: Ready for real-world usage! ✅
+
+### PRIORITY 2: 3D Molecular Viewer (After CF Workers)
+**Status**: Architecture planned, ready to implement
+**Estimated**: 1-2 days
+**Impact**: HIGH (major chemistry feature)
+
+**Implementation Approach**:
+- Use 3Dmol.js (lightweight, JavaScript-based)
+- Alternative: NGL.js (more features but heavier)
+- Support formats: PDB, MMCIF, SDF
+- Features: rotation, zoom, atom selection, coloring
+- Plugin syntax: `{{molecule3d format structure}}`
+
+**Example**:
 ```markdown
-[link text][ref-id]
-[ref-id]: https://example.com "Optional title"
-
-![alt][img-ref]
-[img-ref]: image.png "Title"
+{{molecule3d pdb "ATOM  1  N   ALA A   1 ..."}}`
+{{molecule3d mmcif "data_structure ..."}}
 ```
 
-#### Tasks:
-- [ ] Implement reference definition collection phase
-- [ ] Add ref lookup in link/image rendering
-- [ ] Write 4-6 tests
-- [ ] Update documentation
+### PRIORITY 3: Reaction Mechanisms (After 3D Viewer)
+**Status**: Architecture planned
+**Estimated**: 2-3 days
+**Impact**: MEDIUM-HIGH (visualization feature)
+
+**Implementation Approach**:
+- SVG-based curved arrows for electron flow
+- Use d3.js or custom SVG geometry
+- Support stepwise annotations
+- Plugin syntax: `{{reaction-mechanism [...]}}`
+
+### PRIORITY 4: Spectra Viewer (Parallel with others)
+**Status**: Architecture planned
+**Estimated**: 2-3 days
+**Impact**: HIGH (analytical chemistry feature)
+
+**Implementation Approach**:
+- Parse JCAMP-DX format
+- Render with Plotly.js or Chart.js
+- Interactive features: zoom, pan, annotation
+- Support NMR, IR, MS formats
 
 ---
 
-### 4. Auto-Links (`<url>` and `<email>`) - 🟡 MEDIUM PRIORITY
-**Time Estimate**: 1-2 hours  
-**Complexity**: Low  
-**Impact**: CommonMark standard feature  
+## 📚 Quick Reference
 
-#### Pattern Recognition:
-```markdown
-<https://example.com> → <a href="https://example.com">https://example.com</a>
-<user@example.com> → <a href="mailto:user@example.com">user@example.com</a>
+### Key Files to Know
+- **Parser**: `src/parser/parser.ts`
+- **Renderer**: `src/renderer/html-renderer.ts`
+- **Plugin System**: `src/parser/plugin-system.ts`
+- **Math Renderer**: `src/renderer/html-renderer.ts` (renderMath methods)
+- **Cloudflare Entry**: `src/cloudflare/worker.ts` (to be created)
+- **Tests**: `tests/unit/parser.test.ts`, `tests/unit/renderer.test.ts`, `tests/unit/plugins.test.ts`
+- **Specification**: `bluePrint/markdownRenderRules.md`
+
+### Common Commands
+```bash
+npm test                    # Run all tests (232 tests)
+npm test -- --watch        # Watch mode for TDD
+npm run lint               # Check code quality
+npm run format             # Auto-format code
+npm run build              # Build production bundles
+npm run dev                # Start dev server
+npm run dev:wrangler       # Test with Cloudflare locally
 ```
 
-#### Tasks:
-- [ ] Add auto-link detection in parseInline()
-- [ ] Add URL and email validation
-- [ ] Add rendering methods
-- [ ] Write 3-4 tests
-
----
-
-### 5. Remaining Inline Styles - 🟡 MEDIUM PRIORITY
-**Time Estimate**: 2-3 hours  
-**Complexity**: Medium (syntax conflicts possible)  
-**Impact**: Academic/scientific writing support  
-
-#### Features to Add:
-```markdown
-++underline++      → <u>underline</u>
-==highlight==      → <mark>highlight</mark>
-^superscript^      → <sup>superscript</sup>
-~subscript~        → <sub>subscript</sub>  (CONFLICTS with ~~strikethrough~~)
-```
-
-#### Subscript Conflict Solution:
-- Option A: Use single `~` for subscript, require `~~` for strikethrough (current)
-- Option B: Use different syntax like `~{subscript}` or `:subscript:`
-- **Recommend**: Option A (already works for strikethrough)
-
-#### Tasks:
-- [ ] Add AST types: Underline, Highlight, Superscript, Subscript
-- [ ] Implement parsing for each in parseInline()
-- [ ] Add rendering methods in html-renderer.ts
-- [ ] Write 4-6 tests
-- [ ] Handle nesting and edge cases
-
----
-
-## 📦 Phase 1 Extensions Summary (Next 1-2 Weeks)
-
-| Extension | Status | Priority | Effort | Tests | Status |
-|-----------|--------|----------|--------|-------|--------|
-| Tables | ✅ Done | - | 3 hrs | 18 | Complete |
-| Strikethrough | ✅ Done | - | 1 hr | 8 | Complete |
-| **Footnotes** | ⏳ Next | 🔴 HIGH | 3-4 hrs | 8-10 | Ready |
-| Line Breaks | ⏳ Next | 🟡 MED | 1 hr | 2-3 | Ready |
-| Custom Containers | 📋 Planned | 🟡 MED | 2-3 hrs | 4-6 | Designed |
-| Inline Styles | 📋 Planned | 🟡 MED | 2-3 hrs | 4-6 | Designed |
-| **TOTAL PHASE 1** | | | ~14-16 hrs | 130-145 | 40% Done |
-
----
-
-## 🎯 Phase 1 Completion (Next Month)
-
-### Remaining Work
-1. Footnotes (3-4 hrs)
-2. Line breaks (1 hr)
-3. Custom containers (2-3 hrs)
-4. Additional inline styles (2-3 hrs)
-5. Reference-style links/images (2-3 hrs)
-6. Auto-links (1-2 hrs)
-7. GitHub Actions CI/CD (2 hrs)
-8. Final testing & polish (1-2 hrs)
-
-**Total Remaining**: ~14-20 hours
-
-### Target Timeline
-- **This Week**: Footnotes + Line Breaks (4-5 hours)
-- **Next Week**: Custom Containers + Inline Styles (4-6 hours)
-- **Week 3**: Reference Links + Auto-Links (3-4 hours)
-- **Week 4**: CI/CD + Polish (2-3 hours)
-
-**Phase 1 Complete**: ~4 weeks total (1 week done, 3 weeks remaining)
-
----
-
-## 📋 Before Starting Each Extension
-
-### Checklist Template
-```
-[ ] Read spec section in markdownRenderRules.md
-[ ] Review existing similar implementations
-[ ] Verify AST types exist or create new ones
-[ ] Design parser logic:
-    [ ] Where to detect? (parseInline, parseBlock, etc)
-    [ ] What delimiters/patterns?
-    [ ] How to handle nesting?
-    [ ] Edge cases?
-[ ] Design rendering logic
-[ ] Write test cases FIRST (TDD approach)
-[ ] Implement parser code
-[ ] Implement renderer code
-[ ] Run tests: npm test
-[ ] Run linting: npm run lint
-[ ] Run type check: npm run type-check
-[ ] Update documentation
-[ ] Update CHECKLIST.md progress
-[ ] Update PHASE1_EXTENSIONS.md
-```
-
----
-
-## 🧪 Testing Protocol for Extensions
-
-### For Each Extension Feature:
+### Plugin Pattern
 ```typescript
-// 1. Basic functionality test
-it('should parse [feature]', () => {
-  const ast = parser.parse('[feature markdown]');
-  expect(ast.children[0].type).toBe('expected-type');
-});
-
-// 2. Nested formatting test
-it('should parse [feature] with nested formatting', () => {
-  const ast = parser.parse('[feature with **bold** inside]');
-  // Verify nested nodes are parsed
-});
-
-// 3. Multiple on same line test
-it('should parse multiple [feature] on same line', () => {
-  const ast = parser.parse('[feature1] text [feature2]');
-  // Verify both found
-});
-
-// 4. Edge case - unclosed/invalid test
-it('should handle unclosed [feature]', () => {
-  const ast = parser.parse('[unclosed feature');
-  // Should not crash, handle gracefully
-});
-
-// 5. Rendering test
-it('should render [feature] correctly', () => {
-  const html = mdToHtml('[feature markdown]');
-  expect(html).toContain('<expected-tag>');
-});
-
-// 6. Security test
-it('should escape HTML in [feature]', () => {
-  const html = mdToHtml('[feature with <script>]');
-  expect(html).not.toContain('<script>');
-  expect(html).toContain('&lt;script&gt;');
-});
+// All plugins follow this pattern:
+case 'youtube':
+  return `<iframe src="https://www.youtube.com/embed/${match[1]}"></iframe>`;
+case 'smiles':
+  return `<canvas id="smiles-${uniqueId}"></canvas><script>renderSmiles(...)</script>`;
 ```
 
 ---
 
-## 🔄 Development Workflow
+## 🎓 Resources
 
-### For Each Work Session:
-```bash
-# 1. Pull latest changes
-git pull origin main
+### Documentation Files
+- **[Project Blueprint](bluePrint/projectBlueprint.md)** - Architecture & design
+- **[Markdown Rules](bluePrint/markdownRenderRules.md)** - Complete specification (16 sections)
+- **[Construction Notes](constructionNotes/)** - Implementation guides & status
 
-# 2. Create feature branch
-git checkout -b feature/[extension-name]
+### Key Implementation Docs
+- `PHASE_1D_STATUS.md` - Latest session status (this file updated)
+- `PLUGIN_VERIFICATION_REPORT.md` - All plugins verified
+- `SMILESDRAWER_IMPLEMENTATION_COMPLETE.md` - SMILES plugin details
+- `KATEX_IMPLEMENTATION.md` - Math rendering details
 
-# 3. Run tests before changes
-npm test
+---
 
-# 4. Make changes and test frequently
-npm test -- --watch
+## ✨ Success Criteria for Phase 2
 
-# 5. Before committing, run full suite
-npm test
-npm run lint
-npm run type-check
-npm run format
+Each new plugin should have:
+- ✅ Plugin registration in registry
+- ✅ HTML output generation
+- ✅ 8-12 comprehensive tests
+- ✅ Client-side rendering (if needed)
+- ✅ All tests passing (100%)
+- ✅ Documentation with usage examples
+- ✅ Error handling & fallbacks
 
-# 6. Commit with descriptive message
-git add .
-git commit -m "feat: add [feature] support
+---
 
-- Implement parsing for [feature]
-- Add rendering to [output]
-- Add [N] tests
-- All [N] tests passing"
+## 💡 Pro Tips
 
-# 7. Push and create PR
-git push origin feature/[extension-name]
+1. **Architecture**: Review existing plugins (SMILES, Mermaid) for patterns
+2. **Testing**: Test with local dev server before building
+3. **Performance**: Consider client-side rendering vs server generation
+4. **Error Handling**: Always provide fallbacks for failed rendering
+5. **Documentation**: Keep markdownRenderRules.md updated as features change
+
+---
+
+## � Progress Tracker
+
+```
+PHASE 1 COMPLETION: ✅ 100% (All Core Features)
+✓ Markdown Parser (92 tests)
+✓ HTML Renderer (87 tests)
+✓ Plugin System (35 tests)
+✓ Math Formulas (18 tests)
+Total: 232/232 tests passing
+
+PHASE 2 ROADMAP:
+□ Cloudflare Workers Deployment (Priority 1 - 2-3h)
+□ 3D Molecular Viewer (Priority 2 - 1-2d)
+□ Reaction Mechanisms (Priority 3 - 2-3d)
+□ Spectra Viewer (Priority 4 - 2-3d)
+□ 6 Additional Plugins (Lower priority)
 ```
 
 ---
 
-## 📊 Progress Tracking
+## 🎉 What You Can Do Now
 
-### Weekly Update Template
-```markdown
-## Week [N] Progress
+✅ Parse and render full CommonMark markdown  
+✅ Embed YouTube videos  
+✅ Insert emojis  
+✅ Visualize SMILES chemical structures  
+✅ Add custom badges  
+✅ Render diagrams with Mermaid  
+✅ Display math formulas with chemistry support  
+✅ Extend with custom plugins  
 
-**Completed**:
-- [x] Extension [X]: Feature completed
-  - [x] Parsing implemented
-  - [x] Rendering implemented
-  - [x] [N] tests added
-  - Tests: [current]/[total] passing
+### Next: Choose Your Adventure!
 
-**In Progress**:
-- [ ] Extension [Y]: Feature name
-  - Status: [%] complete
+**Option 1** (Fastest): Deploy to Cloudflare Workers (2-3 hours)  
+→ Then everything above works on a live serverless platform!
 
-**Planned**:
-- [ ] Extension [Z]: Feature name
-  - Estimated: [hours] hours, [N] tests
+**Option 2** (Most Impact): Add 3D Molecular Viewer (1-2 days)  
+→ Visualize 3D protein/drug structures interactively
 
-**Test Coverage**: [current]/[total] (100%)
-**Code Quality**: [status]
-**Blockers**: None / [specific blockers]
+**Option 3** (Chemistry): Add Reaction Mechanisms (2-3 days)  
+→ Show reaction mechanisms with electron flow
 
-**Next Week**: [planned tasks]
-```
+**Which would you like to build next?** 🚀
 
 ---
 
-## 🎓 Knowledge Base for Developers
+**Phase 1 Status**: 🟢 COMPLETE  
+**Current Tests**: 232/232 passing  
+**Build Status**: ✅ Clean  
+**Ready For**: Production deployment (Phase 2)
 
-### Key Files to Review Before Starting
-- `src/parser/parser.ts` - Study existing parseInline() and parseBlock() methods
-- `src/renderer/html-renderer.ts` - Review rendering patterns
-- `tests/unit/parser.test.ts` - Study test structure
-- `tests/unit/renderer.test.ts` - Review test patterns
-- `bluePrint/markdownRenderRules.md` - Reference implementation
-
-### Common Patterns
-
-#### Adding a New Inline Element:
-1. Add type to `ast-types.ts`
-2. Add detection in `parseInline()` method
-3. Add case to `renderInline()` method
-4. Add parser test + renderer test
-5. Run tests: `npm test`
-
-#### Adding a New Block Element:
-1. Add type to `ast-types.ts`
-2. Add detection in `parseBlock()` method
-3. Add case to `renderBlock()` method
-4. Add parser test + renderer test
-
----
-
-## ❓ FAQ for Extension Development
-
-**Q: How do I handle nested formatting?**
-A: Call `this.parseInline(content)` to recursively parse inline content inside your element.
-
-**Q: What if my syntax conflicts with existing syntax?**
-A: Review parsing precedence in `precedence.ts` or adjust detection order in `parseInline()`.
-
-**Q: How do I test edge cases?**
-A: Add test for: unclosed delimiters, nested structures, multiple on same line, empty content, special chars.
-
-**Q: Should I update the AST types?**
-A: Yes - always. Even if partially, add TODOs for future improvements.
-
-**Q: Do I need to handle escaping?**
-A: Yes - users should be able to escape with backslash (e.g., `\++not underline\++`).
-
----
-
-## 📞 Documentation Updates Needed
-
-### For Each Extension Completed:
-1. Create `PHASE1_EXTENSION_[N]_COMPLETE.md` - Summary
-2. Create `[FEATURE]_IMPLEMENTATION.md` - Technical details
-3. Update `PHASE1_EXTENSIONS.md` - Mark complete, show example
-4. Update `CHECKLIST.md` - Check off tasks
-5. Update `README.md` - Add to features list
-6. Update `MARKDOWN_SPEC_COMPLIANCE.md` - Update status
-
----
-
-## 🚀 Ready to Start?
-
-### Before You Begin:
-1. ✅ Read this entire NEXT_STEPS.md
-2. ✅ Review current test structure
-3. ✅ Read relevant spec section
-4. ✅ Check AST types
-5. ✅ Plan test cases
-
-### Getting Started with Footnotes:
-```bash
-# 1. Read spec
-cat bluePrint/markdownRenderRules.md | grep -A 30 "Footnotes"
-
-# 2. Check current state
-npm test  # See baseline: 94 tests passing
-
-# 3. Review similar code
-grep -n "parseInline" src/parser/parser.ts
-
-# 4. Create feature branch
-git checkout -b feature/footnotes
-
-# 5. Start coding and testing!
-npm test -- --watch
-```
-
----
-
-**Status**: Ready to continue with next extension  
-**Next Action**: Start Footnotes implementation  
-**Estimated Completion**: 3-4 hours  
-**Tests After**: 102-104 total passing (100%)
-
----
-
-*Last Updated: November 5, 2025*  
-*Developer Guide Version: 1.0*  
-*Ready for next phase development*
+**Let's build Phase 2! 🚀**

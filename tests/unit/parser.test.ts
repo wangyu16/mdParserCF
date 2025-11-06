@@ -105,7 +105,9 @@ Second paragraph.`;
     it('should parse strikethrough with nested formatting', () => {
       const ast = parser.parse('This is ~~**bold strikethrough**~~ text.');
       const para = ast.children[0] as any;
-      const strikethrough = para.children.find((child: any) => child.type === 'strikethrough') as any;
+      const strikethrough = para.children.find(
+        (child: any) => child.type === 'strikethrough'
+      ) as any;
       expect(strikethrough).toBeDefined();
       expect(strikethrough.children.some((child: any) => child.type === 'strong')).toBe(true);
     });
@@ -383,7 +385,9 @@ const x = 5;
     });
 
     it('should parse image with custom attributes from HTML comment', () => {
-      const ast = parser.parse('![alt text](image.png)<!-- class="responsive-img" style="width: 100%;" -->');
+      const ast = parser.parse(
+        '![alt text](image.png)<!-- class="responsive-img" style="width: 100%;" -->'
+      );
       const para = ast.children[0] as any;
       const img = para.children.find((child: any) => child.type === 'image') as any;
       expect(img.url).toBe('image.png');
@@ -462,6 +466,25 @@ const x = 5;
       const ast = parser.parse(markdown);
       expect(ast.children[0].type).toBe('unordered-list');
     });
+
+    it('should terminate list when blank line followed by non-list content', () => {
+      // Bug fix: blank line followed by non-indented, non-list text should end the list
+      const markdown = `1. Item 1
+2. Item 2
+3. Item 3
+
+Not a list item`;
+      const ast = parser.parse(markdown);
+      expect(ast.children).toHaveLength(2);
+      expect(ast.children[0].type).toBe('ordered-list');
+      expect(ast.children[1].type).toBe('paragraph');
+
+      const list = ast.children[0] as any;
+      expect(list.children).toHaveLength(3);
+
+      const paragraph = ast.children[1] as any;
+      expect(paragraph.children[0].value).toBe('Not a list item');
+    });
   });
 
   describe('Blockquotes', () => {
@@ -525,16 +548,21 @@ const x = 5;
 
   describe('Complex Documents', () => {
     it('should parse mixed content', () => {
-      const markdown = `# Title
+      const markdown =
+        `# Title
 
 This is a paragraph with **bold** and *italic*.
 
 - List item 1
 - List item 2
 
-\`\`\`js
+` +
+        '```' +
+        `js
 code();
-\`\`\`
+` +
+        '```' +
+        `
 
 > A quote`;
       const ast = parser.parse(markdown);
@@ -650,7 +678,9 @@ More text`;
       const ast = parser.parse(markdown);
       expect(ast.children[0].type).toBe('paragraph');
       const paragraph = ast.children[0] as any;
-      const hasFootnoteRef = paragraph.children.some((node: any) => node.type === 'footnote-reference');
+      const hasFootnoteRef = paragraph.children.some(
+        (node: any) => node.type === 'footnote-reference'
+      );
       expect(hasFootnoteRef).toBe(true);
     });
 
@@ -668,7 +698,9 @@ More text`;
       const markdown = 'First[^1] and second[^2] footnotes.';
       const ast = parser.parse(markdown);
       const paragraph = ast.children[0] as any;
-      const footnoteRefs = paragraph.children.filter((node: any) => node.type === 'footnote-reference');
+      const footnoteRefs = paragraph.children.filter(
+        (node: any) => node.type === 'footnote-reference'
+      );
       expect(footnoteRefs.length).toBe(2);
     });
 
@@ -733,7 +765,7 @@ Paragraph 2.`;
       const ast = parser.parse(markdown);
       const para = ast.children[0] as any;
       expect(para.type).toBe('paragraph');
-      
+
       // Should have: text("Line 1"), hard-line-break, text("Line 2")
       const hasLineBreak = para.children.some((child: any) => child.type === 'hard-line-break');
       expect(hasLineBreak).toBe(true);
@@ -743,7 +775,7 @@ Paragraph 2.`;
       const markdown = 'Line 1 \nLine 2';
       const ast = parser.parse(markdown);
       const para = ast.children[0] as any;
-      
+
       // Should treat as soft line break (space)
       const hasHardBreak = para.children.some((child: any) => child.type === 'hard-line-break');
       expect(hasHardBreak).toBe(false);
@@ -753,8 +785,10 @@ Paragraph 2.`;
       const markdown = 'Line 1  \nLine 2  \nLine 3';
       const ast = parser.parse(markdown);
       const para = ast.children[0] as any;
-      
-      const breakCount = para.children.filter((child: any) => child.type === 'hard-line-break').length;
+
+      const breakCount = para.children.filter(
+        (child: any) => child.type === 'hard-line-break'
+      ).length;
       expect(breakCount).toBe(2);
     });
   });
@@ -764,10 +798,10 @@ Paragraph 2.`;
       const markdown = 'Text with ::highlight[important]:: content.';
       const ast = parser.parse(markdown);
       const para = ast.children[0] as any;
-      
+
       const hasSpan = para.children.some((child: any) => child.type === 'custom-span');
       expect(hasSpan).toBe(true);
-      
+
       const span = para.children.find((child: any) => child.type === 'custom-span') as any;
       expect(span.className).toBe('highlight');
     });
@@ -777,10 +811,10 @@ Paragraph 2.`;
 This is a note container.
 :::`;
       const ast = parser.parse(markdown);
-      
+
       const hasContainer = ast.children.some((child: any) => child.type === 'custom-container');
       expect(hasContainer).toBe(true);
-      
+
       const container = ast.children.find((child: any) => child.type === 'custom-container') as any;
       expect(container.className).toBe('note');
     });
@@ -793,7 +827,7 @@ Second paragraph in warning.
 :::`;
       const ast = parser.parse(markdown);
       const container = ast.children[0] as any;
-      
+
       expect(container.type).toBe('custom-container');
       expect(container.children.length).toBeGreaterThan(1);
     });
@@ -802,7 +836,7 @@ Second paragraph in warning.
       const markdown = 'Text with ::highlight[**bold** and *italic*]:: content.';
       const ast = parser.parse(markdown);
       const para = ast.children[0] as any;
-      
+
       const span = para.children.find((child: any) => child.type === 'custom-span') as any;
       expect(span.children.length).toBeGreaterThan(1);
     });
@@ -816,7 +850,7 @@ Note content.
 Warning content.
 :::`;
       const ast = parser.parse(markdown);
-      
+
       const containers = ast.children.filter((child: any) => child.type === 'custom-container');
       expect(containers.length).toBe(2);
     });
@@ -827,9 +861,8 @@ This is info.
 :::`;
       const ast = parser.parse(markdown);
       const container = ast.children[0] as any;
-      
+
       expect(container.className).toBe('info-box');
     });
   });
 });
-

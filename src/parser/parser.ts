@@ -22,11 +22,12 @@ import {
   TableCell,
   FootnoteDefinition,
   CustomContainer,
+  HTMLBlock,
   MathBlock,
   ParserOptions,
   ParserState,
 } from './ast-types';
-
+import { PluginRegistry, createDefaultPluginRegistry } from './plugin-system';
 
 /**
  * Main Parser class
@@ -36,6 +37,7 @@ import {
 export class Parser {
   private options: ParserOptions;
   private currentLinkReferences: Map<string, { url: string; title?: string }> = new Map();
+  private pluginRegistry: PluginRegistry;
 
   constructor(options: ParserOptions = {}) {
     this.options = {
@@ -47,6 +49,9 @@ export class Parser {
       maxNestingDepth: 10,
       ...options,
     };
+
+    // Initialize plugin registry with built-in plugins
+    this.pluginRegistry = createDefaultPluginRegistry();
   }
 
   /**
@@ -55,7 +60,7 @@ export class Parser {
   public parse(markdown: string): Document {
     // Reset link references for new parse
     this.currentLinkReferences = new Map();
-    
+
     const lines = markdown.split('\n');
     const state: ParserState = {
       lines,
@@ -80,11 +85,19 @@ export class Parser {
 
     // First pass: collect block-level elements
     while (state.position < lines.length) {
+      console.log(
+        `Main parse loop: position ${state.position}, line: '${state.lines[state.position]}'`
+      );
       const block = this.parseBlock(state);
+      console.log(`parseBlock returned: ${block ? block.type : 'null'}`);
       if (block) {
         state.ast.children.push(block);
+        console.log(
+          `Added ${block.type} to AST, children now: ${state.ast.children.map((c) => c.type)}`
+        );
       }
       state.position++;
+      console.log(`Incremented position to ${state.position}`);
     }
 
     // Add collected footnotes if enabled
@@ -117,6 +130,14 @@ export class Parser {
       const mathBlock = this.parseMathBlock(state);
       if (mathBlock) {
         return mathBlock;
+      }
+    }
+
+    // Check for block plugins {{plugin ...}}
+    if (this.options.enablePlugins && line.trim().startsWith('{{')) {
+      const blockPlugin = this.parseBlockPlugin(state);
+      if (blockPlugin) {
+        return blockPlugin;
       }
     }
 
@@ -177,6 +198,14 @@ export class Parser {
       const container = this.parseCustomContainer(state);
       if (container) {
         return container;
+      }
+    }
+
+    // Check for HTML block <tag>content</tag>
+    if (trimmed.startsWith('<') && trimmed.includes('>')) {
+      const htmlBlock = this.parseHTMLBlock(state);
+      if (htmlBlock) {
+        return htmlBlock;
       }
     }
 
@@ -261,7 +290,11 @@ export class Parser {
 
       // Check if line is indented or empty
       if (line.startsWith('    ') || line.startsWith('\t') || line.trim() === '') {
-        const unindented = line.startsWith('    ') ? line.slice(4) : line.startsWith('\t') ? line.slice(1) : line;
+        const unindented = line.startsWith('    ')
+          ? line.slice(4)
+          : line.startsWith('\t')
+            ? line.slice(1)
+            : line;
         lines.push(unindented);
         currentLine++;
       } else {
@@ -315,6 +348,58 @@ export class Parser {
       type: 'math-block',
       content: lines.join('\n').trim(),
     };
+  }
+
+  /**
+   * Parse block-level plugin {{plugin ...}}
+   */
+  private parseBlockPlugin(state: ParserState): HTMLBlock | null {
+    const line = state.lines[state.position];
+
+    if (!line.trim().startsWith('{{')) {
+      return null;
+    }
+
+    const lines: string[] = [line];
+    let currentLine = state.position + 1;
+    let foundClosing = line.includes('}}');
+
+    // Find closing }} if not on same line
+    if (!foundClosing) {
+      while (currentLine < state.lines.length) {
+        const currentLineStr = state.lines[currentLine];
+        lines.push(currentLineStr);
+
+        if (currentLineStr.includes('}}')) {
+          foundClosing = true;
+          state.position = currentLine;
+          break;
+        }
+
+        currentLine++;
+      }
+    }
+
+    if (!foundClosing) {
+      // If no closing delimiter, not a valid plugin
+      return null;
+    }
+
+    const pluginText = lines.join('\n');
+
+    // Try each block plugin
+    for (const plugin of this.pluginRegistry.getBlockPlugins()) {
+      plugin.pattern.lastIndex = 0; // Reset regex
+      if (plugin.pattern.test(pluginText)) {
+        const result = plugin.handler(pluginText);
+        if (result.type === 'rendered' && result.content) {
+          return result.content as HTMLBlock;
+        }
+      }
+    }
+
+    // No plugin matched
+    return null;
   }
 
   /**
@@ -400,16 +485,14 @@ export class Parser {
         : currentLineStr.match(/^([-+*])\s+(.*)$/);
 
       if (itemMatch) {
-        const content = itemMatch[itemMatch.length - 1];
-        const item: ListItem = {
-          type: 'list-item',
-          children: this.parseInline(content).map((node) => ({
-            type: 'paragraph',
-            children: [node],
-          })) as BlockNode[],
-        };
-        children.push(item);
-        currentLine++;
+        // Parse this list item, collecting all its content including nested lists
+        const itemResult = this.parseListItem(state, currentLine, isOrdered);
+        if (itemResult) {
+          children.push(itemResult.item);
+          currentLine = itemResult.nextLine;
+        } else {
+          break;
+        }
       } else {
         break;
       }
@@ -430,6 +513,205 @@ export class Parser {
     return {
       type: 'unordered-list',
       children,
+    };
+  }
+
+  /**
+   * Parse a single list item, collecting all its content and nested lists
+   */
+  private parseListItem(
+    state: ParserState,
+    startLine: number,
+    isOrdered: boolean
+  ): { item: ListItem; nextLine: number } | null {
+    const startLineStr = state.lines[startLine];
+    const itemMatch = isOrdered
+      ? startLineStr.match(/^(\d+)\.\s+(.*)$/)
+      : startLineStr.match(/^([-+*])\s+(.*)$/);
+
+    if (!itemMatch) {
+      return null;
+    }
+
+    const baseIndent = startLineStr.length - startLineStr.trimStart().length;
+    const firstLineContent = itemMatch[itemMatch.length - 1];
+    const itemBlocks: BlockNode[] = [];
+
+    // Parse the first line content as inline elements wrapped in a paragraph
+    if (firstLineContent.trim()) {
+      itemBlocks.push({
+        type: 'paragraph',
+        children: this.parseInline(firstLineContent),
+      });
+    }
+
+    let currentLine = startLine + 1;
+    let continueParsing = true;
+
+    while (currentLine < state.lines.length && continueParsing) {
+      const currentLineStr = state.lines[currentLine];
+
+      if (currentLineStr.trim() === '') {
+        // Look ahead to see if a blank line should terminate the list
+        // A blank line followed by non-indented, non-list content should end the list
+        let nextNonBlankLine = currentLine + 1;
+        while (
+          nextNonBlankLine < state.lines.length &&
+          state.lines[nextNonBlankLine].trim() === ''
+        ) {
+          nextNonBlankLine++;
+        }
+
+        if (nextNonBlankLine < state.lines.length) {
+          const nextLine = state.lines[nextNonBlankLine];
+          const nextIndent = nextLine.length - nextLine.trimStart().length;
+          const nextItemMatch = isOrdered
+            ? nextLine.match(/^(\d+)\.\s+/)
+            : nextLine.match(/^([-+*])\s+/);
+
+          // If the next non-blank line is at base indentation and doesn't start a list item,
+          // the blank line should terminate this list item
+          if (nextIndent <= baseIndent && nextLine.trim() !== '' && !nextItemMatch) {
+            break;
+          }
+        }
+
+        // Empty lines can continue list items but create paragraph breaks
+        currentLine++;
+        continue;
+      }
+
+      const currentIndent = currentLineStr.length - currentLineStr.trimStart().length;
+
+      // If we encounter a line with less indentation than the base, stop
+      if (currentIndent < baseIndent && this.startsBlock(currentLineStr.trim())) {
+        break;
+      }
+
+      // Check if this line starts a new list item at the same level
+      const nextItemMatch = isOrdered
+        ? currentLineStr.match(/^(\d+)\.\s+/)
+        : currentLineStr.match(/^([-+*])\s+/);
+
+      if (nextItemMatch && currentIndent <= baseIndent) {
+        // This is the start of the next list item, stop here
+        break;
+      }
+
+      // If we encounter a non-empty line at base indentation that doesn't start a list item,
+      // this should terminate the list (blank line followed by paragraph)
+      if (currentIndent <= baseIndent && currentLineStr.trim() !== '' && !nextItemMatch) {
+        // This is content that should break the list
+        break;
+      }
+
+      // Check if this line starts a nested list (greater indentation)
+      const nestedListMatch = currentLineStr.match(/^(\s*)([-+*]|\d+\.)\s+/);
+      if (nestedListMatch && currentIndent > baseIndent) {
+        // This is a nested list, collect all lines at this indentation level and parse as markdown
+        const nestedLines = [currentLineStr]; // Start with current line
+        let nestedLineIndex = currentLine + 1;
+
+        // Collect all lines that belong to this nested list (same or greater indentation)
+        while (nestedLineIndex < state.lines.length) {
+          const nextNestedLine = state.lines[nestedLineIndex];
+          const nextNestedIndent = nextNestedLine.length - nextNestedLine.trimStart().length;
+
+          // Stop if we encounter a line with less indentation than the current nested list
+          if (nextNestedIndent < currentIndent) {
+            break;
+          }
+
+          nestedLines.push(nextNestedLine);
+          nestedLineIndex++;
+        }
+
+        // Parse the nested content as a complete markdown document
+        // First, strip the common indentation from all lines
+        const minIndent = Math.min(
+          ...nestedLines.map((line) => {
+            const match = line.match(/^(\s*)/);
+            return match ? match[1].length : 0;
+          })
+        );
+
+        const strippedLines = nestedLines.map((line) => line.slice(minIndent));
+        const nestedContent = strippedLines.join('\n');
+        const nestedParser = new Parser(this.options);
+        const nestedDoc = nestedParser.parse(nestedContent);
+
+        // Add all parsed blocks to the current list item
+        itemBlocks.push(...nestedDoc.children);
+
+        currentLine = nestedLineIndex;
+        continue;
+      }
+
+      // Check if this line starts a block element that can be nested in lists
+      if (this.startsBlock(currentLineStr.trim())) {
+        // Check if this is a block type that should break out of the list
+        const trimmed = currentLineStr.trim();
+        if (
+          trimmed.match(/^(#{1,6})\s/) || // Heading
+          trimmed.startsWith('```') || // Fenced code block
+          trimmed.startsWith('~~~') || // Fenced code block
+          trimmed.match(/^\[\^([^\]]+)\]:/) || // Footnote definition
+          trimmed.match(/^\[([^\]]+)\]:\s+/) || // Link reference
+          trimmed === '---' ||
+          trimmed === '***' ||
+          trimmed === '___' || // Horizontal rule
+          trimmed.startsWith(':::') || // Custom container
+          (trimmed.startsWith('<') && trimmed.includes('>')) // HTML block
+        ) {
+          // This is a block that should break the list, so stop parsing the list item
+          break;
+        }
+
+        // Parse this as a nested block element
+        const tempState: ParserState = {
+          lines: state.lines,
+          position: currentLine,
+          ast: { type: 'document', children: [] },
+          footnotes: state.footnotes,
+          linkReferences: state.linkReferences,
+          options: state.options,
+        };
+
+        const block = this.parseBlock(tempState);
+        if (block) {
+          itemBlocks.push(block);
+          currentLine = tempState.position + 1;
+          continue;
+        }
+      } // Otherwise, treat as continuation of the current paragraph
+      const trimmedContent = currentLineStr.slice(baseIndent);
+      if (trimmedContent.trim()) {
+        // If we have a previous paragraph, add to it; otherwise create a new one
+        const lastBlock = itemBlocks[itemBlocks.length - 1];
+        if (lastBlock && lastBlock.type === 'paragraph') {
+          // Add a soft line break and the new content
+          (lastBlock as Paragraph).children.push(
+            { type: 'soft-line-break' },
+            ...this.parseInline(trimmedContent)
+          );
+        } else {
+          // Create a new paragraph
+          itemBlocks.push({
+            type: 'paragraph',
+            children: this.parseInline(trimmedContent),
+          });
+        }
+      }
+
+      currentLine++;
+    }
+
+    return {
+      item: {
+        type: 'list-item',
+        children: itemBlocks,
+      },
+      nextLine: currentLine,
     };
   }
 
@@ -547,12 +829,15 @@ export class Parser {
 
     // Split by pipe and check each cell
     const cells = line.split('|').slice(1, -1); // Remove empty first and last elements
-    
-    return cells.length > 0 && cells.every((cell) => {
-      const trimmed = cell.trim();
-      // Each cell should contain only dashes, colons, and spaces
-      return /^:?-+:?$/.test(trimmed);
-    });
+
+    return (
+      cells.length > 0 &&
+      cells.every((cell) => {
+        const trimmed = cell.trim();
+        // Each cell should contain only dashes, colons, and spaces
+        return /^:?-+:?$/.test(trimmed);
+      })
+    );
   }
 
   /**
@@ -641,7 +926,7 @@ export class Parser {
 
       // Empty line followed by indented content continues the footnote
       if (line.trim() === '') {
-        contentLines.push('');  // Preserve blank lines for paragraph separation
+        contentLines.push(''); // Preserve blank lines for paragraph separation
         nextLine++;
         continue;
       }
@@ -660,8 +945,10 @@ export class Parser {
     state.position = nextLine - 1;
 
     // Parse the footnote content as blocks
+    // For security, disable HTML parsing in footnote content
     const fullContent = contentLines.join('\n');
-    const contentParser = new Parser(this.options);
+    const footnoteOptions = { ...this.options, enableHtml: false };
+    const contentParser = new Parser(footnoteOptions);
     const contentDoc = contentParser.parse(fullContent);
     const children = contentDoc.children;
 
@@ -745,6 +1032,75 @@ export class Parser {
   }
 
   /**
+   * Parse HTML block <tag>content</tag>
+   */
+  private parseHTMLBlock(state: ParserState): HTMLBlock | null {
+    // Skip HTML block parsing if HTML is disabled
+    if (this.options.enableHtml === false) {
+      return null;
+    }
+
+    const line = state.lines[state.position];
+
+    // Match opening HTML tag: <tag> or <tag attr="value">
+    const openMatch = line.match(/^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/);
+    if (!openMatch) {
+      return null;
+    }
+
+    const tag = openMatch[1];
+    const attrs = openMatch[2];
+
+    // Parse attributes
+    const attributes: Record<string, string> = {};
+    const attrRegex = /(\w+)=["']([^"']*)["']/g;
+    let attrMatch;
+    while ((attrMatch = attrRegex.exec(attrs)) !== null) {
+      attributes[attrMatch[1]] = attrMatch[2];
+    }
+
+    const contentLines: string[] = [];
+    let currentLine = state.position + 1;
+    let foundClosing = false;
+
+    // Find matching closing tag
+    while (currentLine < state.lines.length) {
+      const currentLineStr = state.lines[currentLine];
+      const trimmed = currentLineStr.trim();
+
+      // Check if this line contains the closing tag
+      if (trimmed === `</${tag}>`) {
+        foundClosing = true;
+        state.position = currentLine;
+        break;
+      }
+
+      contentLines.push(currentLineStr);
+      currentLine++;
+    }
+
+    if (!foundClosing) {
+      // If no closing tag found, treat as paragraph
+      return null;
+    }
+
+    // Parse the content inside the HTML block as markdown
+    const fullContent = contentLines.join('\n');
+    const contentParser = new Parser(this.options);
+    const contentDoc = contentParser.parse(fullContent);
+    const children = contentDoc.children;
+
+    return {
+      type: 'html-block',
+      tag,
+      attributes,
+      children,
+    };
+  }
+
+  /**
+   * Parse paragraph (default block type)
+   */ /**
    * Parse paragraph (default block type)
    */
   private parseParagraph(state: ParserState): Paragraph {
@@ -798,6 +1154,33 @@ export class Parser {
         });
         i += 2;
         continue;
+      }
+
+      // Check for inline plugins {{plugin args}}
+      if (this.options.enablePlugins && text[i] === '{' && text[i + 1] === '{') {
+        const pluginEndIndex = text.indexOf('}}', i + 2);
+        if (pluginEndIndex !== -1) {
+          const pluginText = text.slice(i, pluginEndIndex + 2);
+          let matched = false;
+
+          // Try each inline plugin
+          for (const plugin of this.pluginRegistry.getInlinePlugins()) {
+            plugin.pattern.lastIndex = 0; // Reset regex
+            if (plugin.pattern.test(pluginText)) {
+              const result = plugin.handler(pluginText);
+              if (result.type === 'rendered' && result.content) {
+                nodes.push(result.content as InlineNode);
+                i = pluginEndIndex + 2;
+                matched = true;
+                break;
+              }
+            }
+          }
+
+          if (matched) {
+            continue;
+          }
+        }
       }
 
       // Check for inline math $...$
@@ -949,7 +1332,9 @@ export class Parser {
         }
 
         // Try email auto-link: <user@example.com>
-        const emailAutoLinkMatch = text.slice(i).match(/^<([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)>/);
+        const emailAutoLinkMatch = text
+          .slice(i)
+          .match(/^<([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)>/);
         if (emailAutoLinkMatch) {
           const email = emailAutoLinkMatch[1];
           nodes.push({
@@ -970,23 +1355,23 @@ export class Parser {
           const alt = imgMatch[1];
           const url = imgMatch[2];
           const title = imgMatch[3];
-          
+
           // Check if HTML comment immediately follows (no space)
           const remainingText = text.slice(i + imgMatch[0].length);
           const commentMatch = remainingText.match(/^<!--\s*(.*?)\s*-->/);
-          
+
           const imageNode: any = {
             type: 'image',
             url,
             alt,
             title,
           };
-          
+
           if (commentMatch) {
             // Parse attributes from HTML comment
             const attributesStr = commentMatch[1];
             const attributes: Record<string, string> = {};
-            
+
             // Match attribute patterns: key="value" or key='value'
             // Attribute names can contain letters, numbers, hyphens, and underscores
             const attrRegex = /([\w-]+)=['"]([^'"]*)['"]/g;
@@ -994,7 +1379,7 @@ export class Parser {
             while ((match = attrRegex.exec(attributesStr)) !== null) {
               attributes[match[1]] = match[2];
             }
-            
+
             if (Object.keys(attributes).length > 0) {
               imageNode.attributes = attributes;
               i += imgMatch[0].length + commentMatch[0].length;
@@ -1004,7 +1389,7 @@ export class Parser {
           } else {
             i += imgMatch[0].length;
           }
-          
+
           nodes.push(imageNode);
           continue;
         }
@@ -1113,8 +1498,65 @@ export class Parser {
         }
       }
 
-      // Default: text node
-      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=$^\u0000<]/);
+      // Check for HTML tags <tag>content</tag> or <tag />
+      if (this.options.enableHtml !== false && text[i] === '<') {
+        // Try to match opening and closing HTML tag with content
+        const htmlRegex = /^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)>(.*?)<\/([a-zA-Z][a-zA-Z0-9]*)>/;
+        const match = text.slice(i).match(htmlRegex);
+        if (match && match[1] === match[4]) {
+          const tag = match[1];
+          const attrs = match[2];
+          const content = match[3];
+          const fullMatch = match[0];
+
+          // Parse attributes
+          const attributes: Record<string, string> = {};
+          const attrRegex = /(\w+)=["']([^"']*)["']/g;
+          let attrMatch;
+          while ((attrMatch = attrRegex.exec(attrs)) !== null) {
+            attributes[attrMatch[1]] = attrMatch[2];
+          }
+
+          // Parse content as markdown
+          const parsedContent = this.parseInline(content);
+
+          nodes.push({
+            type: 'html-inline',
+            tag,
+            attributes,
+            children: parsedContent,
+          });
+          i += fullMatch.length;
+          continue;
+        }
+
+        // Try self-closing tag
+        const selfClosingRegex = /^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)\/>/;
+        const selfMatch = text.slice(i).match(selfClosingRegex);
+        if (selfMatch) {
+          const tag = selfMatch[1];
+          const attrs = selfMatch[2];
+          const fullMatch = selfMatch[0];
+
+          // Parse attributes
+          const attributes: Record<string, string> = {};
+          const attrRegex = /(\w+)=["']([^"']*)["']/g;
+          let attrMatch;
+          while ((attrMatch = attrRegex.exec(attrs)) !== null) {
+            attributes[attrMatch[1]] = attrMatch[2];
+          }
+
+          nodes.push({
+            type: 'html-inline',
+            tag,
+            attributes,
+            selfClosing: true,
+          });
+          i += fullMatch.length;
+          continue;
+        }
+      } // Default: text node
+      const nextSpecial = text.slice(i + 1).search(/[\\`*_\[\]!~:+=$^\u0000<{]/);
       const textLength = nextSpecial === -1 ? text.length - i : nextSpecial + 1;
 
       nodes.push({
@@ -1135,7 +1577,7 @@ export class Parser {
 
     // Check various block starts
     if (
-      line.match(/^(#{1,6})\s/) ||  // Heading requires space after #
+      line.match(/^(#{1,6})\s/) || // Heading requires space after #
       line.startsWith('```') ||
       line.startsWith('~~~') ||
       line.startsWith('>') ||

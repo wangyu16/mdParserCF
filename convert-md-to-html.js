@@ -1,0 +1,212 @@
+#!/usr/bin/env node
+
+/**
+ * Convert Markdown to HTML using mdParserCF
+ * Usage: node convert-md-to-html.js <input.md> <output.html>
+ */
+
+import { readFileSync, writeFileSync } from 'fs';
+import { mdToHtml } from './dist/index.esm.js';
+
+async function convertMarkdownToHtml(inputPath, outputPath) {
+  try {
+    // Read the markdown file
+    const markdown = readFileSync(inputPath, 'utf8');
+
+    // Convert to HTML
+    const html = await mdToHtml(markdown);
+
+    // Create a complete HTML document
+    const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mdParserCF Features Showcase</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://unpkg.com/smiles-drawer@2.0.1/dist/smiles-drawer.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50;
+            margin-top: 2em;
+            margin-bottom: 0.5em;
+        }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code { background: none; padding: 0; }
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #555;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th { background: #f8f9fa; font-weight: bold; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .note, .warning, .info, .error {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .note { background: #e3f2fd; border-left: 4px solid #2196f3; }
+        .warning { background: #fff3e0; border-left: 4px solid #ff9800; }
+        .info { background: #e8f5e8; border-left: 4px solid #4caf50; }
+        .error { background: #ffebee; border-left: 4px solid #f44336; }
+        .highlight { background: #fff9c4; padding: 2px 4px; }
+        .success { background: #e8f5e8; color: #2e7d32; padding: 2px 4px; }
+        hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .footnote { font-size: 0.9em; color: #666; }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-success { background: #4caf50; color: white; }
+        .badge-warning { background: #ff9800; color: white; }
+        .badge-info { background: #2196f3; color: white; }
+        .badge-danger { background: #f44336; color: white; }
+        .badge-secondary { background: #9e9e9e; color: white; }
+        .badge-light { background: #f5f5f5; color: #333; }
+    </style>
+</head>
+<body>
+    ${html}
+    <script>
+    // Initialize all SMILES drawings and reactions after page load
+    if (typeof SmilesDrawer !== 'undefined') {
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('Initializing SmilesDrawer...');
+        
+        // Handle canvas elements (individual molecules)
+        const canvases = document.querySelectorAll('canvas[data-smiles]');
+        console.log('Found', canvases.length, 'molecule canvases');
+        canvases.forEach(function(canvas) {
+          try {
+            const smiles = canvas.dataset.smiles;
+            const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
+            SmilesDrawer.parse(smiles, function(tree) {
+              drawer.draw(tree, canvas, 'light', false);
+            }, function(error) {
+              console.error('SMILES parsing error for', smiles, ':', error);
+              const ctx = canvas.getContext('2d');
+              ctx.font = '12px sans-serif';
+              ctx.fillStyle = '#d00';
+              ctx.fillText('Invalid SMILES: ' + smiles, 10, 20);
+            });
+          } catch (e) {
+            console.error('Error rendering SMILES:', e);
+          }
+        });
+        
+        // Handle SVG elements (reactions)
+        const svgs = document.querySelectorAll('svg[data-smiles]');
+        console.log('Found', svgs.length, 'reaction SVGs');
+        svgs.forEach(function(svg, index) {
+          try {
+            const smiles = svg.dataset.smiles;
+            console.log('Processing reaction', index + 1, ':', smiles);
+            
+            // Get custom options if provided
+            let options = { width: 800, height: 400 };
+            if (svg.dataset.smilesOptions) {
+              try {
+                const customOpts = JSON.parse(svg.dataset.smilesOptions);
+                options = Object.assign(options, customOpts);
+                console.log('Using custom options:', customOpts);
+              } catch (e) {
+                console.warn('Failed to parse options for reaction', index + 1, ':', e);
+              }
+            }
+            
+            const drawer = new SmilesDrawer.Drawer(options);
+            
+            // Check if this is a reaction SMILES (contains '>')
+            if (smiles.includes('>')) {
+              console.log('Detected reaction SMILES, using SmiDrawer.apply() method');
+              // Use the apply method which handles reactions automatically
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = '<svg data-smiles="' + smiles + '"></svg>';
+              const tempSvg = tempDiv.querySelector('svg');
+              
+              // Apply SmiDrawer to render the reaction
+              SmiDrawer.apply({
+                target: tempSvg,
+                options: options
+              });
+              
+              // Copy the rendered content to our actual SVG
+              svg.innerHTML = tempSvg.innerHTML;
+              svg.setAttribute('viewBox', tempSvg.getAttribute('viewBox') || '0 0 800 400');
+              console.log('✅ Successfully rendered reaction', index + 1);
+            } else {
+              // Parse as single molecule in SVG
+              SmilesDrawer.parse(smiles, function(tree) {
+                drawer.draw(tree, svg, 'light', false);
+                console.log('✅ Successfully rendered molecule', index + 1);
+              }, function(error) {
+                console.error('❌ SMILES parsing error for', smiles, ':', error);
+                svg.innerHTML = '<text x="10" y="20" fill="#d00" font-size="12">Invalid SMILES</text>';
+              });
+            }
+          } catch (e) {
+            console.error('❌ Error rendering reaction', index + 1, ':', e);
+            svg.innerHTML = '<text x="10" y="20" fill="#d00" font-size="14">Error: ' + e.message + '</text>';
+          }
+        });
+      });
+    } else {
+      console.error('SmilesDrawer library not loaded!');
+    }
+    </script>
+</body>
+</html>`;
+
+    // Write the HTML file
+    writeFileSync(outputPath, fullHtml, 'utf8');
+
+    console.log(`✅ Successfully converted ${inputPath} to ${outputPath}`);
+    console.log(`📄 Output file size: ${fullHtml.length} characters`);
+  } catch (error) {
+    console.error('❌ Error converting markdown to HTML:', error.message);
+    process.exit(1);
+  }
+}
+
+// Check command line arguments
+const inputPath = process.argv[2] || 'examples/features.md';
+const outputPath = process.argv[3] || 'examples/features.html';
+
+// Run the conversion
+convertMarkdownToHtml(inputPath, outputPath);

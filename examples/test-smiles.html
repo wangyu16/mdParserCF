@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SMILES Test</title>
+    <script src="https://unpkg.com/smiles-drawer@2.0.1/dist/smiles-drawer.min.js"></script>
+  </head>
+  <body>
+    <h1>SMILES Rendering Test</h1>
+
+    <h2>Ethanol (CCO)</h2>
+    <canvas
+      id="test1"
+      data-smiles="CCO"
+      width="300"
+      height="300"
+      style="border: 1px solid #ddd"
+    ></canvas>
+
+    <h2>Benzene (c1ccccc1)</h2>
+    <canvas
+      id="test2"
+      data-smiles="c1ccccc1"
+      width="300"
+      height="300"
+      style="border: 1px solid #ddd"
+    ></canvas>
+
+    <script>
+      // Initialize all SMILES drawings after page load
+      if (typeof SmilesDrawer !== 'undefined') {
+        document.addEventListener('DOMContentLoaded', function () {
+          console.log('SmilesDrawer loaded:', typeof SmilesDrawer);
+          const canvases = document.querySelectorAll('canvas[data-smiles]');
+          console.log('Found', canvases.length, 'canvases');
+          canvases.forEach(function (canvas) {
+            try {
+              const smiles = canvas.dataset.smiles;
+              console.log('Rendering SMILES:', smiles);
+              const drawer = new SmilesDrawer.Drawer({ width: 300, height: 300 });
+              SmilesDrawer.parse(
+                smiles,
+                function (tree) {
+                  drawer.draw(tree, canvas, 'light', false);
+                  console.log('Successfully rendered:', smiles);
+                },
+                function (error) {
+                  console.error('SMILES parsing error for', smiles, ':', error);
+                }
+              );
+            } catch (e) {
+              console.error('Error rendering SMILES:', e);
+            }
+          });
+        });
+      } else {
+        console.error('SmilesDrawer library not loaded!');
+      }
+    </script>
+  </body>
+</html>

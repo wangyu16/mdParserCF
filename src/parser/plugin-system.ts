@@ -180,11 +180,11 @@ export const emojiPlugin: Plugin = {
 /**
  * SMILES (chemical notation) plugin
  * Syntax: {{smiles CCCO}}
- * 
+ *
  * Note: SmilesDrawer requires a DOM/Canvas environment which isn't available
  * in server-side Node.js. For production use, this plugin generates placeholder
  * elements that can be rendered client-side with SmilesDrawer.js loaded in the browser.
- * 
+ *
  * The generated HTML includes:
  * - Canvas element with data-smiles attribute
  * - Script loading SmilesDrawer library
@@ -206,9 +206,6 @@ export const smilesPlugin: Plugin = {
     // This allows SmilesDrawer to render the structure when loaded in browser
     const html = `<div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
 <canvas id="${canvasId}" data-smiles="${smilesString}" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
-<p style="font-size: 0.85em; color: #666; margin: 0.5em 0;">
-  <code>${smilesString}</code>
-</p>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
@@ -230,6 +227,70 @@ if (typeof SmilesDrawer !== 'undefined') {
   }
 }
 </script>
+</div>`;
+
+    return {
+      type: 'rendered',
+      content: {
+        type: 'html-inline',
+        value: html,
+      } as InlineNode,
+    };
+  },
+  type: 'inline',
+};
+
+/**
+ * Chemical Reaction plugin
+ * Syntax: {{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
+ * Optional syntax with options: {{reaction C=CCBr>CC(=O)C>C=CCI | textBelowArrow: 90%, theme: oldschool}}
+ *
+ * Renders chemical reaction schemes using SmilesDrawer's reaction SMILES support.
+ * Reaction SMILES format: reactants>reagents>products
+ *
+ * The generated HTML uses SVG for scalable rendering and includes:
+ * - SVG element with data-smiles attribute containing reaction SMILES
+ * - Optional data-smiles-options for customization (text, theme, etc.)
+ * - Client-side rendering with SmilesDrawer
+ */
+export const reactionPlugin: Plugin = {
+  name: 'reaction',
+  pattern: /\{\{reaction\s+([^}|]+)(?:\s*\|\s*([^}]+))?\}\}/g,
+  handler: (content: string): PluginResult => {
+    const match = content.match(/\{\{reaction\s+([^}|]+)(?:\s*\|\s*([^}]+))?\}\}/);
+    if (!match || !match[1]) {
+      return { type: 'fallthrough' };
+    }
+
+    const reactionSmiles = match[1].trim();
+    const optionsString = match[2] ? match[2].trim() : '';
+
+    // Parse options if provided (e.g., "textBelowArrow: 90%, theme: oldschool")
+    let optionsObj: Record<string, any> = {};
+    if (optionsString) {
+      const optionPairs = optionsString.split(',').map((s) => s.trim());
+      optionPairs.forEach((pair) => {
+        const [key, value] = pair.split(':').map((s) => s.trim());
+        if (key && value) {
+          // Try to parse as number or boolean, otherwise keep as string
+          if (value === 'true') optionsObj[key] = true;
+          else if (value === 'false') optionsObj[key] = false;
+          else if (!isNaN(Number(value))) optionsObj[key] = Number(value);
+          else optionsObj[key] = value.replace(/^['"]|['"]$/g, ''); // Remove quotes
+        }
+      });
+    }
+
+    const optionsAttr =
+      Object.keys(optionsObj).length > 0
+        ? ` data-smiles-options='${JSON.stringify(optionsObj)}'`
+        : '';
+
+    // Generate HTML with SVG element for reaction rendering
+    // SVG scales better than canvas for reactions which can be wide
+    // Note: Reactions are rendered by global script in convert-md-to-html.js
+    const html = `<div class="reaction-container" style="display: block; margin: 1em 0; text-align: center; overflow-x: auto;">
+<svg data-smiles="${reactionSmiles}"${optionsAttr} style="max-width: 100%; height: auto; min-height: 300px;"></svg>
 </div>`;
 
     return {
@@ -319,6 +380,7 @@ export function createDefaultPluginRegistry(): PluginRegistry {
   registry.registerInlinePlugin(youtubePlugin);
   registry.registerInlinePlugin(emojiPlugin);
   registry.registerInlinePlugin(smilesPlugin);
+  registry.registerInlinePlugin(reactionPlugin);
   registry.registerInlinePlugin(badgePlugin);
   registry.registerBlockPlugin(diagramPlugin);
 

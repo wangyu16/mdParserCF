@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mdParserCF Features Showcase</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50;
+            margin-top: 2em;
+            margin-bottom: 0.5em;
+        }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code { background: none; padding: 0; }
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #555;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th { background: #f8f9fa; font-weight: bold; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .note, .warning, .info, .error {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .note { background: #e3f2fd; border-left: 4px solid #2196f3; }
+        .warning { background: #fff3e0; border-left: 4px solid #ff9800; }
+        .info { background: #e8f5e8; border-left: 4px solid #4caf50; }
+        .error { background: #ffebee; border-left: 4px solid #f44336; }
+        .highlight { background: #fff9c4; padding: 2px 4px; }
+        .success { background: #e8f5e8; color: #2e7d32; padding: 2px 4px; }
+        hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .footnote { font-size: 0.9em; color: #666; }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-success { background: #4caf50; color: white; }
+        .badge-warning { background: #ff9800; color: white; }
+        .badge-info { background: #2196f3; color: white; }
+        .badge-danger { background: #f44336; color: white; }
+        .badge-secondary { background: #9e9e9e; color: white; }
+        .badge-light { background: #f5f5f5; color: #333; }
+    </style>
+</head>
+<body>
+    <h1>mdParserCF Features Showcase</h1>
+<p>This file demonstrates all supported markdown features in mdParserCF, including complex nesting scenarios, escaping, and edge cases.</p>
+<hr />
+<h2>Core Markdown Features</h2>
+<h3>1. Headings</h3>
+<h1>Heading 1</h1>
+<h2>Heading 2</h2>
+<h3>Heading 3</h3>
+<h4>Heading 4</h4>
+<h5>Heading 5</h5>
+<h6>Heading 6</h6>
+<p><strong>Note</strong>: Headings can contain emphasis: ## <em>Important</em> Section</p>
+<h3>2. Emphasis &amp; Styling</h3>
+<p><strong>Bold text</strong> and <em>italic text</em> and <strong><em>bold italic</em></strong></p>
+<p><del>Strikethrough text</del> shows deleted content</p>
+<p><u>Underlined text</u> for emphasis</p>
+<p><mark>Highlighted text</mark> for important points</p>
+<p>Superscript: E=mc<sup>2</sup> is the famous equation</p>
+<p>Subscript: H<sub>2</sub>O is water</p>
+<p><strong>Complex</strong>: <strong><em><del>bold italic strikethrough</del></em></strong> text</p>
+<h3>3. Lists</h3>
+<h4>Unordered Lists</h4>
+<p>Simple list</p>
+<ul>
+<li><p>Item 1</p>
+</li>
+<li><p>Item 2</p>
+</li>
+<li><p>Item 3 Nested list</p>
+</li>
+<li><p>Item 1</p>
+</li>
+<li><p>Item 2</p>
+<ul>
+<li><p>Nested item 2.1</p>
+</li>
+<li><p>Nested item 2.2</p>
+<ul>
+<li><p>Deeply nested 2.2.1</p>
+</li>
+<li><p>Deeply nested 2.2.2</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Item 3</p>
+</li>
+</ul>
+<h4>Ordered Lists</h4>
+<p>Simple list</p>
+<ol>
+<li><p>Item 1</p>
+</li>
+<li><p>Item 2</p>
+</li>
+<li><p>Item 3 Nested list</p>
+</li>
+<li><p>First item</p>
+</li>
+<li><p>Second item</p>
+<ol>
+<li><p>Nested first</p>
+</li>
+<li><p>Nested second</p>
+</li>
+</ol>
+</li>
+<li><p>Third item</p>
+<ol>
+<li><p>Another nested</p>
+<ol>
+<li><p>Triple nested</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h4>Mixed Lists</h4>
+<ol>
+<li><p>First ordered</p>
+<ul>
+<li><p>Unordered under ordered</p>
+</li>
+<li><p>Another bullet</p>
+</li>
+</ul>
+</li>
+<li><p>Second ordered</p>
+<ul>
+<li><p>Bullet with <strong>bold</strong></p>
+</li>
+<li><p>Bullet with <em>italic</em></p>
+</li>
+</ul>
+</li>
+</ol>
+<h3>4. Links</h3>
+<p><a href="https://example.com">Inline link</a></p>
+<p>[Link with title](https://example.com &#x27;Example Site&#x27;)</p>
+<p><a href="https://example.com">Reference-style link</a></p>
+<p><a href="https://google.com">Another reference</a></p>
+<p>Auto-link: <a href="https://example.com">https://example.com</a></p>
+<p>Email auto-link: <a href="mailto:user@example.com">user@example.com</a></p>
+<h3>5. Images</h3>
+<p>Standard markdown syntax to insert an image.</p>
+<p><img src="https://markdown-here.com/img/icon256.png" alt="Markdown logo" /></p>
+<p>This Markdown parser supports passing attributes via HTML comments (&lt;!-- --&gt;) placed directly after an image element. This approach ensures compatibility with other Markdown parsers, as the comments are ignored during rendering and do not interfere with the output. See following examples.</p>
+<p><img src="https://markdown-here.com/img/icon256.png" alt="Markdown logo" title="Image" /></p>
+<p><img src="https://markdown-here.com/img/icon256.png" alt="Markdown logo" width="100px" /></p>
+<p><img src="https://markdown-here.com/img/icon256.png" alt="Markdown logo" style="border:5px solid black" /></p>
+<h3>6. Code</h3>
+<p>Inline code: <code>const x = 42;</code></p>
+<p>Complex inline code with special chars: <code>function() { return &quot;test&quot;; }</code></p>
+<h4>Code Block (JavaScript)</h4>
+<pre><code class="language-javascript">function greet(name) {
+  console.log(`Hello, ${name}!`);
+  return true;
+}</code></pre>
+<h4>Code Block (Python)</h4>
+<pre><code class="language-python">def fibonacci(n):
+    if n &lt;= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)</code></pre>
+<h4>Code Block (Plain)</h4>
+<pre><code>Plain text code block
+with multiple lines
+  and indentation</code></pre>
+<h3>7. Blockquotes</h3>
+<blockquote>
+<p>Single level blockquote
+Second line of blockquote</p>
+<p>Nested blockquote:</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>This is nested
+Multiple lines</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>Even deeper nesting</p>
+</blockquote>
+</blockquote>
+<p>Blockquote with <strong>bold</strong>, <em>italic</em>, and <del>strikethrough</del></p>
+</blockquote>
+<h3>8. Horizontal Rules</h3>
+<hr />
+<hr />
+<hr />
+<h3>9. HTML Passthrough</h3>
+<p>You can combine HTML labeling with markdown to add HTML elements directly in your markdown file.</p>
+<p><span class="custom">A sentence.</span></p>
+<p><p>A paragraph.</p></p>
+<div class="custom">
+<p>Custom HTML content can be embedded and markdown works inside:</p>
+<ul>
+<li><p>List item 1</p>
+</li>
+<li><p>List item 2</p>
+<p><strong>Bold text</strong> inside HTML blocks</p>
+</li>
+</ul>
+</div>
+<hr />
+<h2>Phase 1 Extensions</h2>
+<h3>10. Tables (GFM)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tables</td>
+<td>✅ Working</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Math</td>
+<td>✅ Working</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Plugins</td>
+<td>✅ Working</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<h4>Table with Alignment</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Left</th>
+<th style="text-align:center">Center</th>
+<th style="text-align:right">Right</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Left aligned</td>
+<td style="text-align:center">Center aligned</td>
+<td style="text-align:right">Right aligned</td>
+</tr>
+<tr>
+<td style="text-align:left">Text</td>
+<td style="text-align:center">More text</td>
+<td style="text-align:right">Final text</td>
+</tr>
+</tbody>
+</table>
+<h4>Complex Table with Formatting</h4>
+<table>
+<thead>
+<tr>
+<th><strong>Bold Header</strong></th>
+<th><em>Italic Header</em></th>
+<th><del>Strikethrough</del></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regular cell</td>
+<td><code>code cell</code></td>
+<td><a href="https://example.com">Link cell</a></td>
+</tr>
+<tr>
+<td>Cell with <strong>bold</strong></td>
+<td>Cell with <em>italic</em></td>
+<td>Cell with <u>underline</u></td>
+</tr>
+</tbody>
+</table>
+<h3>11. Footnotes</h3>
+<p>This text has a footnote<sup><a href="#fn-1" id="ref-1">[1]</a></sup>.</p>
+<p>Another footnote<sup><a href="#fn-2" id="ref-2">[2]</a></sup> here.</p>
+<p>Reference the same note again<sup><a href="#fn-1" id="ref-1">[1]</a></sup>.</p>
+<h3>12. Custom Containers (Block)</h3>
+<section class="note">
+<p>This is a note container with custom styling.</p>
+</section>
+<section class="warning">
+<p>This is a warning with <strong>bold</strong> and <em>italic</em> support.</p>
+</section>
+<section class="info">
+<p>This container has:</p>
+<ul>
+<li><p>Multiple items</p>
+</li>
+<li><p>With <strong>formatting</strong></p>
+</li>
+<li><p>And links: <a href="https://example.com">example</a></p>
+</li>
+</ul>
+</section>
+<section class="error">
+<p>This is an error state.</p>
+</section>
+<h3>13. Custom Containers (Inline)</h3>
+<p>This text has <span class="highlight">highlighted inline content</span> within it.</p>
+<p>And here is <span class="success">success badge style</span> text.</p>
+<p>Complex: <span class="info">Inline container with <strong>bold</strong> and <em>italic</em></span> text.</p>
+<h3>14. Extended Links</h3>
+<p>Reference link with empty reference: <a href="https://example.com">Link</a></p>
+<h3>15. Auto-Links</h3>
+<p><a href="https://example.com">https://example.com</a></p>
+<p><a href="mailto:user@example.com">user@example.com</a></p>
+<hr />
+<h2>Advanced Features: Math Formulas</h2>
+<h3>16. Inline Math</h3>
+<p>Einstein&#x27;s equation: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E=mc^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">E</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></p>
+<p>Quadratic formula: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mfrac><mrow><mo>−</mo><mi>b</mi><mo>±</mo><msqrt><mrow><msup><mi>b</mi><mn>2</mn></msup><mo>−</mo><mn>4</mn><mi>a</mi><mi>c</mi></mrow></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.3845em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.0395em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight">a</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">b</span><span class="mbin mtight">±</span><span class="mord sqrt mtight"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9221em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mtight" style="padding-left:0.833em;"><span class="mord mtight"><span class="mord mathnormal mtight">b</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7463em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mbin mtight">−</span><span class="mord mtight">4</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight">c</span></span></span><span style="top:-2.8821em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail mtight" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1179em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></p>
+<p>Simple: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>+</mo><mi>β</mi><mo>=</mo><mi>γ</mi></mrow><annotation encoding="application/x-tex">\alpha + \beta = \gamma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05278em;">β</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span></span></span></span></p>
+<h3>Block Math</h3>
+<div class="math-block">
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow></mrow><annotation encoding="application/x-tex"></annotation></semantics></math></span><span class="katex-html" aria-hidden="true"></span></span></span>
+</div>
+<h3>Chemistry with mhchem</h3>
+<p>Water molecule: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mi>H</mi><mn>2</mn><mi>O</mi></mrow></mrow><annotation encoding="application/x-tex">\ce{H2O}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span></span></span></span></span></p>
+<p>Chemical reaction: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mn>2</mn><mi>H</mi><mn>2</mn><mo>+</mo><mi>O</mi><mn>2</mn><mo>−</mo><mo>&gt;</mo><mn>2</mn><mi>H</mi><mn>2</mn><mi>O</mi></mrow></mrow><annotation encoding="application/x-tex">\ce{2H2 + O2 -&gt; 2H2O}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mord">2</span><span class="mord">−</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span></span></span></span></span></p>
+<p>Complex reaction: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mi>C</mi><mi>a</mi><mi>C</mi><mi>O</mi><mn>3</mn><mo>−</mo><mo>&gt;</mo><mo stretchy="false">[</mo><mi>h</mi><mi>e</mi><mi>a</mi><mi>t</mi><mo stretchy="false">]</mo><mi>C</mi><mi>a</mi><mi>O</mi><mo>+</mo><mi>C</mi><mi>O</mi><mn>2</mn></mrow></mrow><annotation encoding="application/x-tex">\ce{CaCO3 -&gt;[heat] CaO + CO2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mord mathnormal">a</span><span class="mord mathnormal" style="margin-right:0.02778em;">CO</span><span class="mord">3</span><span class="mord">−</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">[</span><span class="mord mathnormal">h</span><span class="mord mathnormal">e</span><span class="mord mathnormal">a</span><span class="mord mathnormal">t</span><span class="mclose">]</span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mord mathnormal">a</span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">CO</span><span class="mord">2</span></span></span></span></span></p>
+<p>Oxidation state: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mo stretchy="false">[</mo><mi>F</mi><mi>e</mi><mo stretchy="false">(</mo><mi>C</mi><mi>N</mi><mo stretchy="false">)</mo><mn>6</mn><msup><mo stretchy="false">]</mo><mrow><mn>4</mn><mo>−</mo></mrow></msup></mrow></mrow><annotation encoding="application/x-tex">\ce{[Fe(CN)6]^{4-}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mord mathnormal">e</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10903em;">CN</span><span class="mclose">)</span><span class="mord">6</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">4</span><span class="mord mtight">−</span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<h3>Mixed Math and Text</h3>
+<p>The equation <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E=mc^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">E</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> shows mass-energy equivalence in chemistry calculations like <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mi>C</mi><mo>+</mo><mi>O</mi><mn>2</mn><mo>−</mo><mo>&gt;</mo><mi>C</mi><mi>O</mi><mn>2</mn></mrow></mrow><annotation encoding="application/x-tex">\ce{C + O2 -&gt; CO2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mord">2</span><span class="mord">−</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">CO</span><span class="mord">2</span></span></span></span></span>.</p>
+<hr />
+<h2>Advanced Features: Plugins</h2>
+<h3>17. YouTube Embed</h3>
+<p>{{youtube dQw4w9WgXcQ}}</p>
+<p>{{youtube aqz-KE-bpKQ}}</p>
+<h3>18. Emoji Insertion</h3>
+<p>Emotions: {{emoji smile}} {{emoji heart}} {{emoji laughing}}</p>
+<p>Symbols: {{emoji star}} {{emoji fire}} {{emoji rocket}}</p>
+<p>Nature: {{emoji flower}} {{emoji tree}} {{emoji sun}}</p>
+<h3>19. SMILES Chemical Structures</h3>
+<p>Ethanol: {{smiles CCO}}</p>
+<p>Benzene: {{smiles c1ccccc1}}</p>
+<p>Cyclohexane: {{smiles C1CCCCC1}}</p>
+<p>Acetone: {{smiles CC(=O)C}}</p>
+<p>Glucose: {{smiles C(C(C(C(C=O)O)O)O)O}}</p>
+<h3>20. Custom Badges</h3>
+<p>{{badge success: All tests passing}}</p>
+<p>{{badge warning: Review required}}</p>
+<p>{{badge info: New feature}}</p>
+<p>{{badge danger: Critical issue}}</p>
+<p>{{badge secondary: Not started}}</p>
+<p>{{badge light: Light badge}}</p>
+<h3>21. Mermaid Diagrams</h3>
+<p>{{diagram mermaid
+graph TD
+    A[Start] --&gt; B{Decision}
+    B --&gt;|Yes| C[Process]
+    B --&gt;|No| D[Skip]
+    C --&gt; E[End]
+    D --&gt; E
+}}</p>
+<p>{{diagram mermaid
+sequenceDiagram
+    participant User
+    participant Server
+    User-&gt;&gt;Server: Request data
+    Server--&gt;&gt;User: Response data
+    User-&gt;&gt;Server: Process complete
+}}</p>
+<hr />
+<h2>Complex Nesting &amp; Edge Cases</h2>
+<h3>22. Nested Lists with Multiple Formatting</h3>
+<ol>
+<li><p>First item with <strong>bold</strong> and <code>code</code></p>
+<ul>
+<li><p>Nested item with <em>italic</em></p>
+<ul>
+<li><p>Deep item with <del>strikethrough</del></p>
+<ul>
+<li><p>Very deep with <a href="https://example.com">link</a></p>
+</li>
+<li><p>With {{emoji rocket}} emoji</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Back to level 2 with <code>code block</code>:</p>
+</li>
+</ul>
+<p>  # Code in list
+  def hello():
+      return &quot;nested&quot;
+  ```</p>
+</li>
+<li><p>Second main item</p>
+<p>   &gt; Blockquote in list
+   &gt; Multiple lines    And a paragraph after the blockquote</p>
+</li>
+</ol>
+<h3>23. Tables Inside Blockquotes</h3>
+<blockquote>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+</tr>
+<tr>
+<td>Cell 3</td>
+<td>Cell 4</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+<blockquote>
+<p>Note: This table is inside a blockquote</p>
+</blockquote>
+<h3>24. Code with Special Characters</h3>
+<h4>Code Block with Markdown-like Content</h4>
+<pre><code class="language-markdown"># This looks like markdown
+
+## But it&#x27;s code
+
+- Not parsed as list
+  [Not a link](url)
+
+**Not bold** in code</code></pre>
+<h4>Inline Code Preservation</h4>
+<p>The syntax <code>{{example arg}}</code> is preserved as-is in code.</p>
+<p>The pattern <code>[link](url)</code> stays literal.</p>
+<h4>Escaped Characters in Code</h4>
+<pre><code>\*Not italic\*
+\[Not a link\](url)
+\#Not a heading
+\`Not code\`</code></pre>
+<h3>25. Escaping Edge Cases</h3>
+<h4>Escaping Special Characters</h4>
+<p>Asterisk: * literal star<br />
+Bracket: [ literal bracket<br />
+Hash: # not a heading<br />
+Backslash: \ escaped backslash<br />
+Underscore: _not italic_<br />
+Caret: ^ not superscript<br />
+Tilde: ~ not subscript<br />
+Plus: + not underline<br />
+Equals: = not highlight</p>
+<h4>Escaped Markdown Inside Emphasis</h4>
+<p><strong><em>~~Not strikethrough~~ but escaped</em></strong></p>
+<p><strong>*Escaped asterisk inside bold\</strong>*</p>
+<p>**Escaped inside italic**</p>
+<h4>Complex Escaping</h4>
+<p>The text \<em>should be\</em> <code>\*literal\*</code> but this is <strong>**not escaped*\</strong>* in bold.</p>
+<h3>26. Overlapping &amp; Conflicting Syntax</h3>
+<h4>Math vs Emphasis</h4>
+<p>The formula <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><mo>×</mo><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E = m \times c^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">E</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">m</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> contains caret but shouldn&#x27;t be parsed as superscript.</p>
+<p>Multiple dollars: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a+b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>+</mo><mi>d</mi></mrow><annotation encoding="application/x-tex">c+d</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">c</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">d</span></span></span></span> are separate.</p>
+<p>Underscore in math: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>m</mi><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">y = mx_0 + b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7333em;vertical-align:-0.15em;"></span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span></span></span></span> uses underscore literally.</p>
+<h4>Plugin Syntax vs Code</h4>
+<pre><code>{{emoji smile}}  # This is code, not plugin
+{{smiles CCO}}   # Also code, not rendered</code></pre>
+<p>But outside code: {{emoji smile}} and {{smiles CCO}}</p>
+<h4>Links vs Auto-links</h4>
+<p>Auto-link: <a href="https://example.com">https://example.com</a></p>
+<p>Regular link: <a href="https://example.com">text</a></p>
+<p>Reference link: <a href="https://example.com">text</a></p>
+<p>Escaped link-like text: [not a link](url)</p>
+<h3>27. Nested Emphasis &amp; Strikethrough</h3>
+<p>Simple: <strong><em>bold italic</em></strong></p>
+<p>Complex: <del><strong>bold strikethrough</strong></del></p>
+<p>Extreme: <del><strong><em>bold italic strikethrough</em></strong></del></p>
+<p>Partial: <strong><em>bold <del>strikethrough bold</del> bold</em></strong></p>
+<p>With code: <strong>bold with <code>code</code> inside</strong></p>
+<p>With link: <strong><em><a href="https://example.com">bold italic link</a></em></strong></p>
+<h3>28. List Items with Multiple Paragraphs</h3>
+<ol>
+<li><p>First paragraph in item    Second paragraph same item (note blank line)</p>
+</li>
+<li><p>Another item</p>
+<ul>
+<li><p>Nested list in second paragraph</p>
+</li>
+<li><p>Second nested item</p>
+</li>
+</ul>
+<p>   Back to main paragraph</p>
+</li>
+<li><p>Item with:</p>
+<ul>
+<li><p>Nested list</p>
+</li>
+<li><p>Another item</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>   And code block
+   ```</p>
+<p>   &gt; And blockquote</p>
+<h3>29. Blockquote Edge Cases</h3>
+<blockquote>
+<p>Blockquote with:</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><p>A list</p>
+</li>
+<li><p>Second item</p>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>Paragraph after list</p>
+<p>Code block in blockquote:</p>
+</blockquote>
+<blockquote>
+<pre><code>code here</code></pre>
+</blockquote>
+<blockquote>
+<p>More text</p>
+<p><strong>Bold blockquote with <a href="https://example.com">link</a></strong></p>
+</blockquote>
+<h3>30. Mixed Plugin &amp; Markdown</h3>
+<p><strong>Important:</strong> {{emoji rocket}} Deploy with {{badge success: Ready}} status</p>
+<p>Section with {{diagram mermaid
+graph LR
+    A[Feature] --&gt;|Process| B[Result]
+}} diagram embedded</p>
+<h3>31. Reference Links with Special Cases</h3>
+<p><a href="https://example.com">Link with spaces</a></p>
+<p><a href="https://example.com">UPPERCASE LINK</a></p>
+<p><a href="https://example.com">Link-with-dashes</a></p>
+<h3>32. HTML Edge Cases</h3>
+<div>
+<p>This <strong>markdown</strong> should be parsed inside div</p>
+<ul>
+<li><p>List here</p>
+</li>
+<li><p>Another item</p>
+</li>
+</ul>
+</div>
+<p><span>Inline HTML with <strong>markdown</strong></span> around it</p>
+<pre><code class="language-html">&lt;div&gt;This is code, so **not parsed**&lt;/div&gt;</code></pre>
+<h3>33. Empty &amp; Whitespace Edge Cases</h3>
+<h2>Empty list item:</h2>
+<p>Multiple blank lines between paragraphs:</p>
+<p>Still same paragraph logic</p>
+<hr />
+<p>Multiple horizontal rules (should render as separate rules):</p>
+<hr />
+<hr />
+<hr />
+<h3>34. Long Content with Complex Nesting</h3>
+<p>This is a <strong>complex paragraph</strong> with:</p>
+<ul>
+<li><p>Multiple formatting types (<strong>bold</strong>, <em>italic</em>, <del>strikethrough</del>, <u>underline</u>, <mark>highlight</mark>, superscript<sup>2</sup>, subscript<sub>0</sub>)</p>
+</li>
+<li><p><code>inline code with &quot;quotes&quot;</code></p>
+</li>
+<li><p><a href="https://example.com">link to example</a></p>
+</li>
+<li><p>{{emoji star}} and {{badge info: Note}} Followed by a blockquote:</p>
+<blockquote>
+<p>This blockquote contains:</p>
+</blockquote>
+<p>&gt;</p>
+<blockquote>
+<blockquote>
+<p>Nested blockquote with <strong>bold</strong></p>
+</blockquote>
+</blockquote>
+<p>&gt;</p>
+<blockquote>
+<p>A list:</p>
+</blockquote>
+<p>&gt;</p>
+<blockquote>
+<ul>
+<li><p>Item 1</p>
+</li>
+<li><p>Item 2</p>
+</li>
+</ul>
+</blockquote>
+<p>&gt;</p>
+<blockquote>
+<p>And code:</p>
+</blockquote>
+<p>&gt;</p>
+<blockquote>
+<pre><code class="language-javascript">const complex = &#x27;example&#x27;;</code></pre>
+</blockquote>
+<p>Then a table:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bold</strong></td>
+<td>✅</td>
+</tr>
+<tr>
+<td><em>Italic</em></td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h3>35. Math in Various Contexts</h3>
+<h4>In Headings</h4>
+<h2>The Equation <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E=mc^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">E</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> in a Heading</h2>
+<h4>In Lists</h4>
+<ol>
+<li><p>Simple equation: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi><mo>=</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">a+b=c</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">b</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">c</span></span></span></span></p>
+</li>
+<li><p>Complex: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mi>x</mi><mi>y</mi></mfrac><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">\frac{x}{y} = \frac{1}{2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1765em;vertical-align:-0.4811em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6954em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.4811em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.1901em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></p>
+</li>
+<li><p>Chemistry: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mi>H</mi><mn>2</mn><mi>S</mi><mi>O</mi><mn>4</mn></mrow></mrow><annotation encoding="application/x-tex">\ce{H2SO4}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.02778em;">SO</span><span class="mord">4</span></span></span></span></span> in list</p>
+</li>
+</ol>
+<h4>In Tables</h4>
+<table>
+<thead>
+<tr>
+<th>Math Content</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></td>
+<td>Quadratic</td>
+</tr>
+<tr>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mi>N</mi><mi>a</mi><mi>C</mi><mi>l</mi></mrow></mrow><annotation encoding="application/x-tex">\ce{NaCl}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mord mathnormal">a</span><span class="mord mathnormal" style="margin-right:0.01968em;">Cl</span></span></span></span></span></td>
+<td>Salt</td>
+</tr>
+</tbody>
+</table>
+<h4>In Blockquotes</h4>
+<blockquote>
+<p>The equation <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E=mc^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">E</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> is fundamental</p>
+</blockquote>
+<blockquote>
+<p>And <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mn>2</mn><mi>H</mi><mn>2</mn><mo>+</mo><mi>O</mi><mn>2</mn><mo>−</mo><mo>&gt;</mo><mn>2</mn><mi>H</mi><mn>2</mn><mi>O</mi></mrow></mrow><annotation encoding="application/x-tex">\ce{2H2 + O2 -&gt; 2H2O}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mord">2</span><span class="mord">−</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span></span></span></span></span> shows reaction</p>
+</blockquote>
+<h4>In Code (Not Parsed)</h4>
+<pre><code>This $E=mc^2$ should NOT render as math</code></pre>
+<h3>36. Emoji in Various Contexts</h3>
+<h4>In Text</h4>
+<p>This is a {{emoji smile}} in text</p>
+<h4>In Headings</h4>
+<h2>Progress: {{emoji fire}} Status</h2>
+<h4>In Lists</h4>
+<ul>
+<li><p>Item {{emoji check}}</p>
+</li>
+<li><p>Another {{emoji rocket}}</p>
+</li>
+</ul>
+<h4>In Badges</h4>
+<p>{{badge success: {{emoji star}} Complete}}</p>
+<h4>In Links</h4>
+<p><a href="https://example.com">{{emoji link}} Go to example</a></p>
+<hr />
+<h2>Special Testing Scenarios</h2>
+<h3>37. Consecutive Special Elements</h3>
+<p>{{emoji smile}}{{emoji heart}}{{emoji rocket}}</p>
+<p><a href="url1">link1</a><a href="url2">link2</a></p>
+<p><strong>bold1*\</strong><em>bold2\</em>*</p>
+<h3>38. Ambiguous Syntax Cases</h3>
+<p>The text &quot;<strong><em>mixed</em></strong>&quot; should parse as <strong><em>mixed</em></strong></p>
+<p>The pattern &quot;<em><em>combined</em></em>&quot; should be <em><em>combined</em></em></p>
+<p>The sequence &quot;<strong><em>triple</em></strong>&quot; could be interpreted multiple ways</p>
+<h3>39. Unicode &amp; Special Characters</h3>
+<p>Mathematics: α, β, γ, Δ, Σ</p>
+<p>Arrows: →, ←, ↑, ↓, ↔</p>
+<p>Symbols: ©, ®, ™, €, £, ¥</p>
+<p>Emoji: 😀 😃 😄 😁 (literal emoji chars)</p>
+<h3>40. Performance Edge Cases</h3>
+<p>Very long inline text: The quick brown fox jumps over the lazy dog and continues with more text including <strong>bold</strong>, <em>italic</em>, <code>code</code>, and <a href="url">links</a> all in one long sentence that tests how the parser handles extended content.</p>
+<p>Very long code block:</p>
+<pre><code>This is a very long code block
+with multiple lines
+        indentation
+    more indentation
+and content
+that goes on
+for quite a while
+to test parser performance
+with realistic scenarios</code></pre>
+<p>Deep nesting:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Deeply nested content</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>Even deeper</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>And more</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<hr />
+<h2>Advanced Plugin Combinations</h2>
+<h3>41. Chemical Workflow Example</h3>
+<p><strong>Reaction Analysis:</strong></p>
+<p>Reactant: {{smiles CCO}}<br />
+Catalyst: {{badge warning: Heat required}}<br />
+Product: {{smiles CC(=O)C}}</p>
+<p>Equation: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mi>C</mi><mn>2</mn><mi>H</mi><mn>6</mn><mi>O</mi><mo>−</mo><mo>&gt;</mo><mo stretchy="false">[</mo><mi>H</mi><mo>+</mo><mo separator="true">,</mo><mi>h</mi><mi>e</mi><mi>a</mi><mi>t</mi><mo stretchy="false">]</mo><mi>C</mi><mi>H</mi><mn>3</mn><mi>C</mi><mi>O</mi><mi>C</mi><mi>H</mi><mn>3</mn></mrow></mrow><annotation encoding="application/x-tex">\ce{C2H6O -&gt;[H+,heat] CH3COCH3}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">6</span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mord">−</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">+</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mord mathnormal">e</span><span class="mord mathnormal">a</span><span class="mord mathnormal">t</span><span class="mclose">]</span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">3</span><span class="mord mathnormal" style="margin-right:0.07153em;">COC</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">3</span></span></span></span></span></p>
+<p>{{emoji rocket}} Process {{emoji check}}</p>
+<h3>42. Learning Module Example</h3>
+<h2>Lesson 1: {{emoji lightbulb}} Introduction</h2>
+<p>{{emoji check}} Topics covered:</p>
+<ul>
+<li><p>Molecular structure: {{smiles c1ccccc1}}</p>
+</li>
+<li><p>Equation: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathcolor="#cc0000"><mtext>\ce</mtext></mstyle><mrow><mi>C</mi><mn>6</mn><mi>H</mi><mn>6</mn></mrow></mrow><annotation encoding="application/x-tex">\ce{C6H6}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\ce</span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mord">6</span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mord">6</span></span></span></span></span></p>
+</li>
+<li><p>Reference: <a href="https://example.com">Wikipedia</a> {{badge info: 45% complete}}</p>
+</li>
+</ul>
+<hr />
+<h2>Summary</h2>
+<p>This file demonstrates:</p>
+<p>✅ <strong>Core Markdown</strong>: All CommonMark elements
+✅ <strong>Phase 1 Extensions</strong>: Tables, footnotes, strikethrough, containers, inline styles
+✅ <strong>Advanced Features</strong>: Math formulas with chemistry, plugins
+✅ <strong>Complex Nesting</strong>: Multiple levels of embedded content
+✅ <strong>Edge Cases</strong>: Escaping, overlapping syntax, ambiguous patterns
+✅ <strong>Real-World Scenarios</strong>: Practical examples combining multiple features</p>
+<p>All these features are <strong>fully supported and tested</strong> in mdParserCF!</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>This is a footnote. It can span multiple lines.</p>
+<p>It can have multiple paragraphs.</p>
+</li>
+<li id="fn-2"><p>This is another footnote with <code>code</code> and <strong>formatting</strong>.</p>
+</li>
+</ol>
+</section>
+
+</body>
+</html>

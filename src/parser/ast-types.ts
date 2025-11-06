@@ -188,11 +188,16 @@ export interface CustomContainer extends ASTNode {
 }
 
 /**
- * HTML Block - raw HTML passed through
+ * HTML Block - HTML block with either raw content or parsed markdown content inside
  */
 export interface HTMLBlock extends ASTNode {
   type: 'html-block';
-  content: string;
+  // For raw HTML content (from plugins)
+  content?: string;
+  // For parsed HTML with markdown inside
+  tag?: string;
+  attributes?: Record<string, string>;
+  children?: BlockNode[];
 }
 
 // ========================================
@@ -334,8 +339,11 @@ export interface CustomSpan extends ASTNode {
  */
 export interface HTMLInline extends ASTNode {
   type: 'html-inline';
-  value: string;
-  children?: undefined;
+  value?: string;
+  tag?: string;
+  attributes?: Record<string, string>;
+  children?: InlineNode[];
+  selfClosing?: boolean;
 }
 
 /**
@@ -393,6 +401,9 @@ export interface ParserOptions {
 
   /** Enable footnotes */
   enableFootnotes?: boolean;
+
+  /** Enable HTML parsing */
+  enableHtml?: boolean;
 
   /** Enable plugins */
   enablePlugins?: boolean;

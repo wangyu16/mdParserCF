@@ -6,6 +6,8 @@
  */
 
 import * as katex from 'katex';
+// Import mhchem extension for chemistry formulas
+import 'katex/dist/contrib/mhchem.mjs';
 
 import {
   Document,
@@ -42,6 +44,14 @@ import {
 } from '../parser/ast-types';
 
 import { escapeHtml } from './escaper';
+
+/**
+ * KaTeX options for math rendering
+ */
+const KATEX_OPTIONS = {
+  throwOnError: false,
+  trust: true,
+};
 
 /**
  * HTML Renderer - converts AST to HTML
@@ -216,10 +226,27 @@ export class HTMLRenderer {
   }
 
   /**
-   * Render HTML block (pass-through)
+   * Render HTML block with either raw content or parsed markdown content
    */
   private renderHTMLBlock(block: HTMLBlock): string {
-    return block.content + '\n';
+    // Raw HTML content (from plugins)
+    if (block.content) {
+      return block.content + '\n';
+    }
+
+    // Parsed HTML with markdown content inside
+    if (block.tag && block.children) {
+      const attrs = block.attributes || {};
+      let attrString = '';
+      for (const [key, value] of Object.entries(attrs)) {
+        attrString += ` ${key}="${escapeHtml(value)}"`;
+      }
+
+      const content = block.children.map((child) => this.renderBlock(child)).join('');
+      return `<${block.tag}${attrString}>\n${content}</${block.tag}>\n`;
+    }
+
+    return '';
   }
 
   /**
@@ -258,7 +285,7 @@ export class HTMLRenderer {
       case 'inline-math':
         return this.renderInlineMath(node as any);
       case 'html-inline':
-        return (node as HTMLInline).value;
+        return this.renderHTMLInline(node as HTMLInline);
       case 'footnote-reference':
         return this.renderFootnoteReference(node as FootnoteReference);
       case 'custom-span':
@@ -316,7 +343,7 @@ export class HTMLRenderer {
     const src = escapeHtml(node.url);
     const alt = escapeHtml(node.alt);
     const title = node.title ? ` title="${escapeHtml(node.title)}"` : '';
-    
+
     // Build custom attributes string
     let customAttrs = '';
     if (node.attributes) {
@@ -324,7 +351,7 @@ export class HTMLRenderer {
         customAttrs += ` ${key}="${escapeHtml(value)}"`;
       }
     }
-    
+
     return `<img src="${src}" alt="${alt}"${title}${customAttrs} />`;
   }
 
@@ -384,8 +411,10 @@ export class HTMLRenderer {
 
     let html = '<section class="footnotes">\n<ol>\n';
     for (const footnote of footnotes) {
+      // Render footnote content without wrapping in extra <p> tags
+      // Footnotes can contain multiple blocks, so render them directly
       const content = footnote.children.map((block: BlockNode) => this.renderBlock(block)).join('');
-      html += `<li id="fn-${escapeHtml(footnote.label)}"><p>${content}</p></li>\n`;
+      html += `<li id="fn-${escapeHtml(footnote.label)}">${content}</li>\n`;
     }
     html += '</ol>\n</section>\n';
     return html;
@@ -398,10 +427,7 @@ export class HTMLRenderer {
    */
   private renderInlineMath(node: any): string {
     try {
-      return katex.renderToString(node.content, {
-        throwOnError: false,
-        trust: true,
-      });
+      return katex.renderToString(node.content, KATEX_OPTIONS);
     } catch (error) {
       // Fallback to escaped text if KaTeX rendering fails
       return `<span class="math-error" title="Math rendering failed">${escapeHtml(node.content)}</span>`;
@@ -416,9 +442,8 @@ export class HTMLRenderer {
   private renderMathBlock(node: any): string {
     try {
       const html = katex.renderToString(node.content, {
+        ...KATEX_OPTIONS,
         displayMode: true,
-        throwOnError: false,
-        trust: true,
       });
       return `<div class="math-block">\n${html}\n</div>\n`;
     } catch (error) {
@@ -442,5 +467,34 @@ export class HTMLRenderer {
     const content = node.children.map((block: BlockNode) => this.renderBlock(block)).join('');
     return `<section class="${escapeHtml(node.className)}">\n${content}</section>\n`;
   }
-}
 
+  /**
+   * Render HTML inline element
+   */
+  private renderHTMLInline(node: HTMLInline): string {
+    if (node.value) {
+      // Raw HTML from plugins
+      return node.value;
+    }
+
+    if (node.tag) {
+      // Parsed HTML with markdown content
+      const attrs = node.attributes || {};
+      let attrString = '';
+      for (const [key, value] of Object.entries(attrs)) {
+        attrString += ` ${key}="${escapeHtml(value)}"`;
+      }
+
+      if (node.selfClosing) {
+        return `<${node.tag}${attrString} />`;
+      }
+
+      const content = node.children
+        ? node.children.map((child) => this.renderInline(child)).join('')
+        : '';
+      return `<${node.tag}${attrString}>${content}</${node.tag}>`;
+    }
+
+    return '';
+  }
+}

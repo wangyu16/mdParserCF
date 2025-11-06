@@ -9,17 +9,22 @@ This file demonstrates all supported markdown features in mdParserCF, including 
 ### 1. Headings
 
 # Heading 1
+
 ## Heading 2
+
 ### Heading 3
+
 #### Heading 4
+
 ##### Heading 5
+
 ###### Heading 6
 
-**Note**: Headings can contain emphasis: ## *Important* Section
+**Note**: Headings can contain emphasis: ## _Important_ Section
 
 ### 2. Emphasis & Styling
 
-**Bold text** and *italic text* and ***bold italic***
+**Bold text** and _italic text_ and **_bold italic_**
 
 ~~Strikethrough text~~ shows deleted content
 
@@ -31,11 +36,20 @@ Superscript: E=mc^2^ is the famous equation
 
 Subscript: H~2~O is water
 
-**Complex**: ***~~bold italic strikethrough~~*** text
+**Complex**: **_~~bold italic strikethrough~~_** text
 
 ### 3. Lists
 
 #### Unordered Lists
+
+Simple list
+
+- Item 1
+- Item 2
+- Item 3
+
+Nested list
+
 - Item 1
 - Item 2
   - Nested item 2.1
@@ -45,6 +59,15 @@ Subscript: H~2~O is water
 - Item 3
 
 #### Ordered Lists
+
+Simple list
+
+1. Item 1
+1. Item 2
+1. Item 3
+
+Nested list
+
 1. First item
 2. Second item
    1. Nested first
@@ -54,18 +77,17 @@ Subscript: H~2~O is water
       1. Triple nested
 
 #### Mixed Lists
+
 1. First ordered
    - Unordered under ordered
    - Another bullet
 2. Second ordered
    - Bullet with **bold**
-   - Bullet with *italic*
+   - Bullet with _italic_
 
 ### 4. Links
 
 [Inline link](https://example.com)
-
-[Link with title](https://example.com "Example Site")
 
 [Reference-style link][ref1]
 
@@ -80,9 +102,17 @@ Email auto-link: <user@example.com>
 
 ### 5. Images
 
-![Alt text](https://via.placeholder.com/200 "Image title")
+Standard markdown syntax to insert an image.
 
 ![Markdown logo](https://markdown-here.com/img/icon256.png)
+
+This Markdown parser supports passing attributes via HTML comments (<!-- -->) placed directly after an image element. This approach ensures compatibility with other Markdown parsers, as the comments are ignored during rendering and do not interfere with the output. See following examples.
+
+![Markdown logo](https://markdown-here.com/img/icon256.png)<!-- title="Image" -->
+
+![Markdown logo](https://markdown-here.com/img/icon256.png)<!-- width="100px" -->
+
+![Markdown logo](https://markdown-here.com/img/icon256.png)<!-- style="border:5px solid black" -->
 
 ### 6. Code
 
@@ -91,6 +121,7 @@ Inline code: `const x = 42;`
 Complex inline code with special chars: `function() { return "test"; }`
 
 #### Code Block (JavaScript)
+
 ```javascript
 function greet(name) {
   console.log(`Hello, ${name}!`);
@@ -99,6 +130,7 @@ function greet(name) {
 ```
 
 #### Code Block (Python)
+
 ```python
 def fibonacci(n):
     if n <= 1:
@@ -107,6 +139,7 @@ def fibonacci(n):
 ```
 
 #### Code Block (Plain)
+
 ```
 Plain text code block
 with multiple lines
@@ -119,21 +152,25 @@ with multiple lines
 > Second line of blockquote
 
 > Nested blockquote:
->> This is nested
->> Multiple lines
->>> Even deeper nesting
+>
+> > This is nested
+> > Multiple lines
+> >
+> > > Even deeper nesting
 
-> Blockquote with **bold**, *italic*, and ~~strikethrough~~
+> Blockquote with **bold**, _italic_, and ~~strikethrough~~
 
 ### 8. Horizontal Rules
 
 ---
 
-***
-
-___
-
 ### 9. HTML Passthrough
+
+You can combine HTML labeling with markdown to add HTML elements directly in your markdown file.
+
+<span class="custom">A sentence.</span>
+
+<p>A paragraph.</p>
 
 <div class="custom">
 Custom HTML content can be embedded and markdown works inside:
@@ -142,6 +179,7 @@ Custom HTML content can be embedded and markdown works inside:
 - List item 2
 
 **Bold text** inside HTML blocks
+
 </div>
 
 ---
@@ -150,25 +188,25 @@ Custom HTML content can be embedded and markdown works inside:
 
 ### 10. Tables (GFM)
 
-| Feature | Status | Priority |
-|---------|--------|----------|
-| Tables | ✅ Working | High |
-| Math | ✅ Working | High |
-| Plugins | ✅ Working | High |
+| Feature | Status     | Priority |
+| ------- | ---------- | -------- |
+| Tables  | ✅ Working | High     |
+| Math    | ✅ Working | High     |
+| Plugins | ✅ Working | High     |
 
 #### Table with Alignment
 
-| Left | Center | Right |
-|:---|:-:|---:|
+| Left         |     Center     |         Right |
+| :----------- | :------------: | ------------: |
 | Left aligned | Center aligned | Right aligned |
-| Text | More text | Final text |
+| Text         |   More text    |    Final text |
 
 #### Complex Table with Formatting
 
-| **Bold Header** | *Italic Header* | ~~Strikethrough~~ |
-|---|---|---|
-| Regular cell | `code cell` | [Link cell](https://example.com) |
-| Cell with **bold** | Cell with *italic* | Cell with ++underline++ |
+| **Bold Header**    | _Italic Header_    | ~~Strikethrough~~                |
+| ------------------ | ------------------ | -------------------------------- |
+| Regular cell       | `code cell`        | [Link cell](https://example.com) |
+| Cell with **bold** | Cell with _italic_ | Cell with ++underline++          |
 
 ### 11. Footnotes
 
@@ -179,7 +217,7 @@ Another footnote[^2] here.
 Reference the same note again[^1].
 
 [^1]: This is a footnote. It can span multiple lines.
-    
+
     It can have multiple paragraphs.
 
 [^2]: This is another footnote with `code` and **formatting**.
@@ -191,14 +229,16 @@ This is a note container with custom styling.
 :::
 
 :::warning
-This is a warning with **bold** and *italic* support.
+This is a warning with **bold** and _italic_ support.
 :::
 
 :::info
 This container has:
+
 - Multiple items
 - With **formatting**
 - And links: [example](https://example.com)
+
 :::
 
 :::error
@@ -275,6 +315,21 @@ Symbols: {{emoji star}} {{emoji fire}} {{emoji rocket}}
 
 Nature: {{emoji flower}} {{emoji tree}} {{emoji sun}}
 
+#### Supported Emoji List
+
+| Emoji Name           | Result             | Emoji Name             | Result               |
+| -------------------- | ------------------ | ---------------------- | -------------------- |
+| `{{emoji smile}}`    | {{emoji smile}}    | `{{emoji laugh}}`      | {{emoji laugh}}      |
+| `{{emoji happy}}`    | {{emoji happy}}    | `{{emoji sad}}`        | {{emoji sad}}        |
+| `{{emoji angry}}`    | {{emoji angry}}    | `{{emoji heart}}`      | {{emoji heart}}      |
+| `{{emoji thumbsup}}` | {{emoji thumbsup}} | `{{emoji thumbsdown}}` | {{emoji thumbsdown}} |
+| `{{emoji star}}`     | {{emoji star}}     | `{{emoji fire}}`       | {{emoji fire}}       |
+| `{{emoji rocket}}`   | {{emoji rocket}}   | `{{emoji party}}`      | {{emoji party}}      |
+| `{{emoji thinking}}` | {{emoji thinking}} | `{{emoji eyes}}`       | {{emoji eyes}}       |
+| `{{emoji check}}`    | {{emoji check}}    | `{{emoji cross}}`      | {{emoji cross}}      |
+
+**Note:** You can also use any emoji character directly in the syntax: `{{emoji 😊}}` will render as {{emoji 😊}}
+
 ### 19. SMILES Chemical Structures
 
 Ethanol: {{smiles CCO}}
@@ -287,7 +342,15 @@ Acetone: {{smiles CC(=O)C}}
 
 Glucose: {{smiles C(C(C(C(C=O)O)O)O)O}}
 
-### 20. Custom Badges
+### 20. Chemical Reactions
+
+Simple reaction: {{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
+
+With text below arrow: {{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-] | textBelowArrow: 90%}}
+
+Esterification: {{reaction CC(=O)O.CCO>[H+]>CC(=O)OCC.O | textBelowArrow: Heat}}
+
+### 21. Custom Badges
 
 {{badge success: All tests passing}}
 
@@ -300,6 +363,19 @@ Glucose: {{smiles C(C(C(C(C=O)O)O)O)O}}
 {{badge secondary: Not started}}
 
 {{badge light: Light badge}}
+
+#### Supported Badge Types
+
+| Badge Type | Syntax                                 | Result                               |
+| ---------- | -------------------------------------- | ------------------------------------ |
+| Success    | `{{badge success: All tests passing}}` | {{badge success: All tests passing}} |
+| Warning    | `{{badge warning: Review required}}`   | {{badge warning: Review required}}   |
+| Info       | `{{badge info: New feature}}`          | {{badge info: New feature}}          |
+| Danger     | `{{badge danger: Critical issue}}`     | {{badge danger: Critical issue}}     |
+| Primary    | `{{badge primary: Main task}}`         | {{badge primary: Main task}}         |
+| Secondary  | `{{badge secondary: Not started}}`     | {{badge secondary: Not started}}     |
+
+**Note:** Badge syntax is `{{badge type: Your text here}}`. Any unrecognized type defaults to `info`.
 
 ### 21. Mermaid Diagrams
 
@@ -328,7 +404,7 @@ sequenceDiagram
 ### 22. Nested Lists with Multiple Formatting
 
 1. First item with **bold** and `code`
-   - Nested item with *italic*
+   - Nested item with _italic_
      - Deep item with ~~strikethrough~~
        - Very deep with [link](https://example.com)
        - With {{emoji rocket}} emoji
@@ -338,17 +414,15 @@ sequenceDiagram
      def hello():
          return "nested"
      ```
-
 2. Second main item
    > Blockquote in list
    > Multiple lines
-   
-   And a paragraph after the blockquote
+   > And a paragraph after the blockquote
 
 ### 23. Tables Inside Blockquotes
 
 > | Header 1 | Header 2 |
-> |----------|----------|
+> | -------- | -------- |
 > | Cell 1   | Cell 2   |
 > | Cell 3   | Cell 4   |
 >
@@ -357,21 +431,26 @@ sequenceDiagram
 ### 24. Code with Special Characters
 
 #### Code Block with Markdown-like Content
+
 ```markdown
 # This looks like markdown
+
 ## But it's code
+
 - Not parsed as list
-[Not a link](url)
+  [Not a link](url)
 
 **Not bold** in code
 ```
 
 #### Inline Code Preservation
+
 The syntax `{{example arg}}` is preserved as-is in code.
 
 The pattern `[link](url)` stays literal.
 
 #### Escaped Characters in Code
+
 ```
 \*Not italic\*
 \[Not a link\](url)
@@ -387,23 +466,23 @@ Asterisk: \* literal star
 Bracket: \[ literal bracket  
 Hash: \# not a heading  
 Backslash: \\ escaped backslash  
-Underscore: \_not italic_  
+Underscore: \_not italic\_  
 Caret: \^ not superscript  
 Tilde: \~ not subscript  
 Plus: \+ not underline  
-Equals: \= not highlight  
+Equals: \= not highlight
 
 #### Escaped Markdown Inside Emphasis
 
-***\~~Not strikethrough\~~ but escaped~***
+**_\~~Not strikethrough\~~ but escaped_**
 
 **\*Escaped asterisk inside bold\***
 
-*\*Escaped inside italic\**
+\*\*Escaped inside italic\*\*
 
 #### Complex Escaping
 
-The text \\*should be\\* `\*literal\*` but this is **\*\*not escaped\*\*** in bold.
+The text \\_should be\\_ `\*literal\*` but this is **\*\*not escaped\*\*** in bold.
 
 ### 26. Overlapping & Conflicting Syntax
 
@@ -438,60 +517,60 @@ Escaped link-like text: \[not a link\](url)
 
 ### 27. Nested Emphasis & Strikethrough
 
-Simple: ***bold italic***
+Simple: **_bold italic_**
 
 Complex: ~~**bold strikethrough**~~
 
-Extreme: ~~***bold italic strikethrough***~~
+Extreme: ~~**_bold italic strikethrough_**~~
 
-Partial: ***bold ~~strikethrough bold~~ bold***
+Partial: **_bold ~~strikethrough bold~~ bold_**
 
 With code: **bold with `code` inside**
 
-With link: ***[bold italic link](https://example.com)***
+With link: **_[bold italic link](https://example.com)_**
 
 ### 28. List Items with Multiple Paragraphs
 
 1. First paragraph in item
 
-   Second paragraph same item (note blank line)
+Second paragraph same item (note blank line)
 
 2. Another item
-   
    - Nested list in second paragraph
    - Second nested item
-   
+
    Back to main paragraph
 
 3. Item with:
    - Nested list
    - Another item
-   
    ```
    And code block
    ```
-   
    > And blockquote
 
 ### 29. Blockquote Edge Cases
 
 > Blockquote with:
+>
 > - A list
 > - Second item
 >
 > Paragraph after list
 
 > Code block in blockquote:
+>
 > ```
 > code here
 > ```
+>
 > More text
 
 > **Bold blockquote with [link](https://example.com)**
 
 ### 30. Mixed Plugin & Markdown
 
-**Important:** {{emoji rocket}} Deploy with {{badge success: Ready}} status
+**Important:** {{emoji rocket}} _Deploy_ with {{badge success: Ready}} status
 
 Section with {{diagram mermaid
 graph LR
@@ -521,18 +600,14 @@ This **markdown** should be parsed inside div
 <span>Inline HTML with **markdown**</span> around it
 
 ```html
-<div>
-  This is code, so **not parsed**
-</div>
+<div>This is code, so **not parsed**</div>
 ```
 
 ### 33. Empty & Whitespace Edge Cases
 
-Empty list item:
--
+## Empty list item:
 
 Multiple blank lines between paragraphs:
-
 
 Still same paragraph logic
 
@@ -549,7 +624,8 @@ Multiple horizontal rules (should render as separate rules):
 ### 34. Long Content with Complex Nesting
 
 This is a **complex paragraph** with:
-- Multiple formatting types (**bold**, *italic*, ~~strikethrough~~, ++underline++, ==highlight==, superscript^2^, subscript~0~)
+
+- Multiple formatting types (**bold**, _italic_, ~~strikethrough~~, ++underline++, ==highlight==, superscript^2^, subscript~0~)
 - `inline code with "quotes"`
 - [link to example](https://example.com)
 - {{emoji star}} and {{badge info: Note}}
@@ -557,46 +633,54 @@ This is a **complex paragraph** with:
 Followed by a blockquote:
 
 > This blockquote contains:
->> Nested blockquote with **bold**
+>
+> > Nested blockquote with **bold**
 >
 > A list:
+>
 > - Item 1
 > - Item 2
 >
 > And code:
+>
 > ```javascript
-> const complex = "example";
+> const complex = 'example';
 > ```
 
 Then a table:
 
-| Feature | Status |
-|---------|--------|
-| **Bold** | ✅ |
-| *Italic* | ✅ |
+| Feature  | Status |
+| -------- | ------ |
+| **Bold** | ✅     |
+| _Italic_ | ✅     |
 
 ### 35. Math in Various Contexts
 
 #### In Headings
+
 ## The Equation $E=mc^2$ in a Heading
 
 #### In Lists
+
 1. Simple equation: $a+b=c$
 2. Complex: $\frac{x}{y} = \frac{1}{2}$
 3. Chemistry: $\ce{H2SO4}$ in list
 
 #### In Tables
-| Math Content | Result |
-|---|---|
-| $x^2$ | Quadratic |
-| $\ce{NaCl}$ | Salt |
+
+| Math Content | Result    |
+| ------------ | --------- |
+| $x^2$        | Quadratic |
+| $\ce{NaCl}$  | Salt      |
 
 #### In Blockquotes
+
 > The equation $E=mc^2$ is fundamental
-> 
+>
 > And $\ce{2H2 + O2 -> 2H2O}$ shows reaction
 
 #### In Code (Not Parsed)
+
 ```
 This $E=mc^2$ should NOT render as math
 ```
@@ -604,19 +688,24 @@ This $E=mc^2$ should NOT render as math
 ### 36. Emoji in Various Contexts
 
 #### In Text
+
 This is a {{emoji smile}} in text
 
 #### In Headings
+
 ## Progress: {{emoji fire}} Status
 
 #### In Lists
+
 - Item {{emoji check}}
 - Another {{emoji rocket}}
 
 #### In Badges
+
 {{badge success: {{emoji star}} Complete}}
 
 #### In Links
+
 [{{emoji link}} Go to example](https://example.com)
 
 ---
@@ -629,15 +718,15 @@ This is a {{emoji smile}} in text
 
 [link1](url1)[link2](url2)
 
-**bold1****bold2**
+**bold1\*\***bold2\*\*
 
 ### 38. Ambiguous Syntax Cases
 
 The text "**_mixed_**" should parse as **_mixed_**
 
-The pattern "*_combined_*" should be *_combined_*
+The pattern "_*combined*_" should be _*combined*_
 
-The sequence "___triple___" could be interpreted multiple ways
+The sequence "**_triple_**" could be interpreted multiple ways
 
 ### 39. Unicode & Special Characters
 
@@ -651,9 +740,10 @@ Emoji: 😀 😃 😄 😁 (literal emoji chars)
 
 ### 40. Performance Edge Cases
 
-Very long inline text: The quick brown fox jumps over the lazy dog and continues with more text including **bold**, *italic*, `code`, and [links](url) all in one long sentence that tests how the parser handles extended content.
+Very long inline text: The quick brown fox jumps over the lazy dog and continues with more text including **bold**, _italic_, `code`, and [links](url) all in one long sentence that tests how the parser handles extended content.
 
 Very long code block:
+
 ```
 This is a very long code block
 with multiple lines
@@ -667,10 +757,11 @@ with realistic scenarios
 ```
 
 Deep nesting:
-> >
-> > > >
+
 > > > > > Deeply nested content
+> > > > >
 > > > > > > Even deeper
+> > > > > >
 > > > > > > > And more
 
 ---
@@ -694,6 +785,7 @@ Equation: $\ce{C2H6O ->[H+,heat] CH3COCH3}$
 ## Lesson 1: {{emoji lightbulb}} Introduction
 
 {{emoji check}} Topics covered:
+
 - Molecular structure: {{smiles c1ccccc1}}
 - Equation: $\ce{C6H6}$
 - Reference: [Wikipedia](https://example.com)
