@@ -19,6 +19,7 @@
     "dev": "tsx watch src/index.ts",
     "dev:wrangler": "wrangler dev",
     "build": "tsc && vite build",
+    "build:worker": "node build-worker.mjs",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -27,8 +28,8 @@
     "lint:fix": "eslint 'src/**/*.ts' 'tests/**/*.ts' --fix",
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts' '*.md'",
     "type-check": "tsc --noEmit",
-    "deploy": "npm run build && wrangler deploy",
-    "deploy:staging": "npm run build && wrangler deploy --env staging"
+    "deploy": "npm run build:worker && wrangler deploy",
+    "deploy:staging": "npm run build:worker && wrangler deploy --env staging"
   },
   "keywords": [
     "markdown",
@@ -45,6 +46,7 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitest/ui": "^2.0.0",
+    "esbuild": "^0.25.12",
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
     "tsx": "^4.0.0",
