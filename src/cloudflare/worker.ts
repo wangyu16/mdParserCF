@@ -293,7 +293,8 @@ async function handleParse(request: Request) {
 
     // Render to HTML
     const renderer = new HTMLRenderer();
-    const html = renderer.render(ast);
+    const output = renderer.render(ast);
+    const html = output.html;
 
     const processingTime = Date.now() - startTime;
 

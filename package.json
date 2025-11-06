@@ -1,25 +1,37 @@
 {
   "name": "mdparser-cf",
-  "version": "0.0.1",
-  "description": "Customizable Markdown parser for Cloudflare Workers",
+  "version": "1.0.0",
+  "description": "Advanced Markdown parser with math formulas, tables, footnotes, custom containers, and more. Optimized for Cloudflare Workers and edge computing.",
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    },
+    "./parser": {
+      "types": "./dist/parser/parser.d.ts",
+      "import": "./dist/parser/parser.js"
+    },
+    "./renderer": {
+      "types": "./dist/renderer/html-renderer.d.ts",
+      "import": "./dist/renderer/html-renderer.js"
     }
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "dev:wrangler": "wrangler dev",
     "build": "tsc && vite build",
     "build:worker": "node build-worker.mjs",
+    "prepublishOnly": "npm run build",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -34,12 +46,25 @@
   "keywords": [
     "markdown",
     "parser",
+    "html",
+    "markdown-parser",
+    "markdown-renderer",
+    "katex",
+    "math",
+    "latex",
+    "mhchem",
+    "chemistry",
+    "tables",
+    "footnotes",
     "cloudflare",
     "workers",
-    "html"
+    "edge",
+    "serverless",
+    "gfm",
+    "github-flavored-markdown"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "wangyu16",
+  "license": "MIT",
   "devDependencies": {
     "@types/katex": "^0.16.7",
     "@types/node": "^24.10.0",
@@ -56,18 +81,29 @@
   },
   "dependencies": {
     "katex": "^0.16.25",
-    "smiles-drawer": "^2.1.7",
-    "wrangler": "^3.0.0"
+    "smiles-drawer": "^2.1.7"
   },
-  "optionalDependencies": {
+  "peerDependencies": {
     "highlight.js": "^11.8.0"
   },
+  "peerDependenciesMeta": {
+    "highlight.js": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {
+    "wrangler": "^3.0.0"
+  },
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/wangyu16/mdParserCF.git"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/wangyu16/mdParserCF/issues"
+  },
+  "homepage": "https://github.com/wangyu16/mdParserCF#readme"
 }

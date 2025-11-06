@@ -2,6 +2,90 @@
 
 A comprehensive, customizable Markdown parser designed for deployment on Cloudflare Workers with full local development support.
 
+## 📦 Installation
+
+```bash
+npm install mdparser-cf
+```
+
+Or with other package managers:
+
+```bash
+yarn add mdparser-cf
+pnpm add mdparser-cf
+```
+
+## 🚀 Quick Usage
+
+### Basic Example
+
+```typescript
+import { Parser, HTMLRenderer } from 'mdparser-cf';
+
+// Parse markdown to HTML
+const parser = new Parser();
+const ast = parser.parse('# Hello World\n\nThis is **bold**.');
+
+const renderer = new HTMLRenderer();
+const { html } = renderer.render(ast);
+console.log(html);
+// Output: <h1>Hello World</h1>\n<p>This is <strong>bold</strong>.</p>
+```
+
+### Simple One-Liner
+
+```typescript
+import { mdToHtml } from 'mdparser-cf';
+
+const html = await mdToHtml('# Hello\n\nThis is $E=mc^2$');
+```
+
+### With Math Formulas
+
+```typescript
+import { Parser, HTMLRenderer } from 'mdparser-cf';
+
+const markdown = `
+# Math Example
+
+Inline math: $E = mc^2$
+
+Block math:
+$$
+\\frac{\\partial f}{\\partial x} = \\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}
+$$
+`;
+
+const parser = new Parser({ enableMath: true });
+const ast = parser.parse(markdown);
+
+const renderer = new HTMLRenderer();
+const { html } = renderer.render(ast);
+```
+
+### Advanced: Direct Parser/Renderer Access
+
+```typescript
+import { Parser, HTMLRenderer, type Document } from 'mdparser-cf';
+
+// Configure parser
+const parser = new Parser({
+  enableMath: true,
+  enablePlugins: true,
+  debugAST: false,
+});
+
+// Parse to AST
+const ast: Document = parser.parse(markdown);
+
+// Render to HTML
+const renderer = new HTMLRenderer();
+const output = renderer.render(ast);
+
+console.log(output.html); // HTML string
+console.log(output.headings); // Extracted headings for TOC
+```
+
 ## ✨ Features
 
 - **Complete Markdown Support** - All standard markdown elements plus custom extensions
