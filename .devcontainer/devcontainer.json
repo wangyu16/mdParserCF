@@ -1,10 +1,11 @@
 {
   "name": "Markdown Parser CF Development",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "containerEnv": {
     "NODE_ENV": "development",
@@ -85,10 +86,12 @@
       }
     }
   },
-  "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/node/.ssh,readonly",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,readonly"
-  ],
-  "remoteUser": "node",
+  // Removed user host mounts because ${localEnv:HOME}${localEnv:USERPROFILE} may be empty in the Codespaces/devcontainer launcher,
+  // which previously expanded to `/.ssh` and caused Docker to treat it as an invalid volume name. If you need to mount
+  // your host SSH keys or gitconfig, re-add explicit, correct bind mounts (for example: "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly").
+  "mounts": [],
+  "remoteUser": "vscode",
   "updateRemoteUserUID": true
 }
+
+
