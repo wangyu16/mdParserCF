@@ -4,6 +4,24 @@
 
 Your Markdown Parser is now ready to deploy as a Cloudflare Worker API!
 
+### TL;DR - Deploy Now
+
+```bash
+# 1. Create API token at: https://dash.cloudflare.com/profile/api-tokens
+#    Template: "Edit Cloudflare Workers"
+
+# 2. Set token
+export CLOUDFLARE_API_TOKEN="your-token-here"
+
+# 3. Get account ID
+npx wrangler whoami
+
+# 4. Update wrangler.toml with your account_id
+
+# 5. Deploy!
+npm run deploy
+```
+
 ### Prerequisites
 
 1. **Cloudflare Account**: Sign up at https://dash.cloudflare.com/sign-up
@@ -12,13 +30,53 @@ Your Markdown Parser is now ready to deploy as a Cloudflare Worker API!
 
 ## 📋 Deployment Steps
 
-### Step 1: Login to Cloudflare
+### Step 1: Authenticate with Cloudflare
+
+You have two options for authentication:
+
+#### Option A: Interactive Login (Easier)
 
 ```bash
 npx wrangler login
 ```
 
 This will open a browser window for authentication.
+
+#### Option B: API Token (Recommended for CI/CD)
+
+1. **Create an API Token** at: https://dash.cloudflare.com/profile/api-tokens
+
+2. **Choose Template**: Click "Create Token" → Use the **"Edit Cloudflare Workers"** template
+
+3. **Required Permissions**:
+   - Account → Workers Scripts → Edit
+   - Account → Account Settings → Read
+   - Zone → Workers Routes → Edit (if using custom domains)
+
+4. **Create and Copy Token**: Save it securely!
+
+5. **Set Environment Variable**:
+
+   ```bash
+   export CLOUDFLARE_API_TOKEN="your-api-token-here"
+   ```
+
+   Or add to `~/.bashrc` or `~/.zshrc`:
+
+   ```bash
+   echo 'export CLOUDFLARE_API_TOKEN="your-api-token-here"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+6. **Verify**:
+   ```bash
+   npx wrangler whoami
+   ```
+
+**For CI/CD pipelines** (GitHub Actions, GitLab CI, etc.):
+
+- Add `CLOUDFLARE_API_TOKEN` as a secret in your CI/CD platform
+- Wrangler will automatically use it from environment variables
 
 ### Step 2: Get Your Account ID
 
