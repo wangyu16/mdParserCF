@@ -2,6 +2,8 @@
 
 A comprehensive, customizable Markdown parser designed for deployment on Cloudflare Workers with full local development support.
 
+Read 'examples/features.md' to see all the features. 
+
 ## 📦 Installation
 
 ```bash

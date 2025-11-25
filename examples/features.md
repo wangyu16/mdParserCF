@@ -43,11 +43,11 @@ This file demonstrates all supported markdown features in mdParserCF, including 
 
 ### 2. Emphasis & Styling
 
-Standard inline styling:
+**Standard inline styling:**
 
 **Bold text** and _italic text_ and **_bold italic_**
 
-Extended inline styling:
+**Extended inline styling:**
 
 ~~Strikethrough text~~ shows deleted content
 
@@ -409,6 +409,7 @@ Esterification: {{reaction CC(=O)O.CCO>[H+]>CC(=O)OCC.O | textBelowArrow: Heat}}
 | Danger     | `{{badge danger: Critical issue}}`     | {{badge danger: Critical issue}}     |
 | Primary    | `{{badge primary: Main task}}`         | {{badge primary: Main task}}         |
 | Secondary  | `{{badge secondary: Not started}}`     | {{badge secondary: Not started}}     |
+| Light      | `{{badge light: Light badge}}`         | {{badge light: Light badge}}         |
 
 **Note:** Badge syntax is `{{badge type: Your text here}}`. Any unrecognized type defaults to `info`.
 
