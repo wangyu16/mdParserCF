@@ -267,6 +267,136 @@ function handleHealth() {
   });
 }
 
+// Maximum recursion depth for embedded markdown to prevent infinite loops
+const MAX_EMBED_DEPTH = 3;
+
+// Process markdown embeds in HTML (server-side fetch and render)
+async function processMarkdownEmbeds(
+  html: string,
+  depth: number = 0,
+  fetchedUrls: Set<string> = new Set()
+): Promise<string> {
+  if (depth >= MAX_EMBED_DEPTH) {
+    // Replace remaining embeds with error message at max depth
+    return html.replace(
+      /<div id="[^"]*" class="markdown-embed" data-markdown-url="([^"]+)">[^<]*<div class="markdown-embed-loading">[^<]*<a[^>]*>[^<]*<\/a>[^<]*<\/div>\s*<\/div>/g,
+      '<div class="markdown-embed-error">Maximum embed depth exceeded</div>'
+    );
+  }
+
+  // Find all markdown embed placeholders
+  const embedRegex =
+    /<div id="([^"]*)" class="markdown-embed" data-markdown-url="([^"]+)">[^<]*<div class="markdown-embed-loading">[^<]*<a[^>]*>[^<]*<\/a>[^<]*<\/div>\s*<\/div>/g;
+
+  const embeds: { fullMatch: string; id: string; url: string }[] = [];
+  let match;
+
+  while ((match = embedRegex.exec(html)) !== null) {
+    embeds.push({
+      fullMatch: match[0],
+      id: match[1],
+      url: match[2],
+    });
+  }
+
+  if (embeds.length === 0) {
+    return html;
+  }
+
+  // Process each embed
+  let processedHtml = html;
+
+  for (const embed of embeds) {
+    // Check for circular reference
+    if (fetchedUrls.has(embed.url)) {
+      processedHtml = processedHtml.replace(
+        embed.fullMatch,
+        `<div class="markdown-embed-error">Circular reference detected: ${escapeHtmlWorker(embed.url)}</div>`
+      );
+      continue;
+    }
+
+    try {
+      // Fetch the markdown content
+      const response = await fetch(embed.url, {
+        headers: {
+          'User-Agent': 'mdParserCF/1.0',
+          Accept: 'text/plain, text/markdown, */*',
+        },
+      });
+
+      if (!response.ok) {
+        processedHtml = processedHtml.replace(
+          embed.fullMatch,
+          `<div class="markdown-embed-error">Failed to fetch: ${response.status} ${response.statusText}</div>`
+        );
+        continue;
+      }
+
+      // Get content length and validate size
+      const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+
+      // Limit embedded content size to 100KB
+      if (contentLength > 102400) {
+        processedHtml = processedHtml.replace(
+          embed.fullMatch,
+          `<div class="markdown-embed-error">Content too large (max 100KB)</div>`
+        );
+        continue;
+      }
+
+      const markdownContent = await response.text();
+
+      // Double-check size after fetching
+      if (markdownContent.length > 102400) {
+        processedHtml = processedHtml.replace(
+          embed.fullMatch,
+          `<div class="markdown-embed-error">Content too large (max 100KB)</div>`
+        );
+        continue;
+      }
+
+      // Parse and render the fetched markdown
+      const parser = new Parser();
+      const ast = parser.parse(markdownContent);
+      const renderer = new HTMLRenderer();
+      const output = renderer.render(ast);
+      let embeddedHtml = output.html;
+
+      // Track this URL to prevent circular references
+      const newFetchedUrls = new Set(fetchedUrls);
+      newFetchedUrls.add(embed.url);
+
+      // Recursively process any embeds in the fetched content
+      embeddedHtml = await processMarkdownEmbeds(embeddedHtml, depth + 1, newFetchedUrls);
+
+      // Wrap in a container with source attribution
+      const wrappedHtml = `<div class="markdown-embed-content" data-source="${escapeHtmlWorker(embed.url)}">
+${embeddedHtml}
+</div>`;
+
+      processedHtml = processedHtml.replace(embed.fullMatch, wrappedHtml);
+    } catch (error: any) {
+      processedHtml = processedHtml.replace(
+        embed.fullMatch,
+        `<div class="markdown-embed-error">Error loading content: ${escapeHtmlWorker(error.message || 'Unknown error')}</div>`
+      );
+    }
+  }
+
+  return processedHtml;
+}
+
+// Helper to escape HTML in worker context
+function escapeHtmlWorker(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Parse markdown to HTML
 async function handleParse(request: Request) {
   try {
@@ -278,6 +408,7 @@ async function handleParse(request: Request) {
 
     const markdown = String(body.markdown);
     const options = body.options || {};
+    const processEmbeds = body.processEmbeds !== false; // Default to true
 
     // Validate markdown length
     if (markdown.length > 512000) {
@@ -294,7 +425,12 @@ async function handleParse(request: Request) {
     // Render to HTML
     const renderer = new HTMLRenderer();
     const output = renderer.render(ast);
-    const html = output.html;
+    let html = output.html;
+
+    // Process markdown embeds if enabled
+    if (processEmbeds) {
+      html = await processMarkdownEmbeds(html);
+    }
 
     const processingTime = Date.now() - startTime;
 

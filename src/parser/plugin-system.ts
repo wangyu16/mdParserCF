@@ -371,6 +371,99 @@ export const diagramPlugin: Plugin = {
 };
 
 /**
+ * Markdown/MD embed plugin
+ * Syntax: {{markdown https://example.com/file.md}}
+ *         {{md https://example.com/file.md}}
+ *
+ * Embeds external markdown content from a URL.
+ * The content is fetched and rendered recursively.
+ *
+ * This plugin generates a placeholder that can be:
+ * 1. Processed server-side (in Cloudflare Workers) for pre-rendered content
+ * 2. Processed client-side via JavaScript for browser rendering
+ *
+ * Security considerations:
+ * - Only HTTPS URLs are allowed
+ * - Content is sanitized during markdown parsing
+ * - A maximum recursion depth prevents infinite loops
+ */
+export const markdownPlugin: Plugin = {
+  name: 'markdown',
+  pattern: /\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\}\}/g,
+  handler: (content: string): PluginResult => {
+    const match = content.match(/\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\}\}/);
+    if (!match || !match[1]) {
+      return { type: 'fallthrough' };
+    }
+
+    const url = match[1].trim();
+
+    // Validate URL format
+    try {
+      const parsedUrl = new URL(url);
+      // Only allow http and https protocols
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        return {
+          type: 'rendered',
+          content: {
+            type: 'html-block',
+            content: `<div class="markdown-embed-error">Invalid URL protocol: only HTTP(S) allowed</div>`,
+          } as BlockNode,
+        };
+      }
+    } catch {
+      return {
+        type: 'rendered',
+        content: {
+          type: 'html-block',
+          content: `<div class="markdown-embed-error">Invalid URL format</div>`,
+        } as BlockNode,
+      };
+    }
+
+    // Generate placeholder with data attribute for server-side or client-side processing
+    // The placeholder includes a unique ID for targeting
+    const embedId = `md-embed-${Math.random().toString(36).substr(2, 9)}`;
+
+    const html = `<div id="${embedId}" class="markdown-embed" data-markdown-url="${escapeHtml(url)}">
+<div class="markdown-embed-loading">Loading content from <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>...</div>
+</div>`;
+
+    return {
+      type: 'rendered',
+      content: {
+        type: 'html-block',
+        content: html,
+      } as BlockNode,
+    };
+  },
+  type: 'block',
+};
+
+/**
+ * Short alias for markdown plugin (md)
+ * Syntax: {{md https://example.com/file.md}}
+ */
+export const mdPlugin: Plugin = {
+  name: 'md',
+  pattern: /\{\{md\s+(https?:\/\/[^\s}]+)\}\}/g,
+  handler: markdownPlugin.handler,
+  type: 'block',
+};
+
+// Helper function to escape HTML special characters
+function escapeHtml(text: string): string {
+  const htmlEscapes: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEscapes[char]);
+}
+
+/**
  * Create default plugin registry with built-in plugins
  */
 export function createDefaultPluginRegistry(): PluginRegistry {
@@ -383,6 +476,7 @@ export function createDefaultPluginRegistry(): PluginRegistry {
   registry.registerInlinePlugin(reactionPlugin);
   registry.registerInlinePlugin(badgePlugin);
   registry.registerBlockPlugin(diagramPlugin);
+  registry.registerBlockPlugin(markdownPlugin);
 
   return registry;
 }

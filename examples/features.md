@@ -433,6 +433,10 @@ sequenceDiagram
     User->>Server: Process complete
 }}
 
+### 21. Remote Markdown
+
+{{markdown  }}
+
 ---
 
 ## Complex Nesting & Edge Cases
