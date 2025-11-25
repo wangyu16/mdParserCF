@@ -49,7 +49,6 @@ The **parsing behavior** is derived from the combination of input and output typ
 | `badge`    | Inline     | Inline      | Inline  | `{{badge info: Note}}` → `<span class="badge">`             |
 | `youtube`  | Inline     | Block       | Block   | `{{youtube dQw4w9WgXcQ}}` → `<iframe>`                      |
 | `smiles`   | Inline     | Block       | Block   | `{{smiles CCO}}` → `<div class="smiles-container">`         |
-| `reaction` | Inline     | Block       | Block   | `{{reaction A>B>C}}` → `<div class="reaction-container">`   |
 | `markdown` | Inline     | Block       | Block   | `{{markdown https://...}}` → `<div class="markdown-embed">` |
 | `diagram`  | Block      | Block       | Block   | `{{diagram mermaid\n...\n}}` → `<div class="mermaid">`      |
 
@@ -145,24 +144,6 @@ Ethanol: {{smiles CCO}}
 **Output**: Container div with canvas element for rendered molecular structure
 
 **Requirements**: SmilesDrawer library loaded in browser
-
----
-
-#### `reaction` (Inline/Block)
-
-Renders chemical reaction schemes using reaction SMILES notation.
-
-```markdown
-{{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
-```
-
-**Options**:
-
-```markdown
-{{reaction A>B>C | textBelowArrow: 90%, theme: oldschool}}
-```
-
-**Output**: Container div with SVG element for rendered reaction scheme
 
 ---
 
@@ -405,8 +386,8 @@ const registry = createPluginRegistry({
 
 ## Version History
 
-| Version | Changes                                                                     |
-| ------- | --------------------------------------------------------------------------- |
-| 1.0.0   | Initial plugin system with youtube, emoji, smiles, reaction, badge, diagram |
-| 1.1.0   | Added markdown/md plugin for URL embedding                                  |
-| 1.2.0   | Refactored to separate inputType and outputType (current)                   |
+| Version | Changes                                                           |
+| ------- | ----------------------------------------------------------------- |
+| 1.0.0   | Initial plugin system with youtube, emoji, smiles, badge, diagram |
+| 1.1.0   | Added markdown/md plugin for URL embedding                        |
+| 1.2.0   | Refactored to separate inputType and outputType (current)         |

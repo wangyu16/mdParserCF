@@ -10,9 +10,9 @@ import {
   youtubePlugin,
   emojiPlugin,
   smilesPlugin,
-  reactionPlugin,
+  qrcodePlugin,
   badgePlugin,
-  diagramPlugin,
+  mermaidPlugin,
   createDefaultPluginRegistry,
 } from '../../src/parser/plugin-system';
 
@@ -35,10 +35,10 @@ describe('Plugin System', () => {
 
     it('should register block plugins', () => {
       const registry = new PluginRegistry();
-      registry.registerBlockPlugin(diagramPlugin);
+      registry.registerBlockPlugin(mermaidPlugin);
 
       expect(registry.getBlockPlugins()).toHaveLength(1);
-      expect(registry.getPlugin('diagram')).toBeDefined();
+      expect(registry.getPlugin('mermaid')).toBeDefined();
     });
 
     it('should reject inline/inline plugin registered as block', () => {
@@ -63,7 +63,7 @@ describe('Plugin System', () => {
     it('should clear all plugins', () => {
       const registry = new PluginRegistry();
       registry.registerInlinePlugin(emojiPlugin);
-      registry.registerBlockPlugin(diagramPlugin);
+      registry.registerBlockPlugin(mermaidPlugin);
 
       expect(registry.getInlinePlugins().length + registry.getBlockPlugins().length).toBe(2);
       registry.clearPlugins();
@@ -222,98 +222,53 @@ describe('Plugin System', () => {
       });
     });
 
-    describe('Reaction Plugin', () => {
+    describe('QR Code Plugin', () => {
       it('should have correct pattern', () => {
-        expect(reactionPlugin.name).toBe('reaction');
-        expect(reactionPlugin.inputType).toBe('inline');
-        expect(reactionPlugin.outputType).toBe('block');
+        expect(qrcodePlugin.name).toBe('qrcode');
+        expect(qrcodePlugin.inputType).toBe('inline');
+        expect(qrcodePlugin.outputType).toBe('block');
       });
 
-      it('should render simple reaction', () => {
-        const result = reactionPlugin.handler(
-          '{{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}'
-        );
+      it('should render QR code with URL', () => {
+        const result = qrcodePlugin.handler('{{qrcode https://example.com}}');
 
         expect(result.type).toBe('rendered');
         const node = result.content as any;
-        expect(node.value).toContain('C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]');
-        expect(node.value).toContain('svg');
-        expect(node.value).toContain('data-smiles');
-        // SMILES string should not be displayed in the output
-        expect(node.value).not.toContain('<code>');
+        expect(node.type).toBe('html-block');
+        expect(node.content).toContain('qrcode-container');
+        expect(node.content).toContain('https://example.com');
+        expect(node.content).toContain('yw-qrcode.deno.dev');
       });
 
-      it('should render reaction with textBelowArrow option', () => {
-        const result = reactionPlugin.handler(
-          '{{reaction C=CCBr>CC(=O)C>C=CCI | textBelowArrow: 90%}}'
-        );
+      it('should render QR code with text', () => {
+        const result = qrcodePlugin.handler('{{qr Hello World}}');
 
         expect(result.type).toBe('rendered');
         const node = result.content as any;
-        expect(node.value).toContain('C=CCBr>CC(=O)C>C=CCI');
-        expect(node.value).toContain('data-smiles-options');
-        expect(node.value).toContain('textBelowArrow');
-        expect(node.value).toContain('90%');
+        expect(node.content).toContain('Hello World');
+        expect(node.content).toContain('qrcode-container');
       });
 
-      it('should render reaction with theme option', () => {
-        const result = reactionPlugin.handler('{{reaction CCCO>CrO3>CCC(=O)O | theme: oldschool}}');
-
-        expect(result.type).toBe('rendered');
-        const node = result.content as any;
-        expect(node.value).toContain('CCCO>CrO3>CCC(=O)O');
-        expect(node.value).toContain('data-smiles-options');
-        expect(node.value).toContain('theme');
-        expect(node.value).toContain('oldschool');
-      });
-
-      it('should render reaction with multiple options', () => {
-        const result = reactionPlugin.handler(
-          '{{reaction C=CCBr>CC(=O)C>C=CCI | theme: oldschool, textBelowArrow: 90%}}'
-        );
-
-        expect(result.type).toBe('rendered');
-        const node = result.content as any;
-        expect(node.value).toContain('data-smiles-options');
-        expect(node.value).toContain('theme');
-        expect(node.value).toContain('oldschool');
-        expect(node.value).toContain('textBelowArrow');
-        expect(node.value).toContain('90%');
-      });
-
-      it('should handle esterification reaction', () => {
-        const result = reactionPlugin.handler(
-          '{{reaction CC(=O)O.CCO>H2SO4>CC(=O)OCC.O | textBelowArrow: Heat}}'
-        );
-
-        expect(result.type).toBe('rendered');
-        const node = result.content as any;
-        expect(node.value).toContain('CC(=O)O.CCO>H2SO4>CC(=O)OCC.O');
-        expect(node.value).toContain('textBelowArrow');
-        expect(node.value).toContain('Heat');
-      });
-
-      it('should fallthrough on missing reaction content', () => {
-        const result = reactionPlugin.handler('{{reaction}}');
-
-        expect(result.type).toBe('fallthrough');
-      });
-
-      it('should not display SMILES string in output', () => {
-        const result1 = reactionPlugin.handler('{{reaction C=CCBr>CC(=O)C>C=CCI}}');
-        const result2 = reactionPlugin.handler('{{reaction CCCO>CrO3>CCC(=O)O}}');
+      it('should generate unique IDs', () => {
+        const result1 = qrcodePlugin.handler('{{qrcode Test1}}');
+        const result2 = qrcodePlugin.handler('{{qrcode Test2}}');
 
         const node1 = result1.content as any;
         const node2 = result2.content as any;
 
-        // SMILES strings should be in data-smiles attributes but not visible as text
-        expect(node1.value).toContain('data-smiles="C=CCBr>CC(=O)C>C=CCI"');
-        expect(node1.value).not.toContain('<p style="font-size: 0.85em');
-        expect(node1.value).not.toContain('<code>C=CCBr>CC(=O)C>C=CCI</code>');
+        const id1Match = node1.content.match(/id="(qr-\w+)"/);
+        const id2Match = node2.content.match(/id="(qr-\w+)"/);
 
-        expect(node2.value).toContain('data-smiles="CCCO>CrO3>CCC(=O)O"');
-        expect(node2.value).not.toContain('<p style="font-size: 0.85em');
-        expect(node2.value).not.toContain('<code>CCCO>CrO3>CCC(=O)O</code>');
+        expect(id1Match).toBeTruthy();
+        expect(id2Match).toBeTruthy();
+        if (id1Match && id2Match) {
+          expect(id1Match[1]).not.toBe(id2Match[1]);
+        }
+      });
+
+      it('should fallthrough on empty content', () => {
+        const result = qrcodePlugin.handler('{{qrcode}}');
+        expect(result.type).toBe('fallthrough');
       });
     });
 
@@ -345,17 +300,17 @@ describe('Plugin System', () => {
       });
     });
 
-    describe('Diagram Plugin', () => {
+    describe('Mermaid Plugin', () => {
       it('should have correct pattern', () => {
-        expect(diagramPlugin.name).toBe('diagram');
-        expect(diagramPlugin.inputType).toBe('block');
-        expect(diagramPlugin.outputType).toBe('block');
+        expect(mermaidPlugin.name).toBe('mermaid');
+        expect(mermaidPlugin.inputType).toBe('block');
+        expect(mermaidPlugin.outputType).toBe('block');
       });
 
       it('should render mermaid diagrams', () => {
         const diagramContent = `graph TD
     A --> B`;
-        const result = diagramPlugin.handler(`{{diagram mermaid
+        const result = mermaidPlugin.handler(`{{mermaid
 ${diagramContent}
 }}`);
 
@@ -367,8 +322,19 @@ ${diagramContent}
         expect(node.content).toContain('A --> B');
       });
 
-      it('should fallthrough on unknown diagram type', () => {
-        const result = diagramPlugin.handler('{{diagram unknown\ncontent\n}}');
+      it('should work with mm alias', () => {
+        const result = mermaidPlugin.handler(`{{mm
+graph LR
+    Start --> End
+}}`);
+
+        expect(result.type).toBe('rendered');
+        const node = result.content as any;
+        expect(node.content).toContain('graph LR');
+      });
+
+      it('should fallthrough on empty content', () => {
+        const result = mermaidPlugin.handler('{{mermaid\n}}');
 
         expect(result.type).toBe('fallthrough');
       });
@@ -383,7 +349,7 @@ ${diagramContent}
       const block = registry.getBlockPlugins();
 
       expect(inline).toHaveLength(2); // emoji, badge (both inline/inline)
-      expect(block).toHaveLength(5); // youtube, smiles, reaction, markdown, diagram (any block)
+      expect(block).toHaveLength(5); // youtube, smiles, qrcode, markdown, mermaid (any block)
     });
 
     it('should have youtube plugin', () => {
@@ -401,9 +367,9 @@ ${diagramContent}
       expect(registry.getPlugin('smiles')).toBeDefined();
     });
 
-    it('should have reaction plugin', () => {
+    it('should have qrcode plugin', () => {
       const registry = createDefaultPluginRegistry();
-      expect(registry.getPlugin('reaction')).toBeDefined();
+      expect(registry.getPlugin('qrcode')).toBeDefined();
     });
 
     it('should have badge plugin', () => {
@@ -411,9 +377,9 @@ ${diagramContent}
       expect(registry.getPlugin('badge')).toBeDefined();
     });
 
-    it('should have diagram plugin', () => {
+    it('should have mermaid plugin', () => {
       const registry = createDefaultPluginRegistry();
-      expect(registry.getPlugin('diagram')).toBeDefined();
+      expect(registry.getPlugin('mermaid')).toBeDefined();
     });
   });
 
@@ -423,9 +389,9 @@ ${diagramContent}
         youtubePlugin,
         emojiPlugin,
         smilesPlugin,
-        reactionPlugin,
+        qrcodePlugin,
         badgePlugin,
-        diagramPlugin,
+        mermaidPlugin,
       ];
 
       for (const plugin of plugins) {
@@ -437,7 +403,7 @@ ${diagramContent}
       expect('{{youtube dQw4w9WgXcQ}}'.match(youtubePlugin.pattern)).toBeDefined();
       expect('{{emoji smile}}'.match(emojiPlugin.pattern)).toBeDefined();
       expect('{{smiles CCCO}}'.match(smilesPlugin.pattern)).toBeDefined();
-      expect('{{reaction C=CCBr>CC(=O)C>C=CCI}}'.match(reactionPlugin.pattern)).toBeDefined();
+      expect('{{qrcode Hello}}'.match(qrcodePlugin.pattern)).toBeDefined();
       expect('{{badge success: Label}}'.match(badgePlugin.pattern)).toBeDefined();
     });
   });

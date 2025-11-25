@@ -223,11 +223,12 @@ export class PluginRegistry {
  */
 export const youtubePlugin: Plugin = {
   name: 'youtube',
+  aliases: ['yt'],
   inputType: 'inline',
   outputType: 'block',
-  pattern: /\{\{youtube\s+([a-zA-Z0-9_-]+)\}\}/g,
+  pattern: /\{\{(?:youtube|yt)\s+([a-zA-Z0-9_-]+)\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{youtube\s+([a-zA-Z0-9_-]+)\}\}/);
+    const match = content.match(/\{\{(?:youtube|yt)\s+([a-zA-Z0-9_-]+)\}\}/);
     if (!match || !match[1]) {
       return { type: 'fallthrough' };
     }
@@ -254,11 +255,12 @@ export const youtubePlugin: Plugin = {
  */
 export const emojiPlugin: Plugin = {
   name: 'emoji',
+  aliases: ['em'],
   inputType: 'inline',
   outputType: 'inline',
-  pattern: /\{\{emoji\s+([\w\d\s-]+)\}\}/g,
+  pattern: /\{\{(?:emoji|em)\s+([\w\d\s-]+)\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{emoji\s+([\w\d\s-]+)\}\}/);
+    const match = content.match(/\{\{(?:emoji|em)\s+([\w\d\s-]+)\}\}/);
     if (!match || !match[1]) {
       return { type: 'fallthrough' };
     }
@@ -313,11 +315,12 @@ export const emojiPlugin: Plugin = {
  */
 export const smilesPlugin: Plugin = {
   name: 'smiles',
+  aliases: ['sm'],
   inputType: 'inline',
   outputType: 'block',
-  pattern: /\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/g,
+  pattern: /\{\{(?:smiles|sm)\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/);
+    const match = content.match(/\{\{(?:smiles|sm)\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/);
     if (!match || !match[1]) {
       return { type: 'fallthrough' };
     }
@@ -363,69 +366,43 @@ if (typeof SmilesDrawer !== 'undefined') {
 };
 
 /**
- * Chemical Reaction plugin
- * Syntax: {{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
- * Optional syntax with options: {{reaction C=CCBr>CC(=O)C>C=CCI | textBelowArrow: 90%, theme: oldschool}}
+ * QR Code plugin
+ * Syntax: {{qrcode Hello World}} or {{qr https://example.com}}
  *
- * Input: Inline (single-line reaction SMILES)
- * Output: Block (container div with SVG element)
+ * Input: Inline (single-line text to encode)
+ * Output: Block (image element with QR code)
  *
- * Renders chemical reaction schemes using SmilesDrawer's reaction SMILES support.
- * Reaction SMILES format: reactants>reagents>products
- *
- * The generated HTML uses SVG for scalable rendering and includes:
- * - SVG element with data-smiles attribute containing reaction SMILES
- * - Optional data-smiles-options for customization (text, theme, etc.)
- * - Client-side rendering with SmilesDrawer
+ * Generates QR codes using cloud API (https://yw-qrcode.deno.dev/)
+ * The API URL is embedded directly in the img src attribute.
  */
-export const reactionPlugin: Plugin = {
-  name: 'reaction',
+export const qrcodePlugin: Plugin = {
+  name: 'qrcode',
+  aliases: ['qr'],
   inputType: 'inline',
   outputType: 'block',
-  pattern: /\{\{reaction\s+([^}|]+)(?:\s*\|\s*([^}]+))?\}\}/g,
+  pattern: /\{\{(?:qrcode|qr)\s+([^}]+)\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{reaction\s+([^}|]+)(?:\s*\|\s*([^}]+))?\}\}/);
+    const match = content.match(/\{\{(?:qrcode|qr)\s+([^}]+)\}\}/);
     if (!match || !match[1]) {
       return { type: 'fallthrough' };
     }
 
-    const reactionSmiles = match[1].trim();
-    const optionsString = match[2] ? match[2].trim() : '';
+    const text = match[1].trim();
+    const qrcodeId = `qr-${Math.random().toString(36).substr(2, 9)}`;
+    const encodedText = encodeURIComponent(text);
+    const apiUrl = `https://yw-qrcode.deno.dev/api/generate?text=${encodedText}&format=raw`;
 
-    // Parse options if provided (e.g., "textBelowArrow: 90%, theme: oldschool")
-    let optionsObj: Record<string, any> = {};
-    if (optionsString) {
-      const optionPairs = optionsString.split(',').map((s) => s.trim());
-      optionPairs.forEach((pair) => {
-        const [key, value] = pair.split(':').map((s) => s.trim());
-        if (key && value) {
-          // Try to parse as number or boolean, otherwise keep as string
-          if (value === 'true') optionsObj[key] = true;
-          else if (value === 'false') optionsObj[key] = false;
-          else if (!isNaN(Number(value))) optionsObj[key] = Number(value);
-          else optionsObj[key] = value.replace(/^['"]|['"]$/g, ''); // Remove quotes
-        }
-      });
-    }
-
-    const optionsAttr =
-      Object.keys(optionsObj).length > 0
-        ? ` data-smiles-options='${JSON.stringify(optionsObj)}'`
-        : '';
-
-    // Generate HTML with SVG element for reaction rendering
-    // SVG scales better than canvas for reactions which can be wide
-    // Note: Reactions are rendered by global script in convert-md-to-html.js
-    const html = `<div class="reaction-container" style="display: block; margin: 1em 0; text-align: center; overflow-x: auto;">
-<svg data-smiles="${reactionSmiles}"${optionsAttr} style="max-width: 100%; height: auto; min-height: 300px;"></svg>
+    const html = `<div id="${qrcodeId}" class="qrcode-container" data-qrcode-text="${escapeHtml(text)}" style="margin: 1em 0; text-align: center;">
+<img src="${apiUrl}" alt="QR Code: ${escapeHtml(text)}" style="max-width: 300px; height: auto; border: 1px solid #ddd; padding: 10px; background: white;" loading="lazy" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<p style="font-size: 0.85em; color: #666; margin-top: 0.5em;">${escapeHtml(text)}</p>
 </div>`;
 
     return {
       type: 'rendered',
       content: {
-        type: 'html-inline',
-        value: html,
-      } as InlineNode,
+        type: 'html-block',
+        content: html,
+      } as BlockNode,
     };
   },
 };
@@ -439,11 +416,12 @@ export const reactionPlugin: Plugin = {
  */
 export const badgePlugin: Plugin = {
   name: 'badge',
+  aliases: ['bd'],
   inputType: 'inline',
   outputType: 'inline',
-  pattern: /\{\{badge\s+(\w+)\s*:\s*([^}]+)\}\}/g,
+  pattern: /\{\{(?:badge|bd)\s+(\w+)\s*:\s*([^}]+)\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{badge\s+(\w+)\s*:\s*([^}]+)\}\}/);
+    const match = content.match(/\{\{(?:badge|bd)\s+(\w+)\s*:\s*([^}]+)\}\}/);
     if (!match || !match[1] || !match[2]) {
       return { type: 'fallthrough' };
     }
@@ -467,7 +445,7 @@ export const badgePlugin: Plugin = {
 
 /**
  * Mermaid diagram plugin
- * Syntax: {{diagram mermaid
+ * Syntax: {{mermaid
  *   graph TD
  *   A --> B
  * }}
@@ -475,32 +453,28 @@ export const badgePlugin: Plugin = {
  * Input: Block (multi-line diagram definition)
  * Output: Block (div element with diagram content)
  */
-export const diagramPlugin: Plugin = {
-  name: 'diagram',
+export const mermaidPlugin: Plugin = {
+  name: 'mermaid',
+  aliases: ['mm'],
   inputType: 'block',
   outputType: 'block',
-  pattern: /\{\{diagram\s+(\w+)\s*\n([\s\S]*?)\}\}/g,
+  pattern: /\{\{(?:mermaid|mm)\s*\n([\s\S]*?)\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{diagram\s+(\w+)\s*\n([\s\S]*?)\}\}/);
-    if (!match || !match[1] || !match[2]) {
+    const match = content.match(/\{\{(?:mermaid|mm)\s*\n([\s\S]*?)\}\}/);
+    if (!match || !match[1]) {
       return { type: 'fallthrough' };
     }
 
-    const diagramType = match[1].toLowerCase();
-    const diagramContent = match[2].trim();
+    const diagramContent = match[1].trim();
 
-    if (diagramType === 'mermaid') {
-      const html = `<div class="mermaid">${diagramContent}</div><script async src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"><\/script>`;
-      return {
-        type: 'rendered',
-        content: {
-          type: 'html-block',
-          content: html,
-        } as BlockNode,
-      };
-    }
-
-    return { type: 'fallthrough' };
+    const html = `<div class="mermaid">${diagramContent}</div><script async src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"><\/script>`;
+    return {
+      type: 'rendered',
+      content: {
+        type: 'html-block',
+        content: html,
+      } as BlockNode,
+    };
   },
 };
 
@@ -604,9 +578,9 @@ export function createDefaultPluginRegistry(): PluginRegistry {
   // Block-parsed plugins (either inputType OR outputType is 'block')
   registry.registerPlugin(youtubePlugin); // inline/block
   registry.registerPlugin(smilesPlugin); // inline/block
-  registry.registerPlugin(reactionPlugin); // inline/block
+  registry.registerPlugin(qrcodePlugin); // inline/block
   registry.registerPlugin(markdownPlugin); // inline/block (with 'md' alias)
-  registry.registerPlugin(diagramPlugin); // block/block
+  registry.registerPlugin(mermaidPlugin); // block/block
 
   return registry;
 }

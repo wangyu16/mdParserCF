@@ -11,7 +11,7 @@ This file demonstrates all supported markdown features in mdParserCF, including 
   - Except some very complicated ones, which are not likely to be used any way.
 - Allows creating HTML containers like <div> and <span> with class names using reserved Markdown syntax.
 - Use HTML comment syntax to pass attributes to an image.
-- Extensible plugin system: emoji, badges, SMILES, reactions, YouTube, Mermaid, markdown, qrcode, and more.
+- Extensible plugin system: emoji, badges, SMILES, YouTube, Mermaid, markdown, qrcode, and more.
 - Blank (empty) line = paragraph break (new paragraph).
 - Hard line break inside a paragraph is created by:
   - Two spaces at the end of a line, then newline
@@ -377,15 +377,7 @@ Acetone: {{smiles CC(=O)C}}
 
 Glucose: {{smiles C(C(C(C(C=O)O)O)O)O}}
 
-### 20. Chemical Reactions
-
-Simple reaction: {{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
-
-With text below arrow: {{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-] | textBelowArrow: 90%}}
-
-Esterification: {{reaction CC(=O)O.CCO>[H+]>CC(=O)OCC.O | textBelowArrow: Heat}}
-
-### 21. Custom Badges
+### 20. Custom Badges
 
 {{badge success: All tests passing}}
 
@@ -433,7 +425,7 @@ sequenceDiagram
     User->>Server: Process complete
 }}
 
-### 21. Remote Markdown
+### 21. External Markdown
 
 Use the following plugin  
 `{{markdown https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md }}`
@@ -441,6 +433,17 @@ Use the following plugin
 and you will get:
 
 {{markdown https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md }}
+
+
+### QR code
+
+Pass a string and receive an svg QR code image.
+
+`{{qrcode https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md}}`
+
+and you will get:
+
+{{qrcode https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md}}
 
 ---
 

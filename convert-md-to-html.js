@@ -2,19 +2,58 @@
 
 /**
  * Convert Markdown to HTML using mdParserCF
- * Usage: node convert-md-to-html.js <input.md> <output.html>
+ * Usage:
+ *   node convert-md-to-html.js <input.md> <output.html>         # Use local parser (default)
+ *   node convert-md-to-html.js <input.md> <output.html> api     # Use Cloudflare API
  */
 
 import { readFileSync, writeFileSync } from 'fs';
 import { mdToHtml } from './dist/index.esm.js';
 
-async function convertMarkdownToHtml(inputPath, outputPath) {
+const CLOUDFLARE_API_URL = 'https://mdparser-cf.yxw8611.workers.dev/parse';
+
+async function convertMarkdownToHtmlViaAPI(markdown) {
+  try {
+    const response = await fetch(CLOUDFLARE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        markdown,
+        options: {
+          enableMath: true,
+          enablePlugins: true,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`⚡ API processing time: ${data.processingTime}`);
+    return data.html;
+  } catch (error) {
+    throw new Error(`Failed to convert via API: ${error.message}`);
+  }
+}
+
+async function convertMarkdownToHtml(inputPath, outputPath, useAPI = false) {
   try {
     // Read the markdown file
     const markdown = readFileSync(inputPath, 'utf8');
 
-    // Convert to HTML
-    const html = await mdToHtml(markdown);
+    // Convert to HTML (local or via API)
+    let html;
+    if (useAPI) {
+      console.log('🌐 Using Cloudflare API for conversion...');
+      html = await convertMarkdownToHtmlViaAPI(markdown);
+    } else {
+      console.log('🏠 Using local parser for conversion...');
+      html = await mdToHtml(markdown);
+    }
 
     // Create a complete HTML document
     const fullHtml = `<!DOCTYPE html>
@@ -205,8 +244,27 @@ async function convertMarkdownToHtml(inputPath, outputPath) {
 }
 
 // Check command line arguments
-const inputPath = process.argv[2] || 'examples/features.md';
-const outputPath = process.argv[3] || 'examples/features.html';
+const args = process.argv.slice(2);
+const inputPath = args[0] || 'examples/features.md';
+const outputPath = args[1] || 'examples/features.html';
+const useAPI = args[2] === 'api' || args.includes('--api');
+
+if (args.includes('--help') || args.includes('-h')) {
+  console.log(`
+Usage: node convert-md-to-html.js [input.md] [output.html] [api]
+
+Arguments:
+  input.md   - Input markdown file (default: examples/features.md)
+  output.html - Output HTML file (default: examples/features.html)
+  api        - Use Cloudflare API instead of local parser (optional)
+
+Examples:
+  node convert-md-to-html.js test.md output.html          # Local parser
+  node convert-md-to-html.js test.md output.html api      # Cloudflare API
+  node convert-md-to-html.js test.md output.html --api    # Cloudflare API (alternative)
+  `);
+  process.exit(0);
+}
 
 // Run the conversion
-convertMarkdownToHtml(inputPath, outputPath);
+convertMarkdownToHtml(inputPath, outputPath, useAPI);
