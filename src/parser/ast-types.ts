@@ -67,7 +67,8 @@ export type InlineNode =
   | CustomSpan
   | HTMLInline
   | FootnoteReference
-  | InlineMath;
+  | InlineMath
+  | InlineBlockMath;
 
 // ========================================
 // BLOCK-LEVEL NODES
@@ -383,6 +384,16 @@ export interface InlineMath extends ASTNode {
   children?: undefined;
 }
 
+/**
+ * Inline Block Math - block math $$formula$$ appearing inline within text
+ * Renders as block-level display math even though it's inline in source
+ */
+export interface InlineBlockMath extends ASTNode {
+  type: 'inline-block-math';
+  content: string;
+  children?: undefined;
+}
+
 // ========================================
 // PARSER CONTEXT & OPTIONS
 // ========================================
@@ -393,7 +404,7 @@ export interface InlineMath extends ASTNode {
  */
 export interface ProtectedRegion {
   /** Type of protected content */
-  type: 'escaped' | 'code' | 'plugin' | 'math';
+  type: 'escaped' | 'code' | 'plugin' | 'math' | 'block-math';
   /** Starting position in original text */
   start: number;
   /** Ending position in original text */

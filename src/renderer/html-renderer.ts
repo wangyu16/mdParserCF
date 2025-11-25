@@ -286,6 +286,8 @@ export class HTMLRenderer {
         return this.renderSubscript(node as Subscript);
       case 'inline-math':
         return this.renderInlineMath(node as any);
+      case 'inline-block-math':
+        return this.renderInlineBlockMath(node as any);
       case 'html-inline':
         return this.renderHTMLInline(node as HTMLInline);
       case 'footnote-reference':
@@ -433,6 +435,25 @@ export class HTMLRenderer {
     } catch (error) {
       // Fallback to escaped text if KaTeX rendering fails
       return `<span class="math-error" title="Math rendering failed">${escapeHtml(node.content)}</span>`;
+    }
+  }
+
+  /**
+   * Render inline block math ($$...$$ appearing inline within text)
+   * Rendered as block-level display math even though it appears inline in source
+   * This breaks out of the paragraph flow to display as a centered equation
+   */
+  private renderInlineBlockMath(node: any): string {
+    try {
+      const html = katex.renderToString(node.content, {
+        ...KATEX_OPTIONS,
+        displayMode: true,
+      });
+      // Use </p><div>...<div><p> pattern to break out of paragraph
+      // The empty <p></p> tags will be cleaned up by the browser
+      return `</p>\n<div class="math-block">\n${html}\n</div>\n<p>`;
+    } catch (error) {
+      return `</p>\n<div class="math-block-error"><pre>${escapeHtml(node.content)}</pre></div>\n<p>`;
     }
   }
 

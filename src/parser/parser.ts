@@ -1274,7 +1274,19 @@ export class Parser {
       return placeholder;
     });
 
-    // Priority 3: Protect inline math $...$
+    // Priority 3: Protect block math $$...$$ (must be before inline math)
+    // Block math with double dollar signs should be rendered as block, even inline
+    if (this.options.enableMath) {
+      processed = processed.replace(/\$\$([^\$]+)\$\$/g, (match, _content) => {
+        const placeholder = `\u0001BLOCKMATH${placeholderCounter++}\u0001`;
+        // Restore escapes in the matched content before storing
+        const restoredMatch = restoreEscapesFor(match);
+        protections.set(placeholder, { content: restoredMatch, type: 'block-math' });
+        return placeholder;
+      });
+    }
+
+    // Priority 4: Protect inline math $...$
     // Only if math is enabled, match dollar-delimited formulas (no newlines)
     if (this.options.enableMath) {
       processed = processed.replace(/\$([^\$\n]+)\$/g, (match, _content) => {
@@ -1286,7 +1298,7 @@ export class Parser {
       });
     }
 
-    // Priority 4: Protect plugins {{...}}
+    // Priority 5: Protect plugins {{...}}
     // Only if plugins are enabled, match double-brace syntax
     if (this.options.enablePlugins) {
       processed = processed.replace(/\{\{[^}]+\}\}/g, (match) => {
@@ -1381,6 +1393,13 @@ export class Parser {
               nodes.push({
                 type: 'code',
                 value: codeContent,
+              });
+            } else if (protection.type === 'block-math') {
+              // Block math inline - content already has escapes restored
+              const mathContent = protection.content.slice(2, -2); // Remove $$
+              nodes.push({
+                type: 'inline-block-math',
+                content: mathContent,
               });
             } else if (protection.type === 'math') {
               // Inline math - content already has escapes restored
@@ -1861,6 +1880,11 @@ export class Parser {
    */
   private startsBlock(line: string): boolean {
     if (line.trim() === '') return false;
+
+    // Check for block math $$...$$ on its own line
+    if (this.options.enableMath && line.trim().match(/^\$\$.+\$\$$/)) {
+      return true;
+    }
 
     // Check various block starts
     if (

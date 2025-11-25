@@ -2,6 +2,22 @@
 
 This file demonstrates all supported markdown features in mdParserCF, including complex nesting scenarios, escaping, and edge cases.
 
+### Key Features
+
+- Supports mixed HTML and Markdown; HTML passthrough preserves tags with Markdown inside.
+- Enforces standardized syntax; alternative or legacy Markdown variants are intentionally unsupported.
+- Built-in KaTeX math, with mhchem for chemical formulas (inline and block).
+- Robust handling of complex nesting, overlapping syntax, and escaping edge cases.
+  - Except some very complicated ones, which are not likely to be used any way.
+- Allows creating HTML containers like <div> and <span> with class names using reserved Markdown syntax.
+- Use HTML comment syntax to pass attributes to an image.
+- Extensible plugin system: emoji, badges, SMILES, reactions, YouTube, Mermaid, markdown, qrcode, and more.
+- Blank (empty) line = paragraph break (new paragraph).
+- Hard line break inside a paragraph is created by:
+  - Two spaces at the end of a line, then newline
+  - An explicit `<br>` tag
+  - A single newline without one of the above is rendered as a space.
+
 ---
 
 ## Core Markdown Features
@@ -20,11 +36,18 @@ This file demonstrates all supported markdown features in mdParserCF, including 
 
 ###### Heading 6
 
-**Note**: Headings can contain emphasis: ## _Important_ Section
+**Note**:
+
+- Headings can contain emphasis: ## _Important_ Section
+- Do not accept other heading syntax
 
 ### 2. Emphasis & Styling
 
+Standard inline styling:
+
 **Bold text** and _italic text_ and **_bold italic_**
+
+Extended inline styling:
 
 ~~Strikethrough text~~ shows deleted content
 
@@ -47,6 +70,10 @@ Simple list
 - Item 1
 - Item 2
 - Item 3
+
+* Item 1
+* Item 2
+* Item 3
 
 Nested list
 
@@ -168,7 +195,7 @@ with multiple lines
 
 You can combine HTML labeling with markdown to add HTML elements directly in your markdown file.
 
-<span class="custom">A sentence.</span>
+<span class="custom">A _sentence_.</span>
 
 <p>A paragraph.</p>
 
@@ -282,6 +309,12 @@ Simple: $\alpha + \beta = \gamma$
 $$E = mc^2$$
 
 $$\frac{\partial f}{\partial x} = \lim_{h \to 0} \frac{f(x+h)-f(x)}{h}$$
+
+Even if the block equation is written inline $$E=mc^2$$ it will be shown as block equation.
+
+Or if the equation follow the previous line without an empty line
+$$E=mc^2$$
+It is considered as a block equation.
 
 ### Chemistry with mhchem
 
@@ -535,7 +568,7 @@ With link: **_[bold italic link](https://example.com)_**
 
 1. First paragraph in item
 
-  Second paragraph same item (note blank line)
+Second paragraph same item (note blank line)
 
 2. Another item
    - Nested list in second paragraph
