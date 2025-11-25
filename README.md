@@ -2,9 +2,9 @@
 
 A comprehensive, customizable Markdown parser designed for deployment on Cloudflare Workers with full local development support.
 
-Read 'examples/features.md' to see all the features. 
+Read 'examples/features.md' to see all the features.
 
-To test, use 'convert-md-to-html.js', local parser by default, '-api' cloud parser. 
+To test, use 'convert-md-to-html.js', local parser by default, '-api' cloud parser.
 
 ## 📦 Installation
 
@@ -287,8 +287,6 @@ Edit `wrangler.toml` to configure:
 
 ## 📖 Documentation
 
-
-
 ### Technical Docs (To Be Created)
 
 - Architecture guides in `docs/`
@@ -360,9 +358,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
   - KaTeX with mhchem chemistry support
   - Server-side rendering
 - **Custom Plugins** - ✅ FULLY IMPLEMENTED
-  - 6 built-in plugins (YouTube, Emoji, SMILES, Reaction, Badge, Mermaid)
+  - 6 built-in plugins (YouTube, Emoji, SMILES, QR Code, Badge, Mermaid)
   - SMILES chemical structures with SmilesDrawer
-  - Chemical reaction schemes with arrow annotations
+  - QR Code generation with cloud API (async)
+  - Async plugin system with post-processing
   - Extensible plugin system for custom additions
 
 ### Planned Features 📅 (Phase 2)
