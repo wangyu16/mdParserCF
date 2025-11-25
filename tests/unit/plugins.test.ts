@@ -27,10 +27,10 @@ describe('Plugin System', () => {
 
     it('should register inline plugins', () => {
       const registry = new PluginRegistry();
-      registry.registerInlinePlugin(youtubePlugin);
+      registry.registerInlinePlugin(emojiPlugin);
 
       expect(registry.getInlinePlugins()).toHaveLength(1);
-      expect(registry.getPlugin('youtube')).toBeDefined();
+      expect(registry.getPlugin('emoji')).toBeDefined();
     });
 
     it('should register block plugins', () => {
@@ -41,29 +41,28 @@ describe('Plugin System', () => {
       expect(registry.getPlugin('diagram')).toBeDefined();
     });
 
-    it('should reject wrong plugin inputType', () => {
+    it('should reject inline/inline plugin registered as block', () => {
       const registry = new PluginRegistry();
 
       expect(() => {
         registry.registerBlockPlugin({
-          ...youtubePlugin,
-          inputType: 'inline',
+          ...emojiPlugin, // emoji is inline/inline
         } as any);
       }).toThrow();
     });
 
     it('should remove plugins', () => {
       const registry = new PluginRegistry();
-      registry.registerInlinePlugin(youtubePlugin);
+      registry.registerInlinePlugin(emojiPlugin);
 
       expect(registry.getInlinePlugins()).toHaveLength(1);
-      registry.removePlugin('youtube');
+      registry.removePlugin('emoji');
       expect(registry.getInlinePlugins()).toHaveLength(0);
     });
 
     it('should clear all plugins', () => {
       const registry = new PluginRegistry();
-      registry.registerInlinePlugin(youtubePlugin);
+      registry.registerInlinePlugin(emojiPlugin);
       registry.registerBlockPlugin(diagramPlugin);
 
       expect(registry.getInlinePlugins().length + registry.getBlockPlugins().length).toBe(2);
@@ -136,7 +135,7 @@ describe('Plugin System', () => {
       it('should have correct pattern', () => {
         expect(smilesPlugin.name).toBe('smiles');
         expect(smilesPlugin.inputType).toBe('inline');
-        expect(smilesPlugin.outputType).toBe('inline');
+        expect(smilesPlugin.outputType).toBe('block');
       });
 
       it('should render SMILES notation with canvas placeholder', () => {
@@ -227,7 +226,7 @@ describe('Plugin System', () => {
       it('should have correct pattern', () => {
         expect(reactionPlugin.name).toBe('reaction');
         expect(reactionPlugin.inputType).toBe('inline');
-        expect(reactionPlugin.outputType).toBe('inline');
+        expect(reactionPlugin.outputType).toBe('block');
       });
 
       it('should render simple reaction', () => {
@@ -383,8 +382,8 @@ ${diagramContent}
       const inline = registry.getInlinePlugins();
       const block = registry.getBlockPlugins();
 
-      expect(inline).toHaveLength(5); // youtube, emoji, smiles, reaction, badge
-      expect(block).toHaveLength(2); // diagram, markdown
+      expect(inline).toHaveLength(2); // emoji, badge (both inline/inline)
+      expect(block).toHaveLength(5); // youtube, smiles, reaction, markdown, diagram (any block)
     });
 
     it('should have youtube plugin', () => {

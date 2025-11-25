@@ -10,39 +10,48 @@ The plugin system allows extending the markdown parser with custom syntax patter
 
 Plugins are classified along two independent axes:
 
-### 1. Input Type (Parsing Behavior)
+### 1. Input Type
 
-Determines how the plugin syntax is detected and extracted from the source:
+Describes the format of the plugin content:
 
-| Input Type | Description                                | Pattern Location                                       |
-| ---------- | ------------------------------------------ | ------------------------------------------------------ |
-| **Inline** | Single-line content within `{{...}}`       | Can appear within paragraphs, alongside other text     |
-| **Block**  | Multi-line content spanning multiple lines | Must be standalone, processed before paragraph parsing |
+| Input Type | Description                                | Example                       |
+| ---------- | ------------------------------------------ | ----------------------------- |
+| **Inline** | Single-line content within `{{...}}`       | `{{youtube dQw4w9WgXcQ}}`     |
+| **Block**  | Multi-line content spanning multiple lines | `{{diagram mermaid \n...\n}}` |
 
-### 2. Output Type (Rendering Behavior)
+### 2. Output Type
 
-Determines the HTML element type produced:
+Describes the HTML element type produced:
 
 | Output Type | Description                        | HTML Result                           |
 | ----------- | ---------------------------------- | ------------------------------------- |
 | **Inline**  | Produces inline HTML elements      | `<span>`, `<img>`, `<a>`, etc.        |
 | **Block**   | Produces block-level HTML elements | `<div>`, `<iframe>`, `<figure>`, etc. |
 
+### Parsing Behavior
+
+The **parsing behavior** is derived from the combination of input and output types:
+
+| Combination   | Parsing Behavior  | Description                     |
+| ------------- | ----------------- | ------------------------------- |
+| Inline/Inline | **Inline-parsed** | Processed within paragraph text |
+| Inline/Block  | **Block-parsed**  | Processed at block level        |
+| Block/Inline  | **Block-parsed**  | Processed at block level        |
+| Block/Block   | **Block-parsed**  | Processed at block level        |
+
+**Rule**: If **either** inputType **or** outputType is `'block'`, the plugin is parsed at block level.
+
 ### Classification Matrix
 
-| Plugin     | Input Type | Output Type | Example                                                     |
-| ---------- | ---------- | ----------- | ----------------------------------------------------------- |
-| `emoji`    | Inline     | Inline      | `{{emoji smile}}` → `😊`                                    |
-| `badge`    | Inline     | Inline      | `{{badge info: Note}}` → `<span class="badge">`             |
-| `smiles`   | Inline     | Inline      | `{{smiles CCO}}` → `<div class="smiles-container">`         |
-| `reaction` | Inline     | Inline      | `{{reaction A>B>C}}` → `<div class="reaction-container">`   |
-| `youtube`  | Inline     | Block       | `{{youtube dQw4w9WgXcQ}}` → `<iframe>`                      |
-| `markdown` | Block      | Block       | `{{markdown https://...}}` → `<div class="markdown-embed">` |
-| `diagram`  | Block      | Block       | `{{diagram mermaid\n...\n}}` → `<div class="mermaid">`      |
-
-> **Note**: The `smiles` and `reaction` plugins produce container `<div>` elements for technical reasons (canvas/SVG rendering), but semantically they are inline chemical notations. They are classified as inline-input/inline-output because they appear within text flow.
-
-> **Note**: The `markdown` plugin takes a single-line URL but is classified as block-input because it must stand alone (not within paragraph text) and produces block-level content.
+| Plugin     | Input Type | Output Type | Parsing | Example                                                     |
+| ---------- | ---------- | ----------- | ------- | ----------------------------------------------------------- |
+| `emoji`    | Inline     | Inline      | Inline  | `{{emoji smile}}` → `😊`                                    |
+| `badge`    | Inline     | Inline      | Inline  | `{{badge info: Note}}` → `<span class="badge">`             |
+| `youtube`  | Inline     | Block       | Block   | `{{youtube dQw4w9WgXcQ}}` → `<iframe>`                      |
+| `smiles`   | Inline     | Block       | Block   | `{{smiles CCO}}` → `<div class="smiles-container">`         |
+| `reaction` | Inline     | Block       | Block   | `{{reaction A>B>C}}` → `<div class="reaction-container">`   |
+| `markdown` | Inline     | Block       | Block   | `{{markdown https://...}}` → `<div class="markdown-embed">` |
+| `diagram`  | Block      | Block       | Block   | `{{diagram mermaid\n...\n}}` → `<div class="mermaid">`      |
 
 ## Plugin Interface
 
@@ -50,10 +59,15 @@ Determines the HTML element type produced:
 interface Plugin {
   name: string; // Plugin identifier (e.g., 'youtube', 'emoji')
   aliases?: string[]; // Alternative names (e.g., 'md' for 'markdown')
-  inputType: 'inline' | 'block'; // How the plugin is parsed
+  inputType: 'inline' | 'block'; // Format of plugin content
   outputType: 'inline' | 'block'; // What HTML type it produces
   pattern: RegExp; // Regex to match plugin syntax
   handler: PluginHandler; // Function to process matched content
+}
+
+// Helper function to determine parsing behavior
+function isBlockParsedPlugin(plugin: Plugin): boolean {
+  return plugin.inputType === 'block' || plugin.outputType === 'block';
 }
 
 type PluginHandler = (content: string) => PluginResult;
@@ -66,7 +80,7 @@ interface PluginResult {
 
 ## Built-in Plugins
 
-### Inline Input Plugins
+### Inline-Parsed Plugins (Inline/Inline)
 
 #### `emoji`
 
@@ -96,39 +110,9 @@ Creates styled badge/label elements.
 
 ---
 
-#### `smiles`
+### Block-Parsed Plugins (Any Block Involvement)
 
-Renders chemical structures using SMILES notation (via SmilesDrawer).
-
-```markdown
-Ethanol: {{smiles CCO}}
-```
-
-**Output**: Canvas element with rendered molecular structure
-
-**Requirements**: SmilesDrawer library loaded in browser
-
----
-
-#### `reaction`
-
-Renders chemical reaction schemes using reaction SMILES notation.
-
-```markdown
-{{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
-```
-
-**Options**:
-
-```markdown
-{{reaction A>B>C | textBelowArrow: 90%, theme: oldschool}}
-```
-
-**Output**: SVG element with rendered reaction scheme
-
----
-
-#### `youtube`
+#### `youtube` (Inline/Block)
 
 Embeds YouTube videos.
 
@@ -148,11 +132,41 @@ Check out this video: {{youtube dQw4w9WgXcQ}}
 ></iframe>
 ```
 
-> **Note**: Despite inline input, produces block-level `<iframe>`.
+---
+
+#### `smiles` (Inline/Block)
+
+Renders chemical structures using SMILES notation (via SmilesDrawer).
+
+```markdown
+Ethanol: {{smiles CCO}}
+```
+
+**Output**: Container div with canvas element for rendered molecular structure
+
+**Requirements**: SmilesDrawer library loaded in browser
 
 ---
 
-#### `markdown` / `md`
+#### `reaction` (Inline/Block)
+
+Renders chemical reaction schemes using reaction SMILES notation.
+
+```markdown
+{{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
+```
+
+**Options**:
+
+```markdown
+{{reaction A>B>C | textBelowArrow: 90%, theme: oldschool}}
+```
+
+**Output**: Container div with SVG element for rendered reaction scheme
+
+---
+
+#### `markdown` / `md` (Inline/Block)
 
 Embeds external markdown content from a URL.
 
@@ -161,7 +175,7 @@ Embeds external markdown content from a URL.
 {{md https://raw.githubusercontent.com/user/repo/main/README.md}}
 ```
 
-**Output**: Fetched markdown content rendered inline
+**Output**: Fetched markdown content rendered in a container div
 
 **Features**:
 
@@ -174,9 +188,7 @@ Embeds external markdown content from a URL.
 
 ---
 
-### Block Input Plugins
-
-#### `diagram`
+#### `diagram` (Block/Block)
 
 Renders diagrams using Mermaid.js or other diagramming libraries.
 
