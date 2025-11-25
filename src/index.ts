@@ -6,7 +6,14 @@
 
 export { Parser } from './parser/parser';
 export { HTMLRenderer } from './renderer/html-renderer';
-export { escapeHtml, unescapeHtml, sanitizeHtml, stripHtmlTags, getTextContent } from './renderer/escaper';
+export {
+  escapeHtml,
+  unescapeHtml,
+  sanitizeHtml,
+  stripHtmlTags,
+  getTextContent,
+} from './renderer/escaper';
+export { processAsyncPlugins } from './parser/async-plugin-processor';
 
 export type {
   Document,
@@ -59,13 +66,25 @@ export async function parseToAST(markdown: string) {
 }
 
 /**
- * Convenient wrapper for one-off rendering
+ * Convenient wrapper for one-off rendering with async plugin support
  */
-export async function mdToHtml(markdown: string, options?: { debug?: boolean }): Promise<string> {
+export async function mdToHtml(
+  markdown: string,
+  options?: { debug?: boolean; processAsync?: boolean }
+): Promise<string> {
   const { Parser } = await import('./parser/parser');
   const { HTMLRenderer } = await import('./renderer/html-renderer');
+  const { processAsyncPlugins } = await import('./parser/async-plugin-processor');
+
   const parser = new Parser({ debugAST: options?.debug || false });
   const ast = parser.parse(markdown);
   const renderer = new HTMLRenderer();
-  return renderer.render(ast).html;
+  let html = renderer.render(ast).html;
+
+  // Process async plugins if enabled (default: true)
+  if (options?.processAsync !== false) {
+    html = await processAsyncPlugins(html);
+  }
+
+  return html;
 }

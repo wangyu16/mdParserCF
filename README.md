@@ -4,6 +4,8 @@ A comprehensive, customizable Markdown parser designed for deployment on Cloudfl
 
 Read 'examples/features.md' to see all the features. 
 
+To test, use 'convert-md-to-html.js', local parser by default, '-api' cloud parser. 
+
 ## 📦 Installation
 
 ```bash

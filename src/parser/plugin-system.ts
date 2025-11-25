@@ -31,10 +31,13 @@ import { InlineNode, BlockNode } from './ast-types';
 export interface PluginResult {
   type: 'rendered' | 'fallthrough';
   content?: string | InlineNode | BlockNode;
+  asyncData?: any; // Data needed for async processing
 }
 
 /**
  * Plugin handler function - processes plugin syntax
+ * Async plugins should return placeholders synchronously;
+ * actual async work is done in post-processing
  */
 export type PluginHandler = (content: string) => PluginResult;
 
@@ -43,6 +46,7 @@ export type PluginHandler = (content: string) => PluginResult;
  *
  * @property name - Plugin identifier (e.g., 'youtube', 'emoji')
  * @property aliases - Alternative names (e.g., 'md' for 'markdown')
+ * @property isAsync - Whether this plugin requires async processing (default: false)
  * @property inputType - Format of plugin content:
  *   - 'inline': Single-line content
  *   - 'block': Multi-line content
@@ -59,6 +63,7 @@ export type PluginHandler = (content: string) => PluginResult;
 export interface Plugin {
   name: string;
   aliases?: string[];
+  isAsync?: boolean; // NEW: Flag for async plugins
   inputType: 'inline' | 'block';
   outputType: 'inline' | 'block';
   pattern: RegExp;
@@ -373,11 +378,13 @@ if (typeof SmilesDrawer !== 'undefined') {
  * Output: Block (image element with QR code)
  *
  * Generates QR codes using cloud API (https://yw-qrcode.deno.dev/)
- * The API URL is embedded directly in the img src attribute.
+ * This is an async plugin that returns a placeholder during parsing,
+ * then the actual QR code is fetched during post-processing.
  */
 export const qrcodePlugin: Plugin = {
   name: 'qrcode',
   aliases: ['qr'],
+  isAsync: true, // Mark as async plugin
   inputType: 'inline',
   outputType: 'block',
   pattern: /\{\{(?:qrcode|qr)\s+([^}]+)\}\}/g,
@@ -392,17 +399,23 @@ export const qrcodePlugin: Plugin = {
     const encodedText = encodeURIComponent(text);
     const apiUrl = `https://yw-qrcode.deno.dev/api/generate?text=${encodedText}&format=raw`;
 
-    const html = `<div id="${qrcodeId}" class="qrcode-container" data-qrcode-text="${escapeHtml(text)}" style="margin: 1em 0; text-align: center;">
-<img src="${apiUrl}" alt="QR Code: ${escapeHtml(text)}" style="max-width: 300px; height: auto; border: 1px solid #ddd; padding: 10px; background: white;" loading="lazy" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<p style="font-size: 0.85em; color: #666; margin-top: 0.5em;">${escapeHtml(text)}</p>
+    // For async plugins, we generate a placeholder during parsing
+    // The actual API call will be made during post-processing
+    const placeholder = `<div id="${qrcodeId}" class="async-plugin-placeholder" data-plugin="qrcode" data-qrcode-text="${escapeHtml(text)}" data-api-url="${escapeHtml(apiUrl)}" style="margin: 1em 0; text-align: center;">
+<div style="padding: 20px; border: 1px solid #ddd; background: #f5f5f5;">Loading QR code...</div>
 </div>`;
 
     return {
       type: 'rendered',
       content: {
         type: 'html-block',
-        content: html,
+        content: placeholder,
       } as BlockNode,
+      asyncData: {
+        id: qrcodeId,
+        text,
+        apiUrl,
+      },
     };
   },
 };

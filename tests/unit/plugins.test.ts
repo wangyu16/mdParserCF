@@ -235,7 +235,9 @@ describe('Plugin System', () => {
         expect(result.type).toBe('rendered');
         const node = result.content as any;
         expect(node.type).toBe('html-block');
-        expect(node.content).toContain('qrcode-container');
+        // Now returns placeholder with async-plugin-placeholder class
+        expect(node.content).toContain('async-plugin-placeholder');
+        expect(node.content).toContain('data-plugin="qrcode"');
         expect(node.content).toContain('https://example.com');
         expect(node.content).toContain('yw-qrcode.deno.dev');
       });
@@ -246,7 +248,9 @@ describe('Plugin System', () => {
         expect(result.type).toBe('rendered');
         const node = result.content as any;
         expect(node.content).toContain('Hello World');
-        expect(node.content).toContain('qrcode-container');
+        // Now returns placeholder with async-plugin-placeholder class
+        expect(node.content).toContain('async-plugin-placeholder');
+        expect(node.content).toContain('data-plugin="qrcode"');
       });
 
       it('should generate unique IDs', () => {
@@ -269,6 +273,14 @@ describe('Plugin System', () => {
       it('should fallthrough on empty content', () => {
         const result = qrcodePlugin.handler('{{qrcode}}');
         expect(result.type).toBe('fallthrough');
+      });
+
+      it('should include async metadata', () => {
+        const result = qrcodePlugin.handler('{{qrcode Test}}');
+        expect(result.type).toBe('rendered');
+        expect(result.asyncData).toBeDefined();
+        expect(result.asyncData?.text).toBe('Test');
+        expect(result.asyncData?.apiUrl).toContain('yw-qrcode.deno.dev');
       });
     });
 
@@ -405,6 +417,48 @@ graph LR
       expect('{{smiles CCCO}}'.match(smilesPlugin.pattern)).toBeDefined();
       expect('{{qrcode Hello}}'.match(qrcodePlugin.pattern)).toBeDefined();
       expect('{{badge success: Label}}'.match(badgePlugin.pattern)).toBeDefined();
+    });
+  });
+
+  describe('Async Plugin Processing', () => {
+    it('should process QR code placeholders asynchronously', async () => {
+      const { processAsyncPlugins } = await import('../../src/parser/async-plugin-processor');
+
+      const html = `<div id="qr-test123" class="async-plugin-placeholder" data-plugin="qrcode" data-qrcode-text="Hello" data-api-url="https://yw-qrcode.deno.dev/api/generate?text=Hello&format=raw" style="margin: 1em 0; text-align: center;">
+<div style="padding: 20px; border: 1px solid #ddd; background: #f5f5f5;">Loading QR code...</div>
+</div>`;
+
+      const processed = await processAsyncPlugins(html);
+
+      // Should replace placeholder with actual QR code
+      expect(processed).toContain('qrcode-container');
+      expect(processed).toContain('img src="https://yw-qrcode.deno.dev/');
+      expect(processed).toContain('Hello');
+      expect(processed).not.toContain('Loading QR code...');
+    });
+
+    it('should handle multiple QR codes', async () => {
+      const { processAsyncPlugins } = await import('../../src/parser/async-plugin-processor');
+
+      const html = `<div class="async-plugin-placeholder" data-plugin="qrcode" data-qrcode-text="Test1" data-api-url="https://yw-qrcode.deno.dev/api/generate?text=Test1&format=raw">Loading...</div>
+<div class="async-plugin-placeholder" data-plugin="qrcode" data-qrcode-text="Test2" data-api-url="https://yw-qrcode.deno.dev/api/generate?text=Test2&format=raw">Loading...</div>`;
+
+      const processed = await processAsyncPlugins(html);
+
+      expect(processed).toContain('Test1');
+      expect(processed).toContain('Test2');
+      const qrCodeMatches = processed.match(/qrcode-container/g);
+      expect(qrCodeMatches).toBeDefined();
+      expect(qrCodeMatches?.length).toBe(2);
+    });
+
+    it('should return unchanged HTML when no async plugins present', async () => {
+      const { processAsyncPlugins } = await import('../../src/parser/async-plugin-processor');
+
+      const html = '<p>Hello World</p>';
+      const processed = await processAsyncPlugins(html);
+
+      expect(processed).toBe(html);
     });
   });
 });
