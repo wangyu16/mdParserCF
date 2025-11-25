@@ -9,8 +9,6 @@ coverage/
 *.lcov
 
 # Production
-/bluePrint
-/constructionNotes
 /dist
 /build
 *.tsbuildinfo
