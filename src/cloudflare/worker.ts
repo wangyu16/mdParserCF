@@ -10,6 +10,7 @@
 
 import { Parser } from '../parser/parser';
 import { HTMLRenderer } from '../renderer/html-renderer';
+import { processAsyncPlugins } from '../parser/async-plugin-processor';
 
 // CORS headers for cross-origin requests
 const CORS_HEADERS = {
@@ -426,6 +427,9 @@ async function handleParse(request: Request) {
     const renderer = new HTMLRenderer();
     const output = renderer.render(ast);
     let html = output.html;
+
+    // Process async plugins
+    html = await processAsyncPlugins(html);
 
     // Process markdown embeds if enabled
     if (processEmbeds) {
