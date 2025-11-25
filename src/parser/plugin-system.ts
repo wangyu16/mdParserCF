@@ -7,6 +7,12 @@
  * - {{markdown content}}
  * - {{emoji name}}
  * - {{diagram type}}
+ *
+ * Plugins are classified along two independent axes:
+ * 1. Input Type: How the plugin syntax is parsed (inline vs block)
+ * 2. Output Type: What HTML element type is produced (inline vs block)
+ *
+ * See PLUGIN.md for detailed documentation.
  */
 
 import { InlineNode, BlockNode } from './ast-types';
@@ -22,73 +28,152 @@ export interface PluginResult {
 /**
  * Plugin handler function - processes plugin syntax
  */
-export type InlinePluginHandler = (content: string) => PluginResult;
-export type BlockPluginHandler = (content: string) => PluginResult;
+export type PluginHandler = (content: string) => PluginResult;
 
 /**
- * Plugin definition
+ * Plugin definition with separate input and output type classification
+ *
+ * @property name - Plugin identifier (e.g., 'youtube', 'emoji')
+ * @property aliases - Alternative names (e.g., 'md' for 'markdown')
+ * @property inputType - How the plugin is parsed:
+ *   - 'inline': Single-line content, can appear within paragraphs
+ *   - 'block': Multi-line content, must be standalone
+ * @property outputType - What HTML type is produced:
+ *   - 'inline': Produces inline elements (<span>, <img>, etc.)
+ *   - 'block': Produces block elements (<div>, <iframe>, etc.)
+ * @property pattern - Regex to match plugin syntax
+ * @property handler - Function to process matched content
  */
 export interface Plugin {
   name: string;
+  aliases?: string[];
+  inputType: 'inline' | 'block';
+  outputType: 'inline' | 'block';
   pattern: RegExp;
-  handler: InlinePluginHandler | BlockPluginHandler;
-  type: 'inline' | 'block';
+  handler: PluginHandler;
 }
 
 /**
+ * Legacy plugin type alias for backward compatibility
+ * @deprecated Use Plugin with inputType/outputType instead
+ */
+export interface LegacyPlugin {
+  name: string;
+  pattern: RegExp;
+  handler: PluginHandler;
+  type: 'inline' | 'block';
+}
+
+// Type aliases for backward compatibility
+export type InlinePluginHandler = PluginHandler;
+export type BlockPluginHandler = PluginHandler;
+
+/**
  * Plugin registry to manage all custom plugins
+ *
+ * Plugins are organized by their inputType for parsing purposes:
+ * - Inline plugins: Matched within paragraph text
+ * - Block plugins: Matched as standalone blocks
  */
 export class PluginRegistry {
   private inlinePlugins: Map<string, Plugin> = new Map();
   private blockPlugins: Map<string, Plugin> = new Map();
 
   /**
-   * Register a new inline plugin
+   * Register a plugin (auto-detects based on inputType)
+   */
+  public registerPlugin(plugin: Plugin): void {
+    if (plugin.inputType === 'inline') {
+      this.registerInlinePlugin(plugin);
+    } else {
+      this.registerBlockPlugin(plugin);
+    }
+  }
+
+  /**
+   * Register a new inline-input plugin
    */
   public registerInlinePlugin(plugin: Plugin): void {
-    if (plugin.type !== 'inline') {
-      throw new Error(`Plugin ${plugin.name} must have type 'inline'`);
+    if (plugin.inputType !== 'inline') {
+      throw new Error(`Plugin ${plugin.name} must have inputType 'inline'`);
     }
     this.inlinePlugins.set(plugin.name, plugin);
+    // Register aliases
+    if (plugin.aliases) {
+      for (const alias of plugin.aliases) {
+        this.inlinePlugins.set(alias, plugin);
+      }
+    }
   }
 
   /**
-   * Register a new block plugin
+   * Register a new block-input plugin
    */
   public registerBlockPlugin(plugin: Plugin): void {
-    if (plugin.type !== 'block') {
-      throw new Error(`Plugin ${plugin.name} must have type 'block'`);
+    if (plugin.inputType !== 'block') {
+      throw new Error(`Plugin ${plugin.name} must have inputType 'block'`);
     }
     this.blockPlugins.set(plugin.name, plugin);
+    // Register aliases
+    if (plugin.aliases) {
+      for (const alias of plugin.aliases) {
+        this.blockPlugins.set(alias, plugin);
+      }
+    }
   }
 
   /**
-   * Get all inline plugins
+   * Get all inline-input plugins (unique, excluding aliases)
    */
   public getInlinePlugins(): Plugin[] {
-    return Array.from(this.inlinePlugins.values());
+    const seen = new Set<string>();
+    const plugins: Plugin[] = [];
+    for (const plugin of this.inlinePlugins.values()) {
+      if (!seen.has(plugin.name)) {
+        seen.add(plugin.name);
+        plugins.push(plugin);
+      }
+    }
+    return plugins;
   }
 
   /**
-   * Get all block plugins
+   * Get all block-input plugins (unique, excluding aliases)
    */
   public getBlockPlugins(): Plugin[] {
-    return Array.from(this.blockPlugins.values());
+    const seen = new Set<string>();
+    const plugins: Plugin[] = [];
+    for (const plugin of this.blockPlugins.values()) {
+      if (!seen.has(plugin.name)) {
+        seen.add(plugin.name);
+        plugins.push(plugin);
+      }
+    }
+    return plugins;
   }
 
   /**
-   * Get a specific plugin
+   * Get a specific plugin by name or alias
    */
   public getPlugin(name: string): Plugin | undefined {
     return this.inlinePlugins.get(name) || this.blockPlugins.get(name);
   }
 
   /**
-   * Remove a plugin
+   * Remove a plugin and its aliases
    */
   public removePlugin(name: string): void {
-    this.inlinePlugins.delete(name);
-    this.blockPlugins.delete(name);
+    const plugin = this.getPlugin(name);
+    if (plugin) {
+      this.inlinePlugins.delete(plugin.name);
+      this.blockPlugins.delete(plugin.name);
+      if (plugin.aliases) {
+        for (const alias of plugin.aliases) {
+          this.inlinePlugins.delete(alias);
+          this.blockPlugins.delete(alias);
+        }
+      }
+    }
   }
 
   /**
@@ -107,9 +192,14 @@ export class PluginRegistry {
 /**
  * YouTube embed plugin
  * Syntax: {{youtube videoId}}
+ *
+ * Input: Inline (single-line video ID)
+ * Output: Block (iframe element)
  */
 export const youtubePlugin: Plugin = {
   name: 'youtube',
+  inputType: 'inline',
+  outputType: 'block',
   pattern: /\{\{youtube\s+([a-zA-Z0-9_-]+)\}\}/g,
   handler: (content: string): PluginResult => {
     const match = content.match(/\{\{youtube\s+([a-zA-Z0-9_-]+)\}\}/);
@@ -128,15 +218,19 @@ export const youtubePlugin: Plugin = {
       } as InlineNode,
     };
   },
-  type: 'inline',
 };
 
 /**
  * Emoji plugin
  * Syntax: {{emoji smile}} or {{emoji 😀}}
+ *
+ * Input: Inline (single-line emoji name)
+ * Output: Inline (text/emoji character)
  */
 export const emojiPlugin: Plugin = {
   name: 'emoji',
+  inputType: 'inline',
+  outputType: 'inline',
   pattern: /\{\{emoji\s+([\w\d\s-]+)\}\}/g,
   handler: (content: string): PluginResult => {
     const match = content.match(/\{\{emoji\s+([\w\d\s-]+)\}\}/);
@@ -174,12 +268,14 @@ export const emojiPlugin: Plugin = {
       } as InlineNode,
     };
   },
-  type: 'inline',
 };
 
 /**
  * SMILES (chemical notation) plugin
  * Syntax: {{smiles CCCO}}
+ *
+ * Input: Inline (single-line SMILES notation)
+ * Output: Inline (canvas element for molecular structure)
  *
  * Note: SmilesDrawer requires a DOM/Canvas environment which isn't available
  * in server-side Node.js. For production use, this plugin generates placeholder
@@ -192,6 +288,8 @@ export const emojiPlugin: Plugin = {
  */
 export const smilesPlugin: Plugin = {
   name: 'smiles',
+  inputType: 'inline',
+  outputType: 'inline',
   pattern: /\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/g,
   handler: (content: string): PluginResult => {
     const match = content.match(/\{\{smiles\s+([A-Za-z0-9\-()=#+\\\/%@\[\]]+)\}\}/);
@@ -237,13 +335,15 @@ if (typeof SmilesDrawer !== 'undefined') {
       } as InlineNode,
     };
   },
-  type: 'inline',
 };
 
 /**
  * Chemical Reaction plugin
  * Syntax: {{reaction C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]}}
  * Optional syntax with options: {{reaction C=CCBr>CC(=O)C>C=CCI | textBelowArrow: 90%, theme: oldschool}}
+ *
+ * Input: Inline (single-line reaction SMILES)
+ * Output: Inline (SVG element for reaction scheme)
  *
  * Renders chemical reaction schemes using SmilesDrawer's reaction SMILES support.
  * Reaction SMILES format: reactants>reagents>products
@@ -255,6 +355,8 @@ if (typeof SmilesDrawer !== 'undefined') {
  */
 export const reactionPlugin: Plugin = {
   name: 'reaction',
+  inputType: 'inline',
+  outputType: 'inline',
   pattern: /\{\{reaction\s+([^}|]+)(?:\s*\|\s*([^}]+))?\}\}/g,
   handler: (content: string): PluginResult => {
     const match = content.match(/\{\{reaction\s+([^}|]+)(?:\s*\|\s*([^}]+))?\}\}/);
@@ -301,15 +403,19 @@ export const reactionPlugin: Plugin = {
       } as InlineNode,
     };
   },
-  type: 'inline',
 };
 
 /**
  * Badge/Alert plugin
- * Syntax: {{badge success}} or {{alert warning}}
+ * Syntax: {{badge success: Text}} or {{badge warning: Important}}
+ *
+ * Input: Inline (single-line type and text)
+ * Output: Inline (span element with badge styling)
  */
 export const badgePlugin: Plugin = {
   name: 'badge',
+  inputType: 'inline',
+  outputType: 'inline',
   pattern: /\{\{badge\s+(\w+)\s*:\s*([^}]+)\}\}/g,
   handler: (content: string): PluginResult => {
     const match = content.match(/\{\{badge\s+(\w+)\s*:\s*([^}]+)\}\}/);
@@ -332,7 +438,6 @@ export const badgePlugin: Plugin = {
       } as InlineNode,
     };
   },
-  type: 'inline',
 };
 
 /**
@@ -341,9 +446,14 @@ export const badgePlugin: Plugin = {
  *   graph TD
  *   A --> B
  * }}
+ *
+ * Input: Block (multi-line diagram definition)
+ * Output: Block (div element with diagram content)
  */
 export const diagramPlugin: Plugin = {
   name: 'diagram',
+  inputType: 'block',
+  outputType: 'block',
   pattern: /\{\{diagram\s+(\w+)\s*\n([\s\S]*?)\}\}/g,
   handler: (content: string): PluginResult => {
     const match = content.match(/\{\{diagram\s+(\w+)\s*\n([\s\S]*?)\}\}/);
@@ -367,13 +477,19 @@ export const diagramPlugin: Plugin = {
 
     return { type: 'fallthrough' };
   },
-  type: 'block',
 };
 
 /**
  * Markdown/MD embed plugin
  * Syntax: {{markdown https://example.com/file.md}}
  *         {{md https://example.com/file.md}}
+ *
+ * Input: Block (stands alone on its own line, processed at block level)
+ * Output: Block (div element with embedded content)
+ *
+ * Note: Although the syntax is a single line (URL only), this plugin must be
+ * parsed at the block level because it produces block-level content and should
+ * not appear inline within paragraph text.
  *
  * Embeds external markdown content from a URL.
  * The content is fetched and rendered recursively.
@@ -389,6 +505,9 @@ export const diagramPlugin: Plugin = {
  */
 export const markdownPlugin: Plugin = {
   name: 'markdown',
+  aliases: ['md'],
+  inputType: 'block',
+  outputType: 'block',
   pattern: /\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\s*\}\}/g,
   handler: (content: string): PluginResult => {
     const match = content.match(/\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\s*\}\}/);
@@ -437,18 +556,6 @@ export const markdownPlugin: Plugin = {
       } as BlockNode,
     };
   },
-  type: 'block',
-};
-
-/**
- * Short alias for markdown plugin (md)
- * Syntax: {{md https://example.com/file.md}}
- */
-export const mdPlugin: Plugin = {
-  name: 'md',
-  pattern: /\{\{md\s+(https?:\/\/[^\s}]+)\s*\}\}/g,
-  handler: markdownPlugin.handler,
-  type: 'block',
 };
 
 // Helper function to escape HTML special characters
@@ -469,14 +576,16 @@ function escapeHtml(text: string): string {
 export function createDefaultPluginRegistry(): PluginRegistry {
   const registry = new PluginRegistry();
 
-  // Register built-in plugins
-  registry.registerInlinePlugin(youtubePlugin);
-  registry.registerInlinePlugin(emojiPlugin);
-  registry.registerInlinePlugin(smilesPlugin);
-  registry.registerInlinePlugin(reactionPlugin);
-  registry.registerInlinePlugin(badgePlugin);
-  registry.registerBlockPlugin(diagramPlugin);
-  registry.registerBlockPlugin(markdownPlugin);
+  // Register built-in inline-input plugins
+  registry.registerPlugin(youtubePlugin); // inline input → block output
+  registry.registerPlugin(emojiPlugin); // inline input → inline output
+  registry.registerPlugin(smilesPlugin); // inline input → inline output
+  registry.registerPlugin(reactionPlugin); // inline input → inline output
+  registry.registerPlugin(badgePlugin); // inline input → inline output
+  registry.registerPlugin(markdownPlugin); // inline input → block output (with 'md' alias)
+
+  // Register built-in block-input plugins
+  registry.registerPlugin(diagramPlugin); // block input → block output
 
   return registry;
 }

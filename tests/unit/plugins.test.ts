@@ -41,13 +41,13 @@ describe('Plugin System', () => {
       expect(registry.getPlugin('diagram')).toBeDefined();
     });
 
-    it('should reject wrong plugin type', () => {
+    it('should reject wrong plugin inputType', () => {
       const registry = new PluginRegistry();
 
       expect(() => {
         registry.registerBlockPlugin({
           ...youtubePlugin,
-          type: 'inline',
+          inputType: 'inline',
         } as any);
       }).toThrow();
     });
@@ -77,7 +77,8 @@ describe('Plugin System', () => {
     describe('YouTube Plugin', () => {
       it('should have correct pattern', () => {
         expect(youtubePlugin.name).toBe('youtube');
-        expect(youtubePlugin.type).toBe('inline');
+        expect(youtubePlugin.inputType).toBe('inline');
+        expect(youtubePlugin.outputType).toBe('block');
         expect(youtubePlugin.pattern).toBeDefined();
       });
 
@@ -103,7 +104,8 @@ describe('Plugin System', () => {
     describe('Emoji Plugin', () => {
       it('should have correct pattern', () => {
         expect(emojiPlugin.name).toBe('emoji');
-        expect(emojiPlugin.type).toBe('inline');
+        expect(emojiPlugin.inputType).toBe('inline');
+        expect(emojiPlugin.outputType).toBe('inline');
       });
 
       it('should convert emoji names to unicode', () => {
@@ -133,7 +135,8 @@ describe('Plugin System', () => {
     describe('SMILES Plugin', () => {
       it('should have correct pattern', () => {
         expect(smilesPlugin.name).toBe('smiles');
-        expect(smilesPlugin.type).toBe('inline');
+        expect(smilesPlugin.inputType).toBe('inline');
+        expect(smilesPlugin.outputType).toBe('inline');
       });
 
       it('should render SMILES notation with canvas placeholder', () => {
@@ -223,7 +226,8 @@ describe('Plugin System', () => {
     describe('Reaction Plugin', () => {
       it('should have correct pattern', () => {
         expect(reactionPlugin.name).toBe('reaction');
-        expect(reactionPlugin.type).toBe('inline');
+        expect(reactionPlugin.inputType).toBe('inline');
+        expect(reactionPlugin.outputType).toBe('inline');
       });
 
       it('should render simple reaction', () => {
@@ -317,7 +321,8 @@ describe('Plugin System', () => {
     describe('Badge Plugin', () => {
       it('should have correct pattern', () => {
         expect(badgePlugin.name).toBe('badge');
-        expect(badgePlugin.type).toBe('inline');
+        expect(badgePlugin.inputType).toBe('inline');
+        expect(badgePlugin.outputType).toBe('inline');
       });
 
       it('should render badges', () => {
@@ -344,7 +349,8 @@ describe('Plugin System', () => {
     describe('Diagram Plugin', () => {
       it('should have correct pattern', () => {
         expect(diagramPlugin.name).toBe('diagram');
-        expect(diagramPlugin.type).toBe('block');
+        expect(diagramPlugin.inputType).toBe('block');
+        expect(diagramPlugin.outputType).toBe('block');
       });
 
       it('should render mermaid diagrams', () => {

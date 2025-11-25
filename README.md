@@ -285,22 +285,7 @@ Edit `wrangler.toml` to configure:
 
 ## 📖 Documentation
 
-### Core Documentation
 
-- **[Project Blueprint](bluePrint/projectBlueprint.md)** - Architecture, design decisions, phase plan
-- **[Markdown Rules](bluePrint/markdownRenderRules.md)** - Complete markdown specification
-- **[Test Syntax](bluePrint/testMarkdownSyntax.md)** - Test cases and syntax examples
-
-### Development Progress
-
-Progressive documentation from development sessions is stored in `constructionNotes/`:
-
-- **[Phase 1 Completion](constructionNotes/PHASE1_COMPLETION.md)** - Phase 1 status and achievements
-- **[Phase 1 Extensions Guide](constructionNotes/PHASE1_EXTENSIONS.md)** - How to add new features
-- **[Session Summary](constructionNotes/SESSION_SUMMARY.md)** - Latest session work
-- **[Project Status Dashboard](constructionNotes/PROJECT_STATUS.md)** - Current project metrics
-- **[Celebration Summary](constructionNotes/CELEBRATION.md)** - Achievements summary
-- **[Development Checklist](constructionNotes/CHECKLIST.md)** - Task tracking
 
 ### Technical Docs (To Be Created)
 
