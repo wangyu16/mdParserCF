@@ -544,12 +544,12 @@ M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">�
 <p><strong>Note:</strong> You can also use any emoji character directly in the syntax: <code>{{emoji 😊}}</code> will render as {{emoji 😊}}</p>
 <h3>19. SMILES Chemical Structures</h3>
 <p>Ethanol: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-royvjudqq" data-smiles="CCO" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-5espvr4cs" data-smiles="CCO" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-royvjudqq');
+    const canvas = document.getElementById('smiles-5espvr4cs');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -568,12 +568,12 @@ if (typeof SmilesDrawer !== 'undefined') {
 </script>
 </div></p>
 <p>Benzene: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-5gdb0565w" data-smiles="c1ccccc1" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-yhcfwxde9" data-smiles="c1ccccc1" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-5gdb0565w');
+    const canvas = document.getElementById('smiles-yhcfwxde9');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -592,12 +592,12 @@ if (typeof SmilesDrawer !== 'undefined') {
 </script>
 </div></p>
 <p>Cyclohexane: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-tmxwtfm3e" data-smiles="C1CCCCC1" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-bl1y4chwg" data-smiles="C1CCCCC1" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-tmxwtfm3e');
+    const canvas = document.getElementById('smiles-bl1y4chwg');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -616,12 +616,12 @@ if (typeof SmilesDrawer !== 'undefined') {
 </script>
 </div></p>
 <p>Acetone: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-cvjlww1oa" data-smiles="CC(=O)C" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-ura41ity0" data-smiles="CC(=O)C" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-cvjlww1oa');
+    const canvas = document.getElementById('smiles-ura41ity0');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -640,12 +640,12 @@ if (typeof SmilesDrawer !== 'undefined') {
 </script>
 </div></p>
 <p>Glucose: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-kkb75l29p" data-smiles="C(C(C(C(C=O)O)O)O)O" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-3kg8vhh0g" data-smiles="C(C(C(C(C=O)O)O)O)O" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-kkb75l29p');
+    const canvas = document.getElementById('smiles-3kg8vhh0g');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -741,6 +741,13 @@ if (typeof SmilesDrawer !== 'undefined') {
     User->>Server: Request data
     Server-->>User: Response data
     User->>Server: Process complete</div><script async src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<h3>21. Remote Markdown</h3>
+<p>Use the following plugin<br />
+<code>{{markdown https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md }}</code></p>
+<p>and you will get:</p>
+<div id="md-embed-4wquxi25t" class="markdown-embed" data-markdown-url="https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md">
+<div class="markdown-embed-loading">Loading content from <a href="https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md" target="_blank" rel="noopener">https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md</a>...</div>
+</div>
 <hr />
 <h2>Complex Nesting &amp; Edge Cases</h2>
 <h3>22. Nested Lists with Multiple Formatting</h3>
@@ -842,12 +849,12 @@ Equals: = not highlight</p>
 <pre><code>{{emoji smile}}  # This is code, not plugin
 {{smiles CCO}}   # Also code, not rendered</code></pre>
 <p>But outside code: 😊 and <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-888ht18dw" data-smiles="CCO" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-meyxwf6oi" data-smiles="CCO" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-888ht18dw');
+    const canvas = document.getElementById('smiles-meyxwf6oi');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -1129,12 +1136,12 @@ with realistic scenarios</code></pre>
 <h3>41. Chemical Workflow Example</h3>
 <p><strong>Reaction Analysis:</strong></p>
 <p>Reactant: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-swy123hy0" data-smiles="CCO" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-scbsj60qp" data-smiles="CCO" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-swy123hy0');
+    const canvas = document.getElementById('smiles-scbsj60qp');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -1154,12 +1161,12 @@ if (typeof SmilesDrawer !== 'undefined') {
 </div><br />
 Catalyst: <span class="badge badge-warning">Heat required</span><br />
 Product: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-rv74n3ctz" data-smiles="CC(=O)C" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-v0b4g5i0t" data-smiles="CC(=O)C" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-rv74n3ctz');
+    const canvas = document.getElementById('smiles-v0b4g5i0t');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {
@@ -1190,12 +1197,12 @@ if (typeof SmilesDrawer !== 'undefined') {
 <p>✅ Topics covered:</p>
 <ul>
 <li class="depth-0"><p>Molecular structure: <div class="smiles-container" style="display: inline-block; margin: 0.2em; text-align: center;">
-<canvas id="smiles-uvygqpwgv" data-smiles="c1ccccc1" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
+<canvas id="smiles-oqyea44rj" data-smiles="c1ccccc1" width="300" height="300" style="border: 1px solid #ddd; border-radius: 0.25em;"></canvas>
 <script>
 // Client-side SmilesDrawer rendering
 if (typeof SmilesDrawer !== 'undefined') {
   try {
-    const canvas = document.getElementById('smiles-uvygqpwgv');
+    const canvas = document.getElementById('smiles-oqyea44rj');
     const smiles = canvas.dataset.smiles;
     const drawer = new SmilesDrawer.Drawer({width: 300, height: 300});
     SmilesDrawer.parse(smiles, function(tree) {

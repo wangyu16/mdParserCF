@@ -435,7 +435,12 @@ sequenceDiagram
 
 ### 21. Remote Markdown
 
-{{markdown  }}
+Use the following plugin  
+`{{markdown https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md }}`
+
+and you will get:
+
+{{markdown https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md }}
 
 ---
 

@@ -378,7 +378,7 @@ ${diagramContent}
       const block = registry.getBlockPlugins();
 
       expect(inline).toHaveLength(5); // youtube, emoji, smiles, reaction, badge
-      expect(block).toHaveLength(1); // diagram
+      expect(block).toHaveLength(2); // diagram, markdown
     });
 
     it('should have youtube plugin', () => {

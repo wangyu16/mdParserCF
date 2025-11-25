@@ -389,9 +389,9 @@ export const diagramPlugin: Plugin = {
  */
 export const markdownPlugin: Plugin = {
   name: 'markdown',
-  pattern: /\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\}\}/g,
+  pattern: /\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\s*\}\}/g,
   handler: (content: string): PluginResult => {
-    const match = content.match(/\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\}\}/);
+    const match = content.match(/\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\s*\}\}/);
     if (!match || !match[1]) {
       return { type: 'fallthrough' };
     }
@@ -446,7 +446,7 @@ export const markdownPlugin: Plugin = {
  */
 export const mdPlugin: Plugin = {
   name: 'md',
-  pattern: /\{\{md\s+(https?:\/\/[^\s}]+)\}\}/g,
+  pattern: /\{\{md\s+(https?:\/\/[^\s}]+)\s*\}\}/g,
   handler: markdownPlugin.handler,
   type: 'block',
 };
