@@ -407,7 +407,7 @@ Glucose: {{smiles C(C(C(C(C=O)O)O)O)O}}
 
 ### 21. Mermaid Diagrams
 
-{{diagram mermaid
+{{mermaid
 graph TD
     A[Start] --> B{Decision}
     B -->|Yes| C[Process]
@@ -416,7 +416,7 @@ graph TD
     D --> E
 }}
 
-{{diagram mermaid
+{{mermaid
 sequenceDiagram
     participant User
     participant Server

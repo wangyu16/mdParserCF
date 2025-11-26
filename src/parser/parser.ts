@@ -1413,6 +1413,7 @@ export class Parser {
               const pluginText = protection.content;
               let matched = false;
 
+              // First try inline plugins (inline/inline)
               for (const plugin of this.pluginRegistry.getInlinePlugins()) {
                 plugin.pattern.lastIndex = 0;
                 if (plugin.pattern.test(pluginText)) {
@@ -1421,6 +1422,33 @@ export class Parser {
                     nodes.push(result.content as InlineNode);
                     matched = true;
                     break;
+                  }
+                }
+              }
+
+              // If not matched, try block plugins (inline/block) that can appear inline
+              if (!matched) {
+                for (const plugin of this.pluginRegistry.getBlockPlugins()) {
+                  // Only process plugins with inline inputType
+                  if (plugin.inputType === 'inline') {
+                    plugin.pattern.lastIndex = 0;
+                    if (plugin.pattern.test(pluginText)) {
+                      const result = plugin.handler(pluginText);
+                      if (result.type === 'rendered' && result.content) {
+                        const content = result.content as any;
+                        // If plugin returns block content, convert to inline HTML
+                        if (content.type === 'html-block') {
+                          nodes.push({
+                            type: 'html-inline',
+                            value: content.content,
+                          } as InlineNode);
+                        } else {
+                          nodes.push(content as InlineNode);
+                        }
+                        matched = true;
+                        break;
+                      }
+                    }
                   }
                 }
               }
