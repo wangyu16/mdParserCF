@@ -239,14 +239,16 @@ export const youtubePlugin: Plugin = {
     }
 
     const videoId = match[1];
-    const html = `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    const html = `<div class="youtube-embed" style="margin: 1em 0; text-align: center;">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="max-width: 100%;"></iframe>
+</div>`;
 
     return {
       type: 'rendered',
       content: {
-        type: 'html-inline',
-        value: html,
-      } as InlineNode,
+        type: 'html-block',
+        content: html,
+      } as BlockNode,
     };
   },
 };
@@ -363,9 +365,9 @@ if (typeof SmilesDrawer !== 'undefined') {
     return {
       type: 'rendered',
       content: {
-        type: 'html-inline',
-        value: html,
-      } as InlineNode,
+        type: 'html-block',
+        content: html,
+      } as BlockNode,
     };
   },
 };
@@ -401,8 +403,8 @@ export const qrcodePlugin: Plugin = {
 
     // For async plugins, we generate a placeholder during parsing
     // The actual API call will be made during post-processing
-    const placeholder = `<div id="${qrcodeId}" class="async-plugin-placeholder" data-plugin="qrcode" data-qrcode-text="${escapeHtml(text)}" data-api-url="${escapeHtml(apiUrl)}" style="margin: 1em 0; text-align: center;">
-<div style="padding: 20px; border: 1px solid #ddd; background: #f5f5f5;">Loading QR code...</div>
+    const placeholder = `<div id="${qrcodeId}" class="async-plugin-placeholder" data-plugin="qrcode" data-qrcode-text="${escapeHtml(text)}" data-api-url="${escapeHtml(apiUrl)}">
+Loading QR code...
 </div>`;
 
     return {
@@ -514,6 +516,7 @@ export const mermaidPlugin: Plugin = {
 export const markdownPlugin: Plugin = {
   name: 'markdown',
   aliases: ['md'],
+  isAsync: true, // Mark as async for server-side fetching
   inputType: 'inline',
   outputType: 'block',
   pattern: /\{\{(?:markdown|md)\s+(https?:\/\/[^\s}]+)\s*\}\}/g,
@@ -548,12 +551,11 @@ export const markdownPlugin: Plugin = {
       };
     }
 
-    // Generate placeholder with data attribute for server-side or client-side processing
-    // The placeholder includes a unique ID for targeting
+    // Generate placeholder with data attribute for async processing
     const embedId = `md-embed-${Math.random().toString(36).substr(2, 9)}`;
 
-    const html = `<div id="${embedId}" class="markdown-embed" data-markdown-url="${escapeHtml(url)}">
-<div class="markdown-embed-loading">Loading content from <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>...</div>
+    const html = `<div id="${embedId}" class="async-plugin-placeholder" data-plugin="markdown" data-markdown-url="${escapeHtml(url)}">
+Loading content...
 </div>`;
 
     return {
@@ -562,6 +564,10 @@ export const markdownPlugin: Plugin = {
         type: 'html-block',
         content: html,
       } as BlockNode,
+      asyncData: {
+        id: embedId,
+        url,
+      },
     };
   },
 };

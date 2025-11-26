@@ -16,26 +16,34 @@
 export async function processAsyncPlugins(html: string): Promise<string> {
   // Find all async plugin placeholders
   const placeholderRegex =
-    /<div[^>]*class="async-plugin-placeholder"[^>]*data-plugin="([^"]+)"[^>]*data-qrcode-text="([^"]+)"[^>]*data-api-url="([^"]+)"[^>]*>[\s\S]*?<\/div>/g;
+    /<div[^>]*class="async-plugin-placeholder"[^>]*data-plugin="([^"]+)"[^>]*>[\s\S]*?<\/div>/g;
 
   const placeholders: Array<{
     fullMatch: string;
     plugin: string;
-    text: string;
-    apiUrl: string;
     id: string;
+    data: Record<string, string>;
   }> = [];
 
   let match;
   while ((match = placeholderRegex.exec(html)) !== null) {
-    // Extract ID from the full match
-    const idMatch = match[0].match(/id="([^"]+)"/);
+    const fullMatch = match[0];
+    const plugin = match[1];
+    const idMatch = fullMatch.match(/id="([^"]+)"/);
+
+    // Extract all data attributes
+    const data: Record<string, string> = {};
+    const dataAttrRegex = /data-([a-z-]+)="([^"]*)"/g;
+    let dataMatch;
+    while ((dataMatch = dataAttrRegex.exec(fullMatch)) !== null) {
+      data[dataMatch[1]] = unescapeHtml(dataMatch[2]);
+    }
+
     placeholders.push({
-      fullMatch: match[0],
-      plugin: match[1],
-      text: unescapeHtml(match[2]),
-      apiUrl: unescapeHtml(match[3]),
+      fullMatch,
+      plugin,
       id: idMatch ? idMatch[1] : '',
+      data,
     });
   }
 
@@ -50,15 +58,22 @@ export async function processAsyncPlugins(html: string): Promise<string> {
 
   for (const placeholder of placeholders) {
     try {
+      let replacement: string;
+
       if (placeholder.plugin === 'qrcode') {
-        const replacement = await processQRCodePlugin(
+        replacement = await processQRCodePlugin(
           placeholder.id,
-          placeholder.text,
-          placeholder.apiUrl
+          placeholder.data['qrcode-text'],
+          placeholder.data['api-url']
         );
-        processedHtml = processedHtml.replace(placeholder.fullMatch, replacement);
+      } else if (placeholder.plugin === 'markdown') {
+        replacement = await processMarkdownPlugin(placeholder.id, placeholder.data['markdown-url']);
+      } else {
+        console.warn(`⚠️ Unknown async plugin: ${placeholder.plugin}`);
+        continue;
       }
-      // Add more async plugin types here as needed
+
+      processedHtml = processedHtml.replace(placeholder.fullMatch, replacement);
     } catch (error: any) {
       console.error(`❌ Error processing ${placeholder.plugin}:`, error.message);
       // Replace with error message
@@ -73,11 +88,59 @@ export async function processAsyncPlugins(html: string): Promise<string> {
 }
 
 /**
+ * Process markdown plugin - fetches and renders external markdown
+ */
+async function processMarkdownPlugin(id: string, url: string): Promise<string> {
+  try {
+    // Fetch the markdown content
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'mdParserCF/1.0',
+        Accept: 'text/plain, text/markdown, */*',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch markdown: HTTP ${response.status}`);
+    }
+
+    const markdownText = await response.text();
+
+    // Limit content size (100KB)
+    if (markdownText.length > 100000) {
+      throw new Error('Content too large (max 100KB)');
+    }
+
+    // Parse the markdown (import dynamically to avoid circular deps)
+    const { Parser } = await import('./parser');
+    const { HTMLRenderer } = await import('../renderer/html-renderer');
+
+    const parser = new Parser({
+      debugAST: false,
+      enablePlugins: false, // Disable plugins to prevent infinite recursion
+    });
+    const ast = parser.parse(markdownText);
+    const renderer = new HTMLRenderer();
+    const renderedHtml = renderer.render(ast).html;
+
+    // Generate final HTML without styling - just return the rendered content
+    const html = `<div id="${id}" class="markdown-embed">
+${renderedHtml}
+</div>`;
+
+    return html;
+  } catch (error: any) {
+    throw new Error(`Failed to process markdown: ${error.message}`);
+  }
+}
+
+/**
  * Process QR code plugin - fetches QR code from API
  */
 async function processQRCodePlugin(id: string, text: string, apiUrl: string): Promise<string> {
   try {
-    // Verify the API endpoint is accessible using GET (HEAD not supported)
+    // Fetch the QR code from the API (format=raw returns the URL as plain text)
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
@@ -89,10 +152,16 @@ async function processQRCodePlugin(id: string, text: string, apiUrl: string): Pr
       throw new Error(`API returned status ${response.status}`);
     }
 
-    // Generate final HTML with the QR code image
-    const html = `<div id="${id}" class="qrcode-container" data-qrcode-text="${escapeHtml(text)}" style="margin: 1em 0; text-align: center;">
-<img src="${apiUrl}" alt="QR Code: ${escapeHtml(text)}" style="max-width: 300px; height: auto; border: 1px solid #ddd; padding: 10px; background: white;" loading="lazy" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<p style="font-size: 0.85em; color: #666; margin-top: 0.5em;">${escapeHtml(text)}</p>
+    // Get the image URL from the response (plain text with format=raw)
+    const imageUrl = (await response.text()).trim();
+
+    if (!imageUrl) {
+      throw new Error('API returned empty URL');
+    }
+
+    // Generate final HTML with the QR code image - clean output without styling
+    const html = `<div id="${id}" class="qrcode-container" data-qrcode-text="${escapeHtml(text)}">
+<img src="${escapeHtml(imageUrl)}" alt="QR Code" loading="lazy" />
 </div>`;
 
     return html;
