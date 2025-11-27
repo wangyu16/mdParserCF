@@ -7,6 +7,21 @@ The async plugin system allows plugins to fetch external resources during render
 1. **Parse Phase**: Plugins return placeholder HTML with metadata (synchronous)
 2. **Post-Processing Phase**: Placeholders are replaced with actual content (asynchronous)
 
+## Built-in Plugins: Sync vs Async
+
+| Plugin     | Type  | Reason                                      |
+| ---------- | ----- | ------------------------------------------- |
+| `emoji`    | Sync  | Simple text replacement, no external calls  |
+| `badge`    | Sync  | Static HTML generation                      |
+| `youtube`  | Sync  | Generates static iframe, no API call needed |
+| `smiles`   | Sync  | Client-side rendering via SmilesDrawer.js   |
+| `toc`      | Sync  | Processes document headings at render time  |
+| `diagram`  | Sync  | Client-side rendering via Mermaid.js        |
+| `qrcode`   | Async | Fetches QR code image from external API     |
+| `markdown` | Async | Fetches and renders external markdown files |
+
+**Note**: The `toc` plugin is synchronous because it collects headings from the document AST during the render phase—no external resources are needed.
+
 ## Architecture
 
 ```

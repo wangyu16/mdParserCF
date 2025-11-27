@@ -54,9 +54,21 @@ const KATEX_OPTIONS = {
 };
 
 /**
+ * Heading info collected for TOC generation
+ */
+interface HeadingInfo {
+  level: number;
+  text: string;
+  id: string;
+}
+
+/**
  * HTML Renderer - converts AST to HTML
  */
 export class HTMLRenderer {
+  private headings: HeadingInfo[] = [];
+  private headingIdCounter: Map<string, number> = new Map();
+
   constructor(_options: RendererOptions = {}) {
     // Options reserved for future use (syntax highlighting, sanitization, etc.)
   }
@@ -65,7 +77,15 @@ export class HTMLRenderer {
    * Render document to HTML
    */
   public render(ast: Document): HTMLOutput {
-    const html = this.renderDocument(ast);
+    // Reset headings collection for new render
+    this.headings = [];
+    this.headingIdCounter = new Map();
+
+    let html = this.renderDocument(ast);
+
+    // Process TOC placeholders after all headings are collected
+    html = this.processTocPlaceholders(html);
+
     return {
       html,
     };
@@ -127,7 +147,19 @@ export class HTMLRenderer {
    */
   private renderHeading(heading: Heading): string {
     const content = heading.children.map((child) => this.renderInline(child)).join('');
-    return `<h${heading.level}>${content}</h${heading.level}>\n`;
+
+    // Extract plain text for ID generation
+    const plainText = this.getPlainTextFromInline(heading.children);
+    const id = this.generateHeadingId(plainText);
+
+    // Collect heading info for TOC
+    this.headings.push({
+      level: heading.level,
+      text: plainText,
+      id,
+    });
+
+    return `<h${heading.level} id="${escapeHtml(id)}">${content}</h${heading.level}>\n`;
   }
 
   /**
@@ -519,5 +551,128 @@ export class HTMLRenderer {
     }
 
     return '';
+  }
+
+  /**
+   * Extract plain text from inline nodes (for heading ID generation)
+   */
+  private getPlainTextFromInline(nodes: InlineNode[]): string {
+    return nodes
+      .map((node) => {
+        switch (node.type) {
+          case 'text':
+            return (node as Text).value;
+          case 'code':
+            return (node as Code).value;
+          case 'emphasis':
+          case 'strong':
+          case 'strong-emphasis':
+          case 'strikethrough':
+          case 'underline':
+          case 'highlight':
+          case 'superscript':
+          case 'subscript':
+            return this.getPlainTextFromInline((node as any).children || []);
+          case 'link':
+            return this.getPlainTextFromInline((node as Link).children || []);
+          case 'image':
+            return (node as Image).alt || '';
+          default:
+            return '';
+        }
+      })
+      .join('');
+  }
+
+  /**
+   * Generate a URL-friendly heading ID from text
+   */
+  private generateHeadingId(text: string): string {
+    // Convert to lowercase and replace spaces with hyphens
+    let id = text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Remove consecutive hyphens
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+
+    // Handle empty IDs
+    if (!id) {
+      id = 'heading';
+    }
+
+    // Handle duplicate IDs by appending a counter
+    const count = this.headingIdCounter.get(id) || 0;
+    this.headingIdCounter.set(id, count + 1);
+
+    if (count > 0) {
+      id = `${id}-${count}`;
+    }
+
+    return id;
+  }
+
+  /**
+   * Process TOC placeholders and replace with generated table of contents
+   */
+  private processTocPlaceholders(html: string): string {
+    const tocRegex =
+      /<nav id="[^"]*" class="toc-placeholder" data-toc-min="(\d)" data-toc-max="(\d)"><\/nav>/g;
+
+    return html.replace(tocRegex, (_match, minStr, maxStr) => {
+      const minLevel = parseInt(minStr, 10);
+      const maxLevel = parseInt(maxStr, 10);
+
+      return this.generateToc(minLevel, maxLevel);
+    });
+  }
+
+  /**
+   * Generate table of contents HTML from collected headings
+   */
+  private generateToc(minLevel: number, maxLevel: number): string {
+    // Filter headings within the specified level range
+    const filteredHeadings = this.headings.filter(
+      (h) => h.level >= minLevel && h.level <= maxLevel
+    );
+
+    if (filteredHeadings.length === 0) {
+      return '<nav class="toc"><p><em>No headings found</em></p></nav>\n';
+    }
+
+    let html = '<nav class="toc">\n';
+    html += '<ul class="toc-list">\n';
+
+    // Track nesting levels
+    let currentLevel = minLevel;
+
+    for (const heading of filteredHeadings) {
+      const level = heading.level;
+
+      // Handle nesting
+      while (currentLevel < level) {
+        html += '<ul>\n';
+        currentLevel++;
+      }
+      while (currentLevel > level) {
+        html += '</ul>\n</li>\n';
+        currentLevel--;
+      }
+
+      html += `<li class="toc-item toc-level-${level}"><a href="#${escapeHtml(heading.id)}">${escapeHtml(heading.text)}</a>\n`;
+    }
+
+    // Close remaining lists
+    while (currentLevel > minLevel) {
+      html += '</ul>\n</li>\n';
+      currentLevel--;
+    }
+    html += '</li>\n';
+
+    html += '</ul>\n';
+    html += '</nav>\n';
+
+    return html;
   }
 }

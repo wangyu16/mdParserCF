@@ -50,7 +50,9 @@ The **parsing behavior** is derived from the combination of input and output typ
 | `youtube`  | Inline     | Block       | Block   | `{{youtube dQw4w9WgXcQ}}` → `<iframe>`                      |
 | `smiles`   | Inline     | Block       | Block   | `{{smiles CCO}}` → `<div class="smiles-container">`         |
 | `markdown` | Inline     | Block       | Block   | `{{markdown https://...}}` → `<div class="markdown-embed">` |
+| `toc`      | Inline     | Block       | Block   | `{{toc}}` or `{{toc 2, 4}}` → `<nav class="toc">`           |
 | `diagram`  | Block      | Block       | Block   | `{{diagram mermaid\n...\n}}` → `<div class="mermaid">`      |
+| `toc`      | Inline  | Block | Block | `{{toc }}` → A list of headers |
 
 ## Plugin Interface
 
@@ -189,6 +191,102 @@ graph TD
 ```
 
 **Supported types**: mermaid (more can be added)
+
+---
+
+#### `toc` / `tableofcontents` (Inline/Block)
+
+Generates a table of contents from the document's headings.
+
+```markdown
+{{toc}}
+```
+
+**Default**: Shows headings from level 1 to 3 (h1-h3).
+
+**Custom range**: Specify min and max heading levels:
+
+```markdown
+{{toc 2, 4}}
+```
+
+This shows headings from h2 to h4.
+
+**Examples**:
+
+```markdown
+{{toc}} # Shows h1, h2, h3 (default)
+{{toc 1, 6}} # Shows all headings (h1-h6)
+{{toc 2, 3}} # Shows only h2 and h3
+{{tableofcontents}} # Alias for {{toc}}
+```
+
+**Output**:
+
+```html
+<nav class="toc">
+  <ul class="toc-list">
+    <li class="toc-item toc-level-1">
+      <a href="#introduction">Introduction</a>
+      <ul>
+        <li class="toc-item toc-level-2">
+          <a href="#getting-started">Getting Started</a>
+          <ul>
+            <li class="toc-item toc-level-3">
+              <a href="#installation">Installation</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+```
+
+**Features**:
+
+- Automatically generates anchor IDs for headings (e.g., "Getting Started" → `getting-started`)
+- Handles duplicate headings by appending numbers (`introduction`, `introduction-1`, `introduction-2`)
+- Supports nested hierarchical structure
+- Extracts plain text from formatted headings for TOC display
+- Works with all heading levels (1-6)
+
+**CSS Classes**:
+
+- `.toc` - The nav container
+- `.toc-list` - The top-level ul element
+- `.toc-item` - Each list item
+- `.toc-level-1` through `.toc-level-6` - Level-specific styling
+
+**Styling Example**:
+
+```css
+.toc {
+  background: #f8f9fa;
+  padding: 1em;
+  border-radius: 4px;
+  margin: 1em 0;
+}
+
+.toc-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.toc-list ul {
+  list-style: none;
+  padding-left: 1.5em;
+}
+
+.toc-item a {
+  text-decoration: none;
+  color: #333;
+}
+
+.toc-item a:hover {
+  text-decoration: underline;
+}
+```
 
 ---
 

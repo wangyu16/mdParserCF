@@ -20,16 +20,14 @@ describe('HTMLRenderer', () => {
   describe('Headings', () => {
     it('should render h1 heading', () => {
       const html = renderMarkdown('# Heading 1');
-      expect(html).toContain('<h1>');
-      expect(html).toContain('Heading 1');
-      expect(html).toContain('</h1>');
+      expect(html).toContain('<h1 id="heading-1">Heading 1</h1>');
     });
 
     it('should render all heading levels', () => {
       for (let level = 1; level <= 6; level++) {
         const markdown = '#'.repeat(level) + ' Heading';
         const html = renderMarkdown(markdown);
-        expect(html).toContain(`<h${level}>`);
+        expect(html).toContain(`<h${level} id="heading">`);
         expect(html).toContain(`</h${level}>`);
       }
     });
@@ -453,8 +451,8 @@ console.log('hello');
 
       const html = renderMarkdown(markdown);
 
-      expect(html).toContain('<h1>Title</h1>');
-      expect(html).toContain('<h2>Subsection</h2>');
+      expect(html).toContain('<h1 id="title">Title</h1>');
+      expect(html).toContain('<h2 id="subsection">Subsection</h2>');
       expect(html).toContain('<strong>bold</strong>');
       expect(html).toContain('<em>italic</em>');
       expect(html).toContain('<ul>');
@@ -471,8 +469,8 @@ Paragraph with **emphasis**.
 
       const html = renderMarkdown(markdown);
 
-      // Basic structural checks
-      expect(html.match(/<h1>/g)).toHaveLength(html.match(/<\/h1>/g)?.length || 0);
+      // Basic structural checks - count heading tags with id attribute pattern
+      expect(html.match(/<h1[^>]*>/g)).toHaveLength(html.match(/<\/h1>/g)?.length || 0);
       expect(html.match(/<p>/g)).toHaveLength(html.match(/<\/p>/g)?.length || 0);
       expect(html.match(/<ul>/g)).toHaveLength(html.match(/<\/ul>/g)?.length || 0);
     });
@@ -700,6 +698,122 @@ Info here.
 :::`;
       const html = renderMarkdown(markdown);
       expect(html).toContain('class="info-box"');
+    });
+  });
+
+  describe('Table of Contents (TOC)', () => {
+    it('should generate TOC with default levels (h1-h3)', () => {
+      const markdown = `{{toc}}
+
+# Heading 1
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4`;
+      const html = renderMarkdown(markdown);
+
+      expect(html).toContain('<nav class="toc">');
+      expect(html).toContain('<ul class="toc-list">');
+      expect(html).toContain('href="#heading-1"');
+      expect(html).toContain('href="#heading-2"');
+      expect(html).toContain('href="#heading-3"');
+      expect(html).not.toContain('href="#heading-4"');
+    });
+
+    it('should generate TOC with custom level range', () => {
+      const markdown = `{{toc 2, 4}}
+
+# Heading 1
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4`;
+      const html = renderMarkdown(markdown);
+
+      expect(html).toContain('<nav class="toc">');
+      expect(html).not.toContain('href="#heading-1"');
+      expect(html).toContain('href="#heading-2"');
+      expect(html).toContain('href="#heading-3"');
+      expect(html).toContain('href="#heading-4"');
+    });
+
+    it('should add IDs to headings', () => {
+      const markdown = `# Introduction
+
+## Getting Started
+
+### Installation`;
+      const html = renderMarkdown(markdown);
+
+      expect(html).toContain('<h1 id="introduction">');
+      expect(html).toContain('<h2 id="getting-started">');
+      expect(html).toContain('<h3 id="installation">');
+    });
+
+    it('should handle duplicate heading IDs', () => {
+      const markdown = `# Introduction
+
+## Introduction
+
+### Introduction`;
+      const html = renderMarkdown(markdown);
+
+      expect(html).toContain('id="introduction"');
+      expect(html).toContain('id="introduction-1"');
+      expect(html).toContain('id="introduction-2"');
+    });
+
+    it('should generate slugs from heading text', () => {
+      const markdown = `# Hello World!
+
+## Getting Started (Guide)
+
+### Step 1: Setup`;
+      const html = renderMarkdown(markdown);
+
+      expect(html).toContain('id="hello-world"');
+      expect(html).toContain('id="getting-started-guide"');
+      expect(html).toContain('id="step-1-setup"');
+    });
+
+    it('should handle empty document gracefully', () => {
+      const markdown = `{{toc}}`;
+      const html = renderMarkdown(markdown);
+
+      expect(html).toContain('<nav class="toc">');
+      expect(html).toContain('No headings found');
+    });
+
+    it('should work with tableofcontents alias', () => {
+      const markdown = `{{tableofcontents}}
+
+# Section 1
+
+## Section 2`;
+      const html = renderMarkdown(markdown);
+
+      expect(html).toContain('<nav class="toc">');
+      expect(html).toContain('href="#section-1"');
+    });
+
+    it('should preserve heading content with formatting', () => {
+      const markdown = `{{toc}}
+
+# **Bold** Heading
+
+## *Italic* Section`;
+      const html = renderMarkdown(markdown);
+
+      // The TOC should contain plain text
+      expect(html).toContain('>Bold Heading</a>');
+      expect(html).toContain('>Italic Section</a>');
+
+      // The actual headings should have formatting
+      expect(html).toContain('<h1 id="bold-heading"><strong>Bold</strong> Heading</h1>');
     });
   });
 });

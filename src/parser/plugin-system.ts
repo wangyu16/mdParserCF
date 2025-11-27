@@ -572,6 +572,53 @@ Loading content...
   },
 };
 
+/**
+ * Table of Contents (TOC) plugin
+ * Syntax: {{toc}} - default shows h1-h3
+ *         {{toc 2, 4}} - shows h2-h4
+ *         {{toc 1, 6}} - shows all headings
+ *
+ * Input: Inline (single-line with optional level range)
+ * Output: Block (nav element with list of headings)
+ *
+ * The TOC is generated during rendering by collecting all headings
+ * from the document AST. A placeholder is inserted during parsing,
+ * which is replaced with the actual TOC during rendering.
+ */
+export const tocPlugin: Plugin = {
+  name: 'toc',
+  aliases: ['tableofcontents'],
+  inputType: 'inline',
+  outputType: 'block',
+  pattern: /\{\{(?:toc|tableofcontents)(?:\s+(\d)\s*,\s*(\d))?\s*\}\}/g,
+  handler: (content: string): PluginResult => {
+    const match = content.match(/\{\{(?:toc|tableofcontents)(?:\s+(\d)\s*,\s*(\d))?\s*\}\}/);
+    if (!match) {
+      return { type: 'fallthrough' };
+    }
+
+    // Default to h1-h3, or use specified range
+    const minLevel = match[1] ? parseInt(match[1], 10) : 1;
+    const maxLevel = match[2] ? parseInt(match[2], 10) : 3;
+
+    // Validate levels (1-6)
+    const validMinLevel = Math.max(1, Math.min(6, minLevel));
+    const validMaxLevel = Math.max(validMinLevel, Math.min(6, maxLevel));
+
+    // Generate a placeholder that will be replaced during rendering
+    const tocId = `toc-${Math.random().toString(36).substr(2, 9)}`;
+    const placeholder = `<nav id="${tocId}" class="toc-placeholder" data-toc-min="${validMinLevel}" data-toc-max="${validMaxLevel}"></nav>`;
+
+    return {
+      type: 'rendered',
+      content: {
+        type: 'html-block',
+        content: placeholder,
+      } as BlockNode,
+    };
+  },
+};
+
 // Helper function to escape HTML special characters
 function escapeHtml(text: string): string {
   const htmlEscapes: Record<string, string> = {
@@ -600,6 +647,7 @@ export function createDefaultPluginRegistry(): PluginRegistry {
   registry.registerPlugin(qrcodePlugin); // inline/block
   registry.registerPlugin(markdownPlugin); // inline/block (with 'md' alias)
   registry.registerPlugin(mermaidPlugin); // block/block
+  registry.registerPlugin(tocPlugin); // inline/block (table of contents)
 
   return registry;
 }

@@ -2,6 +2,8 @@
 
 This file demonstrates all supported markdown features in mdParserCF, including complex nesting scenarios, escaping, and edge cases.
 
+{{toc }}
+
 ### Key Features
 
 - Supports mixed HTML and Markdown; HTML passthrough preserves tags with Markdown inside.
@@ -456,6 +458,10 @@ sequenceDiagram
     Server-->>User: Response data
     User->>Server: Process complete
 }}
+
+## 2.8. Table of Content
+
+Use `{{toc }}` to show table of content, as can be seen at the top of this document. You can specify the level of headers to be included. By default, it will include level 1 to 3, but you can specify, such as `{{toc 2, 4}}`, `{{toc 1, 5}}`, etc. 
 
 ---
 

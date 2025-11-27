@@ -13,6 +13,7 @@ import {
   qrcodePlugin,
   badgePlugin,
   mermaidPlugin,
+  tocPlugin,
   createDefaultPluginRegistry,
 } from '../../src/parser/plugin-system';
 
@@ -361,7 +362,7 @@ graph LR
       const block = registry.getBlockPlugins();
 
       expect(inline).toHaveLength(2); // emoji, badge (both inline/inline)
-      expect(block).toHaveLength(5); // youtube, smiles, qrcode, markdown, mermaid (any block)
+      expect(block).toHaveLength(6); // youtube, smiles, qrcode, markdown, mermaid, toc (any block)
     });
 
     it('should have youtube plugin', () => {
@@ -459,6 +460,60 @@ graph LR
       const processed = await processAsyncPlugins(html);
 
       expect(processed).toBe(html);
+    });
+  });
+
+  describe('TOC Plugin', () => {
+    it('should have correct configuration', () => {
+      expect(tocPlugin.name).toBe('toc');
+      expect(tocPlugin.aliases).toContain('tableofcontents');
+      expect(tocPlugin.inputType).toBe('inline');
+      expect(tocPlugin.outputType).toBe('block');
+    });
+
+    it('should match basic toc syntax', () => {
+      const match = '{{toc}}'.match(tocPlugin.pattern);
+      expect(match).toBeTruthy();
+    });
+
+    it('should match toc with level range', () => {
+      tocPlugin.pattern.lastIndex = 0;
+      const match = '{{toc 2, 4}}'.match(tocPlugin.pattern);
+      expect(match).toBeTruthy();
+    });
+
+    it('should match tableofcontents alias', () => {
+      tocPlugin.pattern.lastIndex = 0;
+      const match = '{{tableofcontents}}'.match(tocPlugin.pattern);
+      expect(match).toBeTruthy();
+    });
+
+    it('should generate placeholder with default levels', () => {
+      const result = tocPlugin.handler('{{toc}}');
+      expect(result.type).toBe('rendered');
+      expect(result.content).toBeDefined();
+
+      const content = result.content as any;
+      expect(content.type).toBe('html-block');
+      expect(content.content).toContain('class="toc-placeholder"');
+      expect(content.content).toContain('data-toc-min="1"');
+      expect(content.content).toContain('data-toc-max="3"');
+    });
+
+    it('should generate placeholder with custom levels', () => {
+      const result = tocPlugin.handler('{{toc 2, 4}}');
+      expect(result.type).toBe('rendered');
+
+      const content = result.content as any;
+      expect(content.content).toContain('data-toc-min="2"');
+      expect(content.content).toContain('data-toc-max="4"');
+    });
+
+    it('should be registered in default registry', () => {
+      const registry = createDefaultPluginRegistry();
+      const plugin = registry.getPlugin('toc');
+      expect(plugin).toBeDefined();
+      expect(plugin?.name).toBe('toc');
     });
   });
 });
