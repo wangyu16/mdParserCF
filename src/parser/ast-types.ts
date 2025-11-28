@@ -132,6 +132,7 @@ export interface ListItem extends ASTNode {
   type: 'list-item';
   children: BlockNode[];
   depth?: number; // Nesting depth: 0 for top-level, 1 for nested, 2 for doubly nested, etc.
+  checkbox?: 'checked' | 'unchecked'; // Task list checkbox state (undefined means no checkbox)
 }
 
 /**

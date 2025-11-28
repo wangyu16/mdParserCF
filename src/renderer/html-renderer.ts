@@ -174,8 +174,11 @@ export class HTMLRenderer {
    * Render unordered list
    */
   private renderUnorderedList(list: UnorderedList): string {
+    // Check if this list contains any task items (checkboxes)
+    const hasTaskItems = list.children.some((item) => item.checkbox !== undefined);
+    const taskListClass = hasTaskItems ? ' class="task-list"' : '';
     const items = list.children.map((item) => this.renderListItem(item)).join('');
-    return `<ul>\n${items}</ul>\n`;
+    return `<ul${taskListClass}>\n${items}</ul>\n`;
   }
 
   /**
@@ -183,18 +186,43 @@ export class HTMLRenderer {
    */
   private renderOrderedList(list: OrderedList): string {
     const startAttr = list.start && list.start !== 1 ? ` start="${list.start}"` : '';
+    // Check if this list contains any task items (checkboxes)
+    const hasTaskItems = list.children.some((item) => item.checkbox !== undefined);
+    const taskListClass = hasTaskItems ? ' class="task-list"' : '';
     const items = list.children.map((item) => this.renderListItem(item)).join('');
-    return `<ol${startAttr}>\n${items}</ol>\n`;
+    return `<ol${startAttr}${taskListClass}>\n${items}</ol>\n`;
   }
 
   /**
    * Render list item
    */
   private renderListItem(item: ListItem): string {
-    const content = item.children.map((block) => this.renderBlock(block)).join('');
-    // Add depth as CSS class if available
-    const depthClass = item.depth !== undefined ? ` class="depth-${item.depth}"` : '';
-    return `<li${depthClass}>${content}</li>\n`;
+    let content = item.children.map((block) => this.renderBlock(block)).join('');
+
+    // Build CSS classes
+    const classes: string[] = [];
+    if (item.depth !== undefined) {
+      classes.push(`depth-${item.depth}`);
+    }
+    if (item.checkbox !== undefined) {
+      classes.push('task-list-item');
+    }
+    const classAttr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+
+    // Add checkbox if present
+    if (item.checkbox !== undefined) {
+      const checked = item.checkbox === 'checked' ? ' checked' : '';
+      const checkbox = `<input type="checkbox" disabled${checked}> `;
+      // Insert checkbox at the beginning of the content
+      // If content starts with a paragraph, insert inside the paragraph
+      if (content.startsWith('<p>')) {
+        content = content.replace('<p>', `<p>${checkbox}`);
+      } else {
+        content = checkbox + content;
+      }
+    }
+
+    return `<li${classAttr}>${content}</li>\n`;
   }
 
   /**

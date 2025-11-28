@@ -77,6 +77,12 @@ Simple list
 * Item 2
 * Item 3
 
+Checkbox list
+
+- [ ] Item 1
+- [ ] Item 2
+- [ ] Item 3
+
 Nested list
 
 - Item 1
@@ -461,7 +467,7 @@ sequenceDiagram
 
 ## 2.8. Table of Content
 
-Use `{{toc }}` to show table of content, as can be seen at the top of this document. You can specify the level of headers to be included. By default, it will include level 1 to 3, but you can specify, such as `{{toc 2, 4}}`, `{{toc 1, 5}}`, etc. 
+Use `{{toc }}` to show table of content, as can be seen at the top of this document. You can specify the level of headers to be included. By default, it will include level 1 to 3, but you can specify, such as `{{toc 2, 4}}`, `{{toc 1, 5}}`, etc.
 
 ---
 

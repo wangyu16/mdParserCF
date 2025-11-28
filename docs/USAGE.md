@@ -108,7 +108,39 @@ const parser = new Parser();
 const { html } = parser.parse(markdown).then((ast) => new HTMLRenderer().render(ast).html);
 ```
 
-### 6. Get AST Only (for custom processing)
+### 6. Task Lists (Checkboxes)
+
+```typescript
+const markdown = `
+## Project Checklist
+
+- [x] Design mockups complete
+- [x] Backend API implemented
+- [ ] Frontend integration
+- [ ] Testing and QA
+- [ ] Deploy to production
+`;
+
+const parser = new Parser();
+const ast = parser.parse(markdown);
+const renderer = new HTMLRenderer();
+const { html } = renderer.render(ast);
+
+// Output includes:
+// <ul class="task-list">
+//   <li class="task-list-item"><input type="checkbox" disabled checked> Design mockups complete</li>
+//   ...
+// </ul>
+```
+
+Task list syntax:
+
+- `- [ ]` - Unchecked checkbox
+- `- [x]` or `- [X]` - Checked checkbox
+- Works with both unordered (`-`, `*`, `+`) and ordered (`1.`) lists
+- Can be mixed with regular list items
+
+### 7. Get AST Only (for custom processing)
 
 ```typescript
 import { Parser, type Document } from 'mdparser-cf';
@@ -127,7 +159,7 @@ console.log(JSON.stringify(ast, null, 2));
 // }
 ```
 
-### 7. Extract Headings for Table of Contents
+### 8. Extract Headings for Table of Contents
 
 ```typescript
 import { Parser, HTMLRenderer } from 'mdparser-cf';

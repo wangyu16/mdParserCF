@@ -320,6 +320,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 - Bold, italic, underline, strikethrough
 - Blockquotes (including nested)
 - Lists (ordered, unordered, nested)
+- **Task Lists / Checkboxes** (`- [ ]`, `- [x]`)
 - Code (inline, fenced, indented)
 - Horizontal rules
 - Links and images (inline, reference-style, auto-link)

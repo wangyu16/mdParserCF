@@ -1285,4 +1285,120 @@ This is info.
       });
     });
   });
+
+  describe('Checkbox/Task List Syntax', () => {
+    it('should parse unchecked checkbox in unordered list', () => {
+      const markdown = `- [ ] Unchecked task`;
+      const ast = parser.parse(markdown);
+      const list = ast.children[0] as any;
+      expect(list.type).toBe('unordered-list');
+      expect(list.children[0].checkbox).toBe('unchecked');
+    });
+
+    it('should parse checked checkbox with lowercase x', () => {
+      const markdown = `- [x] Checked task`;
+      const ast = parser.parse(markdown);
+      const list = ast.children[0] as any;
+      expect(list.children[0].checkbox).toBe('checked');
+    });
+
+    it('should parse checked checkbox with uppercase X', () => {
+      const markdown = `- [X] Checked task`;
+      const ast = parser.parse(markdown);
+      const list = ast.children[0] as any;
+      expect(list.children[0].checkbox).toBe('checked');
+    });
+
+    it('should parse checkbox in ordered list', () => {
+      const markdown = `1. [ ] First task
+2. [x] Second task done`;
+      const ast = parser.parse(markdown);
+      const list = ast.children[0] as any;
+      expect(list.type).toBe('ordered-list');
+      expect(list.children[0].checkbox).toBe('unchecked');
+      expect(list.children[1].checkbox).toBe('checked');
+    });
+
+    it('should parse mixed checkbox and regular list items', () => {
+      const markdown = `- [ ] Task item
+- Regular item
+- [x] Done task`;
+      const ast = parser.parse(markdown);
+      const list = ast.children[0] as any;
+      expect(list.children[0].checkbox).toBe('unchecked');
+      expect(list.children[1].checkbox).toBeUndefined();
+      expect(list.children[2].checkbox).toBe('checked');
+    });
+
+    it('should preserve text content after checkbox', () => {
+      const markdown = `- [x] Task with **bold** text`;
+      const ast = parser.parse(markdown);
+      const list = ast.children[0] as any;
+      const item = list.children[0];
+      expect(item.checkbox).toBe('checked');
+      // The content should be in a paragraph
+      const paragraph = item.children[0];
+      expect(paragraph.type).toBe('paragraph');
+      // Should contain "Task with" text and bold text
+      expect(paragraph.children.some((c: any) => c.type === 'strong')).toBe(true);
+    });
+
+    it('should handle nested task lists', () => {
+      const markdown = `- [ ] Parent task
+  - [x] Nested completed task
+  - [ ] Nested incomplete task`;
+      const ast = parser.parse(markdown);
+      const topList = ast.children[0] as any;
+      expect(topList.children[0].checkbox).toBe('unchecked');
+      // Find nested list
+      const nestedList = topList.children[0].children.find((c: any) => c.type === 'unordered-list');
+      expect(nestedList).toBeDefined();
+      expect(nestedList.children[0].checkbox).toBe('checked');
+      expect(nestedList.children[1].checkbox).toBe('unchecked');
+    });
+
+    it('should not treat non-checkbox brackets as checkboxes', () => {
+      const markdown = `- [link] Not a checkbox
+- [a] Also not a checkbox`;
+      const ast = parser.parse(markdown);
+      const list = ast.children[0] as any;
+      // These should not be detected as checkboxes
+      expect(list.children[0].checkbox).toBeUndefined();
+      expect(list.children[1].checkbox).toBeUndefined();
+    });
+
+    it('should render unchecked checkbox as disabled input', () => {
+      const markdown = `- [ ] Unchecked task`;
+      const ast = parser.parse(markdown);
+      const html = renderer.render(ast).html;
+      expect(html).toContain('<input type="checkbox" disabled>');
+      expect(html).toContain('task-list-item');
+      expect(html).toContain('task-list');
+    });
+
+    it('should render checked checkbox as disabled checked input', () => {
+      const markdown = `- [x] Checked task`;
+      const ast = parser.parse(markdown);
+      const html = renderer.render(ast).html;
+      expect(html).toContain('<input type="checkbox" disabled checked>');
+      expect(html).toContain('task-list-item');
+    });
+
+    it('should add task-list class to list containing task items', () => {
+      const markdown = `- [x] Task
+- Regular item`;
+      const ast = parser.parse(markdown);
+      const html = renderer.render(ast).html;
+      expect(html).toContain('<ul class="task-list">');
+    });
+
+    it('should not add task-list class to list without task items', () => {
+      const markdown = `- Regular item 1
+- Regular item 2`;
+      const ast = parser.parse(markdown);
+      const html = renderer.render(ast).html;
+      expect(html).toContain('<ul>');
+      expect(html).not.toContain('task-list');
+    });
+  });
 });

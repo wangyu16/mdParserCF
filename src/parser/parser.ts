@@ -550,12 +550,22 @@ export class Parser {
     }
 
     const baseIndent = startLineStr.length - startLineStr.trimStart().length;
-    const firstLineContent = itemMatch[itemMatch.length - 1];
+    let firstLineContent = itemMatch[itemMatch.length - 1];
 
     // Calculate the content indent (where text starts after the marker)
     // For "1. Text", marker is "1. " (3 chars), for "- Text", marker is "- " (2 chars)
     const markerLength = itemMatch[0].length - firstLineContent.length;
     const contentIndent = baseIndent + markerLength;
+
+    // Check for checkbox syntax at the beginning of the content: [ ], [x], or [X]
+    let checkbox: 'checked' | 'unchecked' | undefined;
+    const checkboxMatch = firstLineContent.match(/^\[([ xX])\]\s*/);
+    if (checkboxMatch) {
+      const checkboxChar = checkboxMatch[1];
+      checkbox = checkboxChar === ' ' ? 'unchecked' : 'checked';
+      // Remove the checkbox syntax from the content
+      firstLineContent = firstLineContent.slice(checkboxMatch[0].length);
+    }
 
     const itemBlocks: BlockNode[] = [];
 
@@ -789,6 +799,7 @@ export class Parser {
         type: 'list-item',
         children: itemBlocks,
         depth,
+        ...(checkbox !== undefined && { checkbox }),
       },
       nextLine: currentLine,
     };
