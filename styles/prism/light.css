@@ -1,0 +1,3 @@
+/* Light Prism theme wrapper — uses Prism's default light theme */
+@import url('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css');
+@import url('./prism-overrides.css');

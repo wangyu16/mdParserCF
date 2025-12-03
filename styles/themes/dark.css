@@ -1,0 +1,14 @@
+/* styles/themes/dark.css
+   Dark theme token mapping. Apply via `data-theme="dark"` on <html> or <body>.
+*/
+[data-theme='dark'] {
+  --color-bg: #0b1220;
+  --color-text: #e6eef8;
+  --color-surface: #0f1724;
+  --color-muted: #9aa6b2;
+  --color-accent: #4ea8ff;
+  --color-border: #1f2937;
+  /* Highlight adjustments for dark mode */
+  --color-highlight-bg: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  --color-highlight-text: var(--color-text);
+}

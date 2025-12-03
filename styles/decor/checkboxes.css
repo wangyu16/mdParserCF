@@ -1,0 +1,26 @@
+/* styles/decor/checkboxes.css
+   Styles for checkbox list items and custom checkbox appearance.
+*/
+.md-root ul,
+.md-root ol {
+  padding-left: 1.25rem;
+}
+
+.md-root input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  accent-color: var(--color-accent);
+}
+
+/* Custom styled checkbox label */
+.checkbox-label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.checkbox-checked {
+  opacity: 0.7;
+  text-decoration: line-through;
+}

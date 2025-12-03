@@ -1,0 +1,11 @@
+/* styles/themes/light.css
+   Light theme token mapping. Apply via `data-theme="light"` on <html> or <body>.
+*/
+[data-theme='light'] {
+  --color-bg: #ffffff;
+  --color-text: #0f172a;
+  --color-surface: #ffffff;
+  --color-muted: #6b7280;
+  --color-accent: #0066ff;
+  --color-border: #e6edf3;
+}

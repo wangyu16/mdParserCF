@@ -1,0 +1,365 @@
+/*
+  theme-dark.full.css
+  Standalone dark theme stylesheet — includes base element styles,
+  design tokens, and Prism token mappings so this file can be dropped
+  into other projects without external theme dependencies.
+*/
+
+/* -------------------- Base (from styles/base/base.css) -------------------- */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #111827;
+  --color-surface: #f7f7f8;
+  --color-muted: #6b7280;
+  --color-accent: #0066ff;
+  --color-border: #e5e7eb;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Highlight token (background + text) - themeable */
+  --color-highlight-bg: color-mix(in srgb, var(--color-accent) 12%, white);
+  --color-highlight-text: var(--color-text);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+
+  --font-family-system:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --font-size-base: 16px;
+  --line-height-base: 1.6;
+}
+
+/* Box-sizing + reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font-family-system);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Container for rendered markdown content */
+.md-root {
+  background: var(--color-surface);
+  padding: var(--space-4);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.md-root h1,
+.md-root h2,
+.md-root h3 {
+  color: var(--color-text);
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.md-root p {
+  margin-bottom: var(--space-2);
+}
+
+.md-root a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.md-root a:hover {
+  text-decoration: underline;
+}
+
+/* Page layout and markdown element styles moved from generator */
+body {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text);
+  margin-top: calc(var(--space-3) * 1);
+  margin-bottom: var(--space-2);
+}
+
+h1 {
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 0.3em;
+}
+
+code {
+  background: var(--color-surface);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+pre {
+  background: var(--color-surface);
+  padding: 15px;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  padding: 0;
+}
+
+blockquote {
+  border-left: 4px solid var(--color-accent);
+  padding-left: 15px;
+  margin: 15px 0;
+  color: var(--color-muted);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+}
+th,
+td {
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  text-align: left;
+}
+th {
+  background: var(--color-surface);
+  font-weight: bold;
+}
+tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.note,
+.warning,
+.info,
+.error {
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 5px;
+}
+.note {
+  background: rgba(33, 150, 243, 0.08);
+  border-left: 4px solid var(--color-accent);
+}
+.warning {
+  background: rgba(255, 152, 0, 0.08);
+  border-left: 4px solid var(--color-warning);
+}
+.info {
+  background: rgba(76, 175, 80, 0.06);
+  border-left: 4px solid var(--color-success);
+}
+.error {
+  background: rgba(244, 67, 54, 0.06);
+  border-left: 4px solid var(--color-danger);
+}
+
+.highlight {
+  background: var(--color-highlight-bg);
+  color: var(--color-highlight-text);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.success {
+  background: color-mix(in srgb, var(--color-success) 8%, white);
+  color: var(--color-success);
+  padding: 2px 4px;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2em 0;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.footnote {
+  font-size: 0.9em;
+  color: var(--color-muted);
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+.badge-success {
+  background: var(--color-success);
+  color: white;
+}
+.badge-warning {
+  background: var(--color-warning);
+  color: white;
+}
+.badge-info {
+  background: var(--color-accent);
+  color: white;
+}
+.badge-danger {
+  background: var(--color-danger);
+  color: white;
+}
+.badge-secondary {
+  background: #9e9e9e;
+  color: white;
+}
+.badge-light {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.badge-primary {
+  background: var(--color-accent);
+  color: white;
+}
+.badge-default,
+.badge-muted {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.theme-chooser {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.theme-chooser select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.theme-chooser label {
+  color: var(--color-text);
+}
+.theme-chooser select {
+  color: var(--color-text);
+}
+.theme-chooser select option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* -------------------- Dark theme overrides -------------------- */
+:root {
+  --color-bg: #0b1220;
+  --color-text: #e6eef8;
+  --color-surface: #0f1724;
+  --color-muted: #9aa6b2;
+  --color-accent: #4ea8ff;
+  --color-border: #1f2937;
+  --color-highlight-bg: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  --color-highlight-text: var(--color-text);
+}
+
+/* -------------------- Prism token mappings (from prism-overrides.css) -------------------- */
+pre[class*='language-'],
+code[class*='language-'] {
+  background: var(--color-surface) !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.95em;
+  line-height: 1.5;
+  text-shadow: none !important;
+  color: var(--color-text);
+}
+
+code[class*='language-'] {
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--color-muted) !important;
+}
+
+.token.punctuation {
+  color: var(--color-text) !important;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--color-danger) !important;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--color-success) !important;
+}
+
+.token.namespace,
+.token.parameter,
+.token.decorator,
+.token.property {
+  color: var(--color-accent) !important;
+}
+
+.token {
+  color: var(--color-text) !important;
+}
+
+.token.function,
+.token.class-name {
+  color: var(--color-accent) !important;
+}
+
+.token.keyword,
+.token.important {
+  color: var(--color-accent) !important;
+  font-weight: 600;
+}
+
+.token.operator {
+  color: var(--color-accent) !important;
+}
+
+.line-numbers .line-numbers-rows > span:before {
+  color: var(--color-muted) !important;
+}
+
+/* End of standalone dark theme */

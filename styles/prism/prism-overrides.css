@@ -1,0 +1,90 @@
+/* Prism overrides to map token colors to our CSS semantic tokens */
+
+pre[class*='language-'],
+code[class*='language-'] {
+  background: var(--color-surface) !important;
+  /* Do not force a single color on the entire code block — some languages
+     use nested token spans and forcing the parent color (especially with
+     !important) can produce visual overlap in dark themes. Token colors are
+     set below and will override this when needed. */
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.95em;
+  line-height: 1.5;
+  /* Disable the default Prism text-shadow which can produce a faint duplicated
+     appearance in some themes when combined with our variable-driven colors. */
+  text-shadow: none !important;
+  /* Ensure any text not wrapped in token spans remains readable by inheriting
+      the theme's text color. Avoid using !important here to let explicit token
+      colors override this when present. */
+  color: var(--color-text);
+}
+
+/* Make sure inline code has subtle padding */
+code[class*='language-'] {
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}
+
+/* Token color mappings using our theme variables */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--color-muted) !important;
+}
+
+.token.punctuation {
+  color: var(--color-text) !important;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--color-danger) !important;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--color-success) !important;
+}
+
+/* Additional mappings to cover Python-specific tokens */
+.token.namespace,
+.token.parameter,
+.token.decorator,
+.token.property {
+  color: var(--color-accent) !important;
+}
+
+/* Ensure a sensible default for any token not explicitly mapped above */
+.token {
+  color: var(--color-text) !important;
+}
+
+.token.function,
+.token.class-name {
+  color: var(--color-accent) !important;
+}
+
+.token.keyword,
+.token.important {
+  color: var(--color-accent) !important;
+  font-weight: 600;
+}
+
+.token.operator {
+  color: var(--color-accent) !important;
+}
+
+/* Make line numbers/metadata muted */
+.line-numbers .line-numbers-rows > span:before {
+  color: var(--color-muted) !important;
+}

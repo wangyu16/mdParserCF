@@ -1,0 +1,5 @@
+/* Sepia Prism theme wrapper — start from the light theme then rely on our overrides
+   to nudge colors toward the sepia palette provided by the theme tokens.
+*/
+@import url('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css');
+@import url('./prism-overrides.css');

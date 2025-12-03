@@ -1,0 +1,3 @@
+/* Dark Prism theme wrapper — okaidia */
+@import url('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-okaidia.css');
+@import url('./prism-overrides.css');

@@ -1,0 +1,28 @@
+/* styles/decor/callouts.css
+   Callouts for note/warning/info/error using tokens.
+*/
+.note,
+.warning,
+.info,
+.error {
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+  border-radius: 8px;
+}
+
+.note {
+  background: rgba(34, 139, 230, 0.08);
+  border-left: 4px solid var(--color-accent);
+}
+.warning {
+  background: rgba(255, 165, 0, 0.06);
+  border-left: 4px solid #ff9800;
+}
+.info {
+  background: rgba(76, 175, 80, 0.06);
+  border-left: 4px solid #4caf50;
+}
+.error {
+  background: rgba(244, 67, 54, 0.06);
+  border-left: 4px solid #f44336;
+}

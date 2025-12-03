@@ -1,0 +1,14 @@
+/* styles/themes/sepia.css
+   Sepia theme token mapping.
+*/
+[data-theme='sepia'] {
+  --color-bg: #fbf5ea;
+  --color-text: #3b2f2f;
+  --color-surface: #fff8ef;
+  --color-muted: #6e5a4e;
+  --color-accent: #b35b00;
+  --color-border: #e6d8c1;
+  /* Highlight adjustments for sepia theme */
+  --color-highlight-bg: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+  --color-highlight-text: var(--color-text);
+}
