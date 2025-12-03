@@ -66,6 +66,7 @@
   "author": "wangyu16",
   "license": "MIT",
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/katex": "^0.16.7",
     "@types/node": "^24.10.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
@@ -80,6 +81,7 @@
     "vitest": "^2.0.0"
   },
   "dependencies": {
+    "js-yaml": "^4.1.1",
     "katex": "^0.16.25",
     "smiles-drawer": "^2.1.7"
   },
