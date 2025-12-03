@@ -24,6 +24,7 @@
  */
 
 import { InlineNode, BlockNode } from './ast-types';
+import * as yaml from 'js-yaml';
 
 /**
  * Plugin handler result
@@ -619,6 +620,71 @@ export const tocPlugin: Plugin = {
   },
 };
 
+/**
+ * YAML plugin
+ * Syntax: {{yaml
+ *   key: value
+ *   nested:
+ *     item: data
+ * }}
+ * or: {{yml ... }}
+ *
+ * Input: Block (multi-line YAML content)
+ * Output: Block (div element with JSON script)
+ *
+ * Parses YAML content and outputs a hidden div containing a JSON script.
+ * The JSON can be used by client-side JavaScript for various purposes.
+ * The div shows nothing when the HTML is loaded directly in a browser.
+ */
+export const yamlPlugin: Plugin = {
+  name: 'yaml',
+  aliases: ['yml'],
+  inputType: 'block',
+  outputType: 'block',
+  pattern: /\{\{(?:yaml|yml)\s*\n([\s\S]*?)\}\}/g,
+  handler: (content: string): PluginResult => {
+    const match = content.match(/\{\{(?:yaml|yml)\s*\n([\s\S]*?)\}\}/);
+    if (!match || !match[1]) {
+      return { type: 'fallthrough' };
+    }
+
+    const yamlContent = match[1];
+    const yamlId = `yaml-${Math.random().toString(36).substr(2, 9)}`;
+
+    try {
+      // Parse YAML to JavaScript object
+      const parsed = yaml.load(yamlContent);
+
+      // Convert to JSON string (handles escaping of quotes and special chars)
+      const jsonString = JSON.stringify(parsed);
+
+      // Generate HTML with div and embedded JSON script
+      // The div is invisible but contains structured data for client-side use
+      const html = `<div id="${yamlId}" class="yaml-data" style="display:none;"><script type="application/json">${jsonString}</script></div>`;
+
+      return {
+        type: 'rendered',
+        content: {
+          type: 'html-block',
+          content: html,
+        } as BlockNode,
+      };
+    } catch (error) {
+      // Handle YAML parsing errors gracefully
+      const errorMessage = error instanceof Error ? error.message : 'Unknown YAML parsing error';
+      const html = `<div id="${yamlId}" class="yaml-error" style="color: red; padding: 0.5em; border: 1px solid red; border-radius: 4px;">YAML Error: ${escapeHtml(errorMessage)}</div>`;
+
+      return {
+        type: 'rendered',
+        content: {
+          type: 'html-block',
+          content: html,
+        } as BlockNode,
+      };
+    }
+  },
+};
+
 // Helper function to escape HTML special characters
 function escapeHtml(text: string): string {
   const htmlEscapes: Record<string, string> = {
@@ -648,6 +714,7 @@ export function createDefaultPluginRegistry(): PluginRegistry {
   registry.registerPlugin(markdownPlugin); // inline/block (with 'md' alias)
   registry.registerPlugin(mermaidPlugin); // block/block
   registry.registerPlugin(tocPlugin); // inline/block (table of contents)
+  registry.registerPlugin(yamlPlugin); // block/block (YAML data embedding)
 
   return registry;
 }
