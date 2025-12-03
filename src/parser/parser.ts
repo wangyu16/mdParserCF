@@ -60,11 +60,64 @@ export class Parser {
   /**
    * Preprocess HTML to strip global HTML elements
    * Removes <!DOCTYPE>, <html>, </html>, <head>...</head>, <body>, </body>
-   * while preserving content inside body
+   * while preserving content inside body.
+   *
+   * IMPORTANT: Protects code blocks (fenced and indented) and inline code
+   * so that these tags can still be shown as code examples.
    */
   private preprocessGlobalHtml(markdown: string): string {
+    // Step 1: Protect code regions before stripping global HTML
+    const protectedRegions: { placeholder: string; content: string }[] = [];
+    let placeholderCounter = 0;
     let result = markdown;
 
+    // Protect fenced code blocks (``` or ~~~)
+    result = result.replace(/^(```|~~~)([^\n]*)\n([\s\S]*?)\n\1\s*$/gm, (match) => {
+      const placeholder = `\u0000CODEBLOCK${placeholderCounter++}\u0000`;
+      protectedRegions.push({ placeholder, content: match });
+      return placeholder;
+    });
+
+    // Protect inline code spans (backticks)
+    result = result.replace(/`([^`\n]+)`/g, (match) => {
+      const placeholder = `\u0000INLINECODE${placeholderCounter++}\u0000`;
+      protectedRegions.push({ placeholder, content: match });
+      return placeholder;
+    });
+
+    // Protect indented code blocks (4 spaces or 1 tab at start of line)
+    // This is trickier - we need to find consecutive lines that are all indented
+    const lines = result.split('\n');
+    const processedLines: string[] = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      // Check if line starts with 4 spaces or a tab (indented code block)
+      if (/^(    |\t)/.test(line)) {
+        // Collect all consecutive indented lines
+        const indentedLines: string[] = [line];
+        let j = i + 1;
+        while (j < lines.length && (/^(    |\t)/.test(lines[j]) || lines[j].trim() === '')) {
+          indentedLines.push(lines[j]);
+          j++;
+        }
+        // Only protect if there's actual content (not just empty lines)
+        if (indentedLines.some((l) => /^(    |\t)/.test(l))) {
+          const content = indentedLines.join('\n');
+          const placeholder = `\u0000INDENTCODE${placeholderCounter++}\u0000`;
+          protectedRegions.push({ placeholder, content });
+          processedLines.push(placeholder);
+          i = j;
+          continue;
+        }
+      }
+      processedLines.push(line);
+      i++;
+    }
+    result = processedLines.join('\n');
+
+    // Step 2: Now strip global HTML elements from unprotected content
     // Remove <!DOCTYPE ...> (case-insensitive)
     result = result.replace(/<!doctype[^>]*>/gi, '');
 
@@ -76,6 +129,11 @@ export class Parser {
 
     // Remove <body> and </body> tags but preserve content between them (case-insensitive)
     result = result.replace(/<\/?body[^>]*>/gi, '');
+
+    // Step 3: Restore protected regions
+    for (const { placeholder, content } of protectedRegions) {
+      result = result.replace(placeholder, content);
+    }
 
     return result;
   }

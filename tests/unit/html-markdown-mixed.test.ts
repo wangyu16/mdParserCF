@@ -413,4 +413,82 @@ Content here.
       expect(html).toContain('</article>');
     });
   });
+
+  describe('Global HTML tags in code blocks', () => {
+    it('should preserve <html> in inline code', () => {
+      const markdown = 'Use `<html>` to start an HTML document.';
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('<code>');
+      expect(html).toContain('&lt;html&gt;');
+    });
+
+    it('should preserve <!DOCTYPE html> in inline code', () => {
+      const markdown = 'Start with `<!DOCTYPE html>` declaration.';
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('<code>');
+      expect(html).toContain('&lt;!DOCTYPE html&gt;');
+    });
+
+    it('should preserve <head> and <body> in inline code', () => {
+      const markdown = 'The `<head>` section contains metadata, while `<body>` has content.';
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('&lt;head&gt;');
+      expect(html).toContain('&lt;body&gt;');
+    });
+
+    it('should preserve global HTML tags in fenced code blocks', () => {
+      const markdown = `\`\`\`html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+</head>
+<body>
+  <p>Hello</p>
+</body>
+</html>
+\`\`\``;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('&lt;!DOCTYPE html&gt;');
+      expect(html).toContain('&lt;html&gt;');
+      expect(html).toContain('&lt;head&gt;');
+      expect(html).toContain('&lt;body&gt;');
+      expect(html).toContain('&lt;/html&gt;');
+    });
+
+    it('should preserve global HTML tags in indented code blocks', () => {
+      const markdown = `Here's an HTML example:
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Test</title>
+    </head>
+    <body>
+      Content
+    </body>
+    </html>`;
+      const html = renderMarkdown(markdown);
+      expect(html).toContain('&lt;!DOCTYPE html&gt;');
+      expect(html).toContain('&lt;html&gt;');
+    });
+
+    it('should still strip global HTML tags outside of code blocks', () => {
+      const markdown = `<!DOCTYPE html>
+<html>
+<body>
+
+\`\`\`html
+<html>Example code</html>
+\`\`\`
+
+</body>
+</html>`;
+      const html = renderMarkdown(markdown);
+      // Outside code: should be stripped
+      expect(html.match(/<html>/g)).toBeNull(); // Real <html> tags stripped
+      // Inside code: should be preserved (escaped)
+      expect(html).toContain('&lt;html&gt;');
+    });
+  });
 });
