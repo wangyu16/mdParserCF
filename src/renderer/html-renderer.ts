@@ -38,6 +38,8 @@ import {
   Subscript,
   HTMLInline,
   HTMLBlock,
+  HTMLComment,
+  HTMLCommentBlock,
   FootnoteReference,
   RendererOptions,
   HTMLOutput,
@@ -125,6 +127,8 @@ export class HTMLRenderer {
         return this.renderTable(block as Table);
       case 'html-block':
         return this.renderHTMLBlock(block as HTMLBlock);
+      case 'html-comment-block':
+        return this.renderHTMLCommentBlock(block as any);
       case 'math-block':
         return this.renderMathBlock(block as any);
       case 'custom-container':
@@ -312,6 +316,14 @@ export class HTMLRenderer {
   }
 
   /**
+   * Render HTML comment block
+   * Outputs the comment as-is without modification
+   */
+  private renderHTMLCommentBlock(block: any): string {
+    return `<!--${block.content}-->\n`;
+  }
+
+  /**
    * Render inline element
    */
   private renderInline(node: InlineNode): string {
@@ -350,6 +362,8 @@ export class HTMLRenderer {
         return this.renderInlineBlockMath(node as any);
       case 'html-inline':
         return this.renderHTMLInline(node as HTMLInline);
+      case 'html-comment':
+        return this.renderHTMLComment(node as any);
       case 'footnote-reference':
         return this.renderFootnoteReference(node as FootnoteReference);
       case 'custom-span':
@@ -579,6 +593,14 @@ export class HTMLRenderer {
     }
 
     return '';
+  }
+
+  /**
+   * Render inline HTML comment
+   * Outputs the comment as-is without modification
+   */
+  private renderHTMLComment(node: any): string {
+    return `<!--${node.content}-->`;
   }
 
   /**

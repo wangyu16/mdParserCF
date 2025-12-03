@@ -330,7 +330,11 @@ const x = 5;
 
     it('should not include attributes when HTML comment has space before it', () => {
       const html = renderMarkdown('![alt](image.png) <!-- class="test" -->');
-      expect(html).not.toContain('class="test"');
+      // The image should NOT have the class attribute since there's a space before the comment
+      expect(html).toContain('<img src="image.png" alt="alt"');
+      expect(html).not.toContain('<img src="image.png" alt="alt" class="test"');
+      // But the comment should still be preserved in output (as of mixed HTML/MD handling)
+      expect(html).toContain('<!-- class="test" -->');
     });
 
     it('should handle single-quoted attributes in rendering', () => {

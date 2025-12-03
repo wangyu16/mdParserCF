@@ -43,6 +43,7 @@ export type BlockNode =
   | Table
   | CustomContainer
   | HTMLBlock
+  | HTMLCommentBlock
   | MathBlock;
 
 /**
@@ -66,6 +67,7 @@ export type InlineNode =
   | Subscript
   | CustomSpan
   | HTMLInline
+  | HTMLComment
   | FootnoteReference
   | InlineMath
   | InlineBlockMath;
@@ -201,6 +203,16 @@ export interface HTMLBlock extends ASTNode {
   tag?: string;
   attributes?: Record<string, string>;
   children?: BlockNode[];
+}
+
+/**
+ * HTML Comment Block - block-level HTML comment <!-- ... -->
+ * Preserved in output as-is, not displayed as visible content
+ */
+export interface HTMLCommentBlock extends ASTNode {
+  type: 'html-comment-block';
+  content: string;
+  children?: undefined;
 }
 
 // ========================================
@@ -347,6 +359,16 @@ export interface HTMLInline extends ASTNode {
   attributes?: Record<string, string>;
   children?: InlineNode[];
   selfClosing?: boolean;
+}
+
+/**
+ * HTML Comment - HTML comment node <!-- ... -->
+ * Preserved in output as-is
+ */
+export interface HTMLComment extends ASTNode {
+  type: 'html-comment';
+  content: string;
+  children?: undefined;
 }
 
 /**

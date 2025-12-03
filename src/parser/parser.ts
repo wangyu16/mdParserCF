@@ -23,6 +23,7 @@ import {
   FootnoteDefinition,
   CustomContainer,
   HTMLBlock,
+  HTMLCommentBlock,
   MathBlock,
   ParserOptions,
   ParserState,
@@ -57,13 +58,39 @@ export class Parser {
   }
 
   /**
+   * Preprocess HTML to strip global HTML elements
+   * Removes <!DOCTYPE>, <html>, </html>, <head>...</head>, <body>, </body>
+   * while preserving content inside body
+   */
+  private preprocessGlobalHtml(markdown: string): string {
+    let result = markdown;
+
+    // Remove <!DOCTYPE ...> (case-insensitive)
+    result = result.replace(/<!doctype[^>]*>/gi, '');
+
+    // Remove <html> and </html> tags (case-insensitive)
+    result = result.replace(/<\/?html[^>]*>/gi, '');
+
+    // Remove entire <head>...</head> section including content (case-insensitive, multiline)
+    result = result.replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '');
+
+    // Remove <body> and </body> tags but preserve content between them (case-insensitive)
+    result = result.replace(/<\/?body[^>]*>/gi, '');
+
+    return result;
+  }
+
+  /**
    * Parse markdown string into AST
    */
   public parse(markdown: string): Document {
     // Reset link references for new parse
     this.currentLinkReferences = new Map();
 
-    const lines = markdown.split('\n');
+    // Preprocess to strip global HTML elements
+    const preprocessedMarkdown = this.preprocessGlobalHtml(markdown);
+
+    const lines = preprocessedMarkdown.split('\n');
     const state: ParserState = {
       lines,
       position: 0,
@@ -201,6 +228,14 @@ export class Parser {
       const container = this.parseCustomContainer(state);
       if (container) {
         return container;
+      }
+    }
+
+    // Check for HTML comment block <!-- ... -->
+    if (trimmed.startsWith('<!--')) {
+      const commentBlock = this.parseHTMLCommentBlock(state);
+      if (commentBlock) {
+        return commentBlock;
       }
     }
 
@@ -1122,6 +1157,60 @@ export class Parser {
   }
 
   /**
+   * Parse HTML comment block <!-- ... -->
+   * Block-level HTML comments are preserved in output as-is
+   */
+  private parseHTMLCommentBlock(state: ParserState): HTMLCommentBlock | null {
+    const line = state.lines[state.position];
+    const trimmed = line.trim();
+
+    if (!trimmed.startsWith('<!--')) {
+      return null;
+    }
+
+    // Check if comment is on single line: <!-- comment -->
+    const singleLineMatch = trimmed.match(/^<!--([\s\S]*?)-->$/);
+    if (singleLineMatch) {
+      return {
+        type: 'html-comment-block',
+        content: singleLineMatch[1],
+      };
+    }
+
+    // Multi-line comment: collect lines until -->
+    const commentLines: string[] = [trimmed.slice(4)]; // Remove opening <!--
+    let currentLine = state.position + 1;
+    let foundClosing = false;
+
+    while (currentLine < state.lines.length) {
+      const currentLineStr = state.lines[currentLine];
+
+      // Check if this line contains the closing -->
+      const closingIndex = currentLineStr.indexOf('-->');
+      if (closingIndex !== -1) {
+        // Include content before --> in this line
+        commentLines.push(currentLineStr.slice(0, closingIndex));
+        foundClosing = true;
+        state.position = currentLine;
+        break;
+      }
+
+      commentLines.push(currentLineStr);
+      currentLine++;
+    }
+
+    if (!foundClosing) {
+      // If no closing found, treat the opening <!-- as text (paragraph)
+      return null;
+    }
+
+    return {
+      type: 'html-comment-block',
+      content: commentLines.join('\n'),
+    };
+  }
+
+  /**
    * Parse HTML block <tag>content</tag>
    */
   private parseHTMLBlock(state: ParserState): HTMLBlock | null {
@@ -1837,6 +1926,32 @@ export class Parser {
           });
           i += footnoteMatch[0].length;
           continue;
+        }
+      }
+
+      // Check for HTML comments <!-- ... --> (must be before general HTML tag check)
+      // Skip if this is an image attribute comment (handled in image parsing above)
+      if (
+        this.options.enableHtml !== false &&
+        processed[i] === '<' &&
+        processed.slice(i, i + 4) === '<!--'
+      ) {
+        // Check if this immediately follows an image (already handled)
+        // Look for pattern ![alt](url)<!-- which means it's an image attribute
+        const beforeComment = processed.slice(0, i);
+        const isImageAttribute = /!\[[^\]]*\]\([^)]+\)$/.test(beforeComment);
+
+        if (!isImageAttribute) {
+          // Match HTML comment: <!-- ... -->
+          const commentMatch = processed.slice(i).match(/^<!--([\s\S]*?)-->/);
+          if (commentMatch) {
+            nodes.push({
+              type: 'html-comment',
+              content: commentMatch[1],
+            });
+            i += commentMatch[0].length;
+            continue;
+          }
         }
       }
 
