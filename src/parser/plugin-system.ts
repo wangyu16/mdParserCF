@@ -25,6 +25,7 @@
 
 import { InlineNode, BlockNode } from './ast-types';
 import * as yaml from 'js-yaml';
+import { parseNyml } from './nyml-parser';
 
 /**
  * Plugin handler result
@@ -685,6 +686,73 @@ export const yamlPlugin: Plugin = {
   },
 };
 
+/**
+ * NYML plugin
+ * Syntax: {{nyml
+ *   key: value
+ *   nested:
+ *     item: data
+ * }}
+ *
+ * Input: Block (multi-line NYML content)
+ * Output: Block (div element with JSON script)
+ *
+ * NYML is a format inspired by YAML, but with significant distinctions:
+ * - All fields at the same level are converted to a list by default
+ * - All end level values are strings
+ * - Simpler syntax without comments
+ *
+ * Parses NYML content and outputs a hidden div containing a JSON script.
+ * The JSON can be used by client-side JavaScript for various purposes.
+ */
+export const nymlPlugin: Plugin = {
+  name: 'nyml',
+  inputType: 'block',
+  outputType: 'block',
+  pattern: /\{\{nyml\s*\n([\s\S]*?)\}\}/g,
+  handler: (content: string): PluginResult => {
+    const match = content.match(/\{\{nyml\s*\n([\s\S]*?)\}\}/);
+    if (!match || !match[1]) {
+      return { type: 'fallthrough' };
+    }
+
+    const nymlContent = match[1];
+    const nymlId = `nyml-${Math.random().toString(36).substr(2, 9)}`;
+
+    try {
+      // Parse NYML to JavaScript object using the NYML parser
+      const parsed = parseNyml(nymlContent);
+
+      // Convert to JSON string (handles escaping of quotes and special chars)
+      const jsonString = JSON.stringify(parsed);
+
+      // Generate HTML with div and embedded JSON script
+      // The div is invisible but contains structured data for client-side use
+      const html = `<div id="${nymlId}" class="nyml-data" style="display:none;"><script type="application/json">${jsonString}</script></div>`;
+
+      return {
+        type: 'rendered',
+        content: {
+          type: 'html-block',
+          content: html,
+        } as BlockNode,
+      };
+    } catch (error) {
+      // Handle NYML parsing errors gracefully
+      const errorMessage = error instanceof Error ? error.message : 'Unknown NYML parsing error';
+      const html = `<div id="${nymlId}" class="nyml-error" style="color: red; padding: 0.5em; border: 1px solid red; border-radius: 4px;">NYML Error: ${escapeHtml(errorMessage)}</div>`;
+
+      return {
+        type: 'rendered',
+        content: {
+          type: 'html-block',
+          content: html,
+        } as BlockNode,
+      };
+    }
+  },
+};
+
 // Helper function to escape HTML special characters
 function escapeHtml(text: string): string {
   const htmlEscapes: Record<string, string> = {
@@ -715,6 +783,7 @@ export function createDefaultPluginRegistry(): PluginRegistry {
   registry.registerPlugin(mermaidPlugin); // block/block
   registry.registerPlugin(tocPlugin); // inline/block (table of contents)
   registry.registerPlugin(yamlPlugin); // block/block (YAML data embedding)
+  registry.registerPlugin(nymlPlugin); // block/block (NYML data embedding)
 
   return registry;
 }

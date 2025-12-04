@@ -362,7 +362,7 @@ graph LR
       const block = registry.getBlockPlugins();
 
       expect(inline).toHaveLength(2); // emoji, badge (both inline/inline)
-      expect(block).toHaveLength(7); // youtube, smiles, qrcode, markdown, mermaid, toc, yaml (any block)
+      expect(block).toHaveLength(8); // youtube, smiles, qrcode, markdown, mermaid, toc, yaml, nyml (any block)
     });
 
     it('should have youtube plugin', () => {

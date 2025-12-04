@@ -13,7 +13,7 @@ This file demonstrates all supported markdown features in mdParserCF, including 
   - Except some very complicated ones, which are not likely to be used any way.
 - Allows creating HTML containers like <div> and <span> with class names using reserved Markdown syntax.
 - Use HTML comment syntax to pass attributes to an image.
-- Extensible plugin system: emoji, badges, SMILES, YouTube, Mermaid, markdown, qrcode, and more.
+- Extensible plugin system: emoji, badges, SMILES, YouTube, Mermaid, markdown, qrcode, YAML, NYML, and more.
 - Blank (empty) line = paragraph break (new paragraph).
 - Hard line break inside a paragraph is created by:
   - Two spaces at the end of a line, then newline
@@ -445,8 +445,6 @@ and you will get:
 
 {{md https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md}}
 
-{{md https://md-editor.yxw8611.workers.dev/raw/999e4679-7257-4cbb-8c5e-de835c8423fb}}
-
 ## 2.6. QR code
 
 Pass a string and receive an svg QR code image. Use either `{{qrcode ...}}` or `{{qr ...}}`.
@@ -483,7 +481,69 @@ sequenceDiagram
     User->>Server: Process complete
 }}
 
-## 2.8. Table of Content
+## 2.8. YAML Data Embedding
+
+Use `{{yaml ...}}` or `{{yml ...}}` to embed YAML data as hidden JSON. The YAML content is parsed and converted to JSON, stored in a hidden div for client-side JavaScript access.
+
+{{yaml
+title: Example Page
+author: John Doe
+tags:
+
+- markdown
+- parser
+- yaml
+  metadata:
+  version: 1.0
+  published: true
+  }}
+
+## 2.9. NYML Data Embedding
+
+Use `{{nyml ...}}` to embed NYML data as hidden JSON. NYML is a format inspired by YAML but with key differences:
+
+- All fields at the same level are converted to a list by default
+- All end level values are strings (no type conversion)
+- Simpler syntax without comments
+- Multi-value fields create nested lists
+
+**Basic key-value:**
+
+{{nyml
+name: Alice
+age: 25
+location: New York
+}}
+
+**Multi-value fields (creates lists):**
+
+{{nyml
+items:
+  value1
+  value2
+  child: nested value
+  another plain value
+}}
+
+**Multiline values with pipe syntax:**
+
+{{nyml
+description: |
+  This is a multiline value.
+  It preserves line breaks.
+  Useful for embedding markdown content.
+}}
+
+**Key differences from YAML:**
+
+| Feature        | YAML             | NYML            |
+| -------------- | ---------------- | --------------- |
+| Root structure | Object or Array  | Always Array    |
+| Value types    | Auto-detected    | Always String   |
+| Comments       | Supported (#)    | Not supported   |
+| Multi-value    | Use - for arrays | Use indentation |
+
+## 2.10. Table of Content
 
 Use `{{toc }}` to show table of content, as can be seen at the top of this document. You can specify the level of headers to be included. By default, it will include level 1 to 3, but you can specify, such as `{{toc 2, 4}}`, `{{toc 1, 5}}`, etc.
 
