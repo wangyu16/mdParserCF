@@ -1730,7 +1730,36 @@ export class Parser {
 
       // Check for links [text](url "title") or reference-style [text][ref] or [text][]
       if (processed[i] === '[') {
-        // First try inline link: [text](url "title")
+        // First check for clickable image: [![alt](imgUrl)](linkUrl) or [![alt](imgUrl "imgTitle")](linkUrl "linkTitle")
+        const clickableImageMatch = processed
+          .slice(i)
+          .match(/^\[!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
+        if (clickableImageMatch) {
+          const imgAlt = clickableImageMatch[1];
+          const imgUrl = clickableImageMatch[2];
+          const imgTitle = clickableImageMatch[3];
+          const linkUrl = clickableImageMatch[4];
+          const linkTitle = clickableImageMatch[5];
+
+          // Create an image node inside a link node
+          const imageNode: any = {
+            type: 'image',
+            url: imgUrl,
+            alt: imgAlt,
+            title: imgTitle,
+          };
+
+          nodes.push({
+            type: 'link',
+            url: linkUrl,
+            title: linkTitle,
+            children: [imageNode],
+          });
+          i += clickableImageMatch[0].length;
+          continue;
+        }
+
+        // Then try inline link: [text](url "title")
         const inlineLinkMatch = processed
           .slice(i)
           .match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
