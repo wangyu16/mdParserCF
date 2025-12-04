@@ -489,14 +489,15 @@ Use `{{yaml ...}}` or `{{yml ...}}` to embed YAML data as hidden JSON. The YAML 
 title: Example Page
 author: John Doe
 tags:
+  - markdown
+  - parser
+  - yaml
+metadata:
+version: 1.0
+published: true
+}}
 
-- markdown
-- parser
-- yaml
-  metadata:
-  version: 1.0
-  published: true
-  }}
+{{badge success: Invisible yaml block above. }}
 
 ## 2.9. NYML Data Embedding
 
@@ -509,6 +510,7 @@ Use `{{nyml ...}}` to embed NYML data as hidden JSON. NYML is a format inspired 
 
 **Basic key-value:**
 
+<!-- prettier-ignore -->
 {{nyml
 name: Alice
 age: 25
@@ -517,6 +519,7 @@ location: New York
 
 **Multi-value fields (creates lists):**
 
+<!-- prettier-ignore -->
 {{nyml
 items:
   value1
@@ -527,12 +530,15 @@ items:
 
 **Multiline values with pipe syntax:**
 
+<!-- prettier-ignore -->
 {{nyml
 description: |
   This is a multiline value.
   It preserves line breaks.
   Useful for embedding markdown content.
 }}
+
+{{badge success: Invisible nyml blocks above. }}
 
 **Key differences from YAML:**
 
