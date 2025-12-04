@@ -38,8 +38,6 @@ import {
   Subscript,
   HTMLInline,
   HTMLBlock,
-  HTMLComment,
-  HTMLCommentBlock,
   FootnoteReference,
   RendererOptions,
   HTMLOutput,

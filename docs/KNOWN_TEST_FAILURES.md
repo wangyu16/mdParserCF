@@ -2,7 +2,7 @@
 
 This document describes test failures that exist in the current codebase and are known issues that may be addressed in future updates.
 
-**Current Status:** 11 tests failing, 339 tests passing (350 total)
+**Current Status:** 11 tests failing, 385 tests passing (396 total)
 
 ---
 
@@ -203,4 +203,4 @@ These tests are related to the inline text pre-processing system that protects s
 
 2. **Pre-Processing failures** represent actual edge cases where complex nesting of protected regions (escapes, code, math, plugins) inside formatted text doesn't parse as expected. These are non-trivial to fix and affect advanced use cases.
 
-3. All core markdown functionality (339 tests) works correctly. The failing tests cover edge cases that are unlikely to occur in typical usage.
+3. All core markdown functionality (385 tests) works correctly. The failing tests cover edge cases that are unlikely to occur in typical usage.

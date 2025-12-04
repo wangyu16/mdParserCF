@@ -1,5 +1,7 @@
 # Styles / Theming Guide
 
+==A Theme Forger has been created. This folder is not needed anymore. ==
+
 This folder contains the modular theming system used by the `examples` output.
 
 Overview
