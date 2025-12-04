@@ -161,7 +161,8 @@ export class Parser {
     // Pre-pass: collect link reference definitions
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const match = line.match(/^\[([^\]]+)\]:\s+(.+?)(?:\s+"([^"]*)")?\s*$/);
+      // Match [label]: url or [label]: url "title" or [label]: url 'title'
+      const match = line.match(/^\[([^\]]+)\]:\s+(.+?)(?:\s+["']([^"']*)["'])?\s*$/);
       if (match) {
         const label = match[1].toLowerCase();
         const url = match[2].trim();
@@ -1154,8 +1155,8 @@ export class Parser {
    */
   private parseLinkReferenceDefinition(state: ParserState): boolean {
     const line = state.lines[state.position];
-    // Match [label]: url or [label]: url "title"
-    const match = line.match(/^\[([^\]]+)\]:\s+(.+?)(?:\s+"([^"]*)")?\s*$/);
+    // Match [label]: url or [label]: url "title" or [label]: url 'title'
+    const match = line.match(/^\[([^\]]+)\]:\s+(.+?)(?:\s+["']([^"']*)["'])?\s*$/);
 
     if (!match) {
       return false;
@@ -1776,6 +1777,60 @@ export class Parser {
           });
           i += clickableImageMatch[0].length;
           continue;
+        }
+
+        // Check for reference-style clickable image: [![alt](imgUrl)][ref] or [![alt](imgUrl)][]
+        // Also supports: [![alt](imgUrl)<!-- attrs -->][ref]
+        const refClickableImageMatch = processed
+          .slice(i)
+          .match(
+            /^\[!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)(<!--\s*(.*?)\s*-->)?\](?:\[\]|\[([^\]]+)\])/
+          );
+        if (refClickableImageMatch) {
+          const imgAlt = refClickableImageMatch[1];
+          const imgUrl = refClickableImageMatch[2];
+          const imgTitle = refClickableImageMatch[3];
+          const attributesStr = refClickableImageMatch[5]; // content inside comment
+          const refName = refClickableImageMatch[6]; // reference name, may be undefined for []
+
+          // For [![alt](imgUrl)][], use the image alt text as reference
+          // For [![alt](imgUrl)][ref], use the provided ref
+          const ref = refName || imgAlt;
+          const refLabel = ref.toLowerCase();
+
+          const linkRef = this.currentLinkReferences.get(refLabel);
+          if (linkRef) {
+            // Create an image node inside a link node
+            const imageNode: any = {
+              type: 'image',
+              url: imgUrl,
+              alt: imgAlt,
+              title: imgTitle,
+            };
+
+            // Parse attributes from HTML comment if present
+            if (attributesStr) {
+              const attributes: Record<string, string> = {};
+              const attrRegex = /([\w-]+)=['"]([^'"]*)['"]/g;
+              let match;
+              while ((match = attrRegex.exec(attributesStr)) !== null) {
+                attributes[match[1]] = match[2];
+              }
+              if (Object.keys(attributes).length > 0) {
+                imageNode.attributes = attributes;
+              }
+            }
+
+            nodes.push({
+              type: 'link',
+              url: linkRef.url,
+              title: linkRef.title,
+              children: [imageNode],
+            });
+            i += refClickableImageMatch[0].length;
+            continue;
+          }
+          // If reference not found, fall through to treat as text
         }
 
         // Then try inline link: [text](url "title")

@@ -159,6 +159,12 @@ Clickable image with attributes (click the image to navigate, attributes control
 
 [![Markdown logo](https://markdown-here.com/img/icon256.png)<!-- style="border:5px solid black" -->](https://example.com))
 
+Reference-style clickable image (link URL defined separately).
+
+[![Markdown logo](https://markdown-here.com/img/icon256.png)][example-link]
+
+[example-link]: https://example.com 'Example Site'
+
 ## 1.6. Code
 
 Inline code: `const x = 42;`

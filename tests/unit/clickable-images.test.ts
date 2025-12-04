@@ -129,6 +129,68 @@ describe('Clickable Images', () => {
     });
   });
 
+  describe('Reference-style clickable images', () => {
+    it('should render reference-style clickable image with [ref]', () => {
+      const md = `[![Alt](https://example.com/img.jpg)][mylink]
+
+[mylink]: https://example.com`;
+      const html = parse(md);
+      expect(html).toContain('<a href="https://example.com">');
+      expect(html).toContain('<img src="https://example.com/img.jpg" alt="Alt" />');
+    });
+
+    it('should render reference-style clickable image with [] (use alt as ref)', () => {
+      const md = `[![google](https://example.com/img.jpg)][]
+
+[google]: https://google.com`;
+      const html = parse(md);
+      expect(html).toContain('<a href="https://google.com">');
+      expect(html).toContain('<img src="https://example.com/img.jpg" alt="google" />');
+    });
+
+    it('should render reference-style clickable image with attributes', () => {
+      const md = `[![Alt](https://example.com/img.jpg)<!-- width="100px" -->][mylink]
+
+[mylink]: https://example.com`;
+      const html = parse(md);
+      expect(html).toContain('<a href="https://example.com">');
+      expect(html).toContain('width="100px"');
+    });
+
+    it('should render reference-style clickable image with title from reference', () => {
+      const md = `[![Alt](https://example.com/img.jpg)][mylink]
+
+[mylink]: https://example.com "Link Title"`;
+      const html = parse(md);
+      expect(html).toContain('<a href="https://example.com" title="Link Title">');
+    });
+
+    it('should render reference-style clickable image with image title and link title', () => {
+      const md = `[![Alt](https://example.com/img.jpg "Image Title")][mylink]
+
+[mylink]: https://example.com "Link Title"`;
+      const html = parse(md);
+      expect(html).toContain('<a href="https://example.com" title="Link Title">');
+      expect(html).toContain('title="Image Title"');
+    });
+
+    it('should be case-insensitive for reference names', () => {
+      const md = `[![Alt](https://example.com/img.jpg)][MyLink]
+
+[mylink]: https://example.com`;
+      const html = parse(md);
+      expect(html).toContain('<a href="https://example.com">');
+    });
+
+    it('should not render clickable image link if reference is not defined', () => {
+      const md = `[![Alt](https://example.com/img.jpg)][undefined-ref]`;
+      const html = parse(md);
+      // When reference is not found, the pattern is not matched as a clickable image
+      // and falls through to other parsing rules
+      expect(html).toContain('[undefined-ref]');
+    });
+  });
+
   describe('Non-clickable images and links still work', () => {
     it('should still render regular images', () => {
       const md = '![Alt](https://example.com/img.jpg)';
@@ -158,6 +220,14 @@ describe('Clickable Images', () => {
       const md = '![Alt](https://example.com/img.jpg)<!-- width="100px" -->';
       const html = parse(md);
       expect(html).toContain('<img src="https://example.com/img.jpg" alt="Alt" width="100px" />');
+    });
+
+    it('should still render regular reference-style links', () => {
+      const md = `[Link text][ref1]
+
+[ref1]: https://google.com`;
+      const html = parse(md);
+      expect(html).toContain('<a href="https://google.com">Link text</a>');
     });
   });
 });
