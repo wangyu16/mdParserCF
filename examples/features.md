@@ -445,6 +445,8 @@ and you will get:
 
 {{md https://raw.githubusercontent.com/wangyu16/mdParserCF/refs/heads/main/examples/mdPlugin.md}}
 
+{{md https://md-editor.yxw8611.workers.dev/raw/999e4679-7257-4cbb-8c5e-de835c8423fb}}
+
 ## 2.6. QR code
 
 Pass a string and receive an svg QR code image. Use either `{{qrcode ...}}` or `{{qr ...}}`.

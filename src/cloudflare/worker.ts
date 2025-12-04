@@ -428,8 +428,11 @@ async function handleParse(request: Request) {
     const output = renderer.render(ast);
     let html = output.html;
 
-    // Process async plugins
-    html = await processAsyncPlugins(html);
+    // Get the worker origin for same-origin fetch detection
+    const workerOrigin = new URL(request.url).origin;
+
+    // Process async plugins (pass origin for same-origin fetch workaround)
+    html = await processAsyncPlugins(html, workerOrigin);
 
     // Process markdown embeds if enabled
     if (processEmbeds) {

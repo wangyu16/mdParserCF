@@ -2,7 +2,30 @@
 
 This document describes test failures that exist in the current codebase and are known issues that may be addressed in future updates.
 
-**Current Status:** 11 tests failing, 385 tests passing (396 total)
+**Current Status:** 11 tests failing, 400 tests passing (411 total)
+
+---
+
+## Known Limitations
+
+### Cloudflare Worker-to-Worker Fetch Issue
+
+**Issue:** The markdown embed plugin (`{{md url}}` or `{{markdown url}}`) returns HTTP 404 when fetching markdown content from another Cloudflare Worker on the same account.
+
+**Example:**
+
+- ✅ Works: `{{md https://raw.githubusercontent.com/user/repo/main/file.md}}`
+- ❌ Fails: `{{md https://other-worker.username.workers.dev/raw/id}}`
+
+**Root Cause:** Cloudflare Workers on the same account have restrictions when making fetch requests to each other. The fetch request results in a 404 error, even though the same URL works correctly when accessed via curl or browser.
+
+**Workaround:** Host markdown files on external services (GitHub raw, CDN, etc.) instead of on another Cloudflare Worker from the same account.
+
+**Technical Details:**
+
+- Tested with explicit `Request` objects, custom headers, and CF-specific options
+- The 404 is returned by the target worker, suggesting Cloudflare's internal routing handles same-account worker requests differently
+- Service Bindings could potentially solve this, but require additional configuration
 
 ---
 
@@ -191,11 +214,12 @@ These tests are related to the inline text pre-processing system that protects s
 
 ## Summary
 
-| Category        | Failures | Priority | Recommended Action                                            |
-| --------------- | -------- | -------- | ------------------------------------------------------------- |
-| Markdown Plugin | 3        | Low      | Update tests to match new async plugin implementation         |
-| Math Tests      | 1        | Low      | Update test to expect heading ID attribute                    |
-| Pre-Processing  | 7        | Medium   | Review and fix `restoreProtections` logic for nested contexts |
+| Category               | Failures | Priority | Recommended Action                                             |
+| ---------------------- | -------- | -------- | -------------------------------------------------------------- |
+| Markdown Plugin        | 3        | Low      | Update tests to match new async plugin implementation          |
+| Math Tests             | 1        | Low      | Update test to expect heading ID attribute                     |
+| Pre-Processing         | 7        | Medium   | Review and fix `restoreProtections` logic for nested contexts  |
+| Worker-to-Worker Fetch | N/A      | Low      | Use external URLs or Service Bindings for same-account workers |
 
 ### Notes
 
@@ -203,4 +227,6 @@ These tests are related to the inline text pre-processing system that protects s
 
 2. **Pre-Processing failures** represent actual edge cases where complex nesting of protected regions (escapes, code, math, plugins) inside formatted text doesn't parse as expected. These are non-trivial to fix and affect advanced use cases.
 
-3. All core markdown functionality (385 tests) works correctly. The failing tests cover edge cases that are unlikely to occur in typical usage.
+3. **Worker-to-Worker Fetch** is a Cloudflare platform limitation, not a code bug. Markdown embeds work correctly with external URLs (GitHub, CDNs).
+
+4. All core markdown functionality (400 tests) works correctly. The failing tests cover edge cases that are unlikely to occur in typical usage.

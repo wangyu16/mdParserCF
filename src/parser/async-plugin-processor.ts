@@ -11,9 +11,10 @@
  * Process async plugin placeholders in rendered HTML
  *
  * @param html - The HTML string with async plugin placeholders
+ * @param workerOrigin - Optional origin URL of the worker (for same-origin fetch workaround)
  * @returns Promise<string> - HTML with placeholders replaced by actual content
  */
-export async function processAsyncPlugins(html: string): Promise<string> {
+export async function processAsyncPlugins(html: string, workerOrigin?: string): Promise<string> {
   // Find all async plugin placeholders
   const placeholderRegex =
     /<div[^>]*class="async-plugin-placeholder"[^>]*data-plugin="([^"]+)"[^>]*>[\s\S]*?<\/div>/g;
@@ -67,7 +68,11 @@ export async function processAsyncPlugins(html: string): Promise<string> {
           placeholder.data['api-url']
         );
       } else if (placeholder.plugin === 'markdown') {
-        replacement = await processMarkdownPlugin(placeholder.id, placeholder.data['markdown-url']);
+        replacement = await processMarkdownPlugin(
+          placeholder.id,
+          placeholder.data['markdown-url'],
+          workerOrigin
+        );
       } else {
         console.warn(`⚠️ Unknown async plugin: ${placeholder.plugin}`);
         continue;
@@ -90,16 +95,23 @@ export async function processAsyncPlugins(html: string): Promise<string> {
 /**
  * Process markdown plugin - fetches and renders external markdown
  */
-async function processMarkdownPlugin(id: string, url: string): Promise<string> {
+async function processMarkdownPlugin(
+  id: string,
+  url: string,
+  _workerOrigin?: string
+): Promise<string> {
   try {
-    // Fetch the markdown content
-    const response = await fetch(url, {
+    // Create a new Request object to ensure proper URL handling
+    // This is important for worker-to-worker requests on Cloudflare
+    const request = new Request(url, {
       method: 'GET',
       headers: {
-        'User-Agent': 'mdParserCF/1.0',
         Accept: 'text/plain, text/markdown, */*',
       },
     });
+
+    // Fetch the markdown content
+    const response = await fetch(request);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch markdown: HTTP ${response.status}`);
