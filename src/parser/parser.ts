@@ -1730,16 +1730,22 @@ export class Parser {
 
       // Check for links [text](url "title") or reference-style [text][ref] or [text][]
       if (processed[i] === '[') {
-        // First check for clickable image: [![alt](imgUrl)](linkUrl) or [![alt](imgUrl "imgTitle")](linkUrl "linkTitle")
+        // First check for clickable image with optional attributes:
+        // [![alt](imgUrl)](linkUrl) or [![alt](imgUrl "imgTitle")](linkUrl "linkTitle")
+        // Also supports: [![alt](imgUrl)<!-- attrs -->](linkUrl)
         const clickableImageMatch = processed
           .slice(i)
-          .match(/^\[!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/);
+          .match(
+            /^\[!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)(<!--\s*(.*?)\s*-->)?\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/
+          );
         if (clickableImageMatch) {
           const imgAlt = clickableImageMatch[1];
           const imgUrl = clickableImageMatch[2];
           const imgTitle = clickableImageMatch[3];
-          const linkUrl = clickableImageMatch[4];
-          const linkTitle = clickableImageMatch[5];
+          // clickableImageMatch[4] is the full comment match (<!-- ... -->)
+          const attributesStr = clickableImageMatch[5]; // content inside comment
+          const linkUrl = clickableImageMatch[6];
+          const linkTitle = clickableImageMatch[7];
 
           // Create an image node inside a link node
           const imageNode: any = {
@@ -1748,6 +1754,19 @@ export class Parser {
             alt: imgAlt,
             title: imgTitle,
           };
+
+          // Parse attributes from HTML comment if present
+          if (attributesStr) {
+            const attributes: Record<string, string> = {};
+            const attrRegex = /([\w-]+)=['"]([^'"]*)['"]/g;
+            let match;
+            while ((match = attrRegex.exec(attributesStr)) !== null) {
+              attributes[match[1]] = match[2];
+            }
+            if (Object.keys(attributes).length > 0) {
+              imageNode.attributes = attributes;
+            }
+          }
 
           nodes.push({
             type: 'link',

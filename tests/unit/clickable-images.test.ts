@@ -1,6 +1,7 @@
 /**
  * Tests for clickable images feature
  * Syntax: [![alt](imageUrl)](linkUrl)
+ * With attributes: [![alt](imageUrl)<!-- attrs -->](linkUrl)
  */
 
 import { describe, it, expect } from 'vitest';
@@ -57,6 +58,54 @@ describe('Clickable Images', () => {
     });
   });
 
+  describe('Clickable images with HTML comment attributes', () => {
+    it('should render clickable image with width attribute', () => {
+      const md = '[![Alt](https://example.com/img.jpg)<!-- width="100px" -->](https://example.com)';
+      const html = parse(md);
+      expect(html).toContain('<a href="https://example.com">');
+      expect(html).toContain('<img src="https://example.com/img.jpg" alt="Alt" width="100px" />');
+    });
+
+    it('should render clickable image with multiple attributes', () => {
+      const md =
+        '[![Alt](https://example.com/img.jpg)<!-- width="200px" height="100px" class="my-img" -->](https://example.com)';
+      const html = parse(md);
+      expect(html).toContain('width="200px"');
+      expect(html).toContain('height="100px"');
+      expect(html).toContain('class="my-img"');
+    });
+
+    it('should render clickable image with style attribute', () => {
+      const md =
+        '[![Alt](https://example.com/img.jpg)<!-- style="border:1px solid red" -->](https://example.com)';
+      const html = parse(md);
+      expect(html).toContain('style="border:1px solid red"');
+    });
+
+    it('should render clickable image with both title and attributes', () => {
+      const md =
+        '[![Alt](https://example.com/img.jpg "Image title")<!-- width="150px" -->](https://example.com "Link title")';
+      const html = parse(md);
+      expect(html).toContain('<a href="https://example.com" title="Link title">');
+      expect(html).toContain('title="Image title"');
+      expect(html).toContain('width="150px"');
+    });
+
+    it('should render clickable image with single-quoted attributes', () => {
+      const md = "[![Alt](https://example.com/img.jpg)<!-- width='100px' -->](https://example.com)";
+      const html = parse(md);
+      expect(html).toContain('width="100px"');
+    });
+
+    it('should handle data-* attributes', () => {
+      const md =
+        '[![Alt](https://example.com/img.jpg)<!-- data-id="123" data-type="banner" -->](https://example.com)';
+      const html = parse(md);
+      expect(html).toContain('data-id="123"');
+      expect(html).toContain('data-type="banner"');
+    });
+  });
+
   describe('Clickable images in context', () => {
     it('should render clickable image within a paragraph', () => {
       const md =
@@ -103,6 +152,12 @@ describe('Clickable Images', () => {
       const md = '[Link text](https://example.com "Title")';
       const html = parse(md);
       expect(html).toContain('<a href="https://example.com" title="Title">Link text</a>');
+    });
+
+    it('should still render regular images with HTML comment attributes', () => {
+      const md = '![Alt](https://example.com/img.jpg)<!-- width="100px" -->';
+      const html = parse(md);
+      expect(html).toContain('<img src="https://example.com/img.jpg" alt="Alt" width="100px" />');
     });
   });
 });

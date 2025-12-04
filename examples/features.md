@@ -153,6 +153,12 @@ Image with a link.
 
 [![Markdown logo](https://markdown-here.com/img/icon256.png)](https://example.com)
 
+Clickable image with attributes (click the image to navigate, attributes control image size/style).
+
+[![Markdown logo](https://markdown-here.com/img/icon256.png)<!-- width="100px" -->](https://example.com)
+
+[![Markdown logo](https://markdown-here.com/img/icon256.png)<!-- style="border:5px solid black" -->](https://example.com))
+
 ## 1.6. Code
 
 Inline code: `const x = 42;`
